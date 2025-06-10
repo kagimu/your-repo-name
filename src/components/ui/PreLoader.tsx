@@ -94,7 +94,7 @@ export const PreLoader: React.FC<PreLoaderProps> = ({
             className="absolute inset-10 bg-white rounded-full flex items-center justify-center shadow-2xl"
           >
             <img 
-              src="/lovable-uploads/76509dcc-120a-4d6a-ac62-e95f73910665.png" 
+              src="/img/logo.png" 
               alt="Edumall" 
               className="w-12 h-12 object-contain"
             />

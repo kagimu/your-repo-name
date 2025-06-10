@@ -1,14 +1,31 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Package, Truck, CheckCircle, Clock, MapPin, Trash2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
+import { useNavigate } from 'react-router-dom';
+import { DeliveryMap } from '@/components/courier/DeliveryMap';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import type { ElementType } from 'react';
+
+// Notification type for better type safety
+interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  icon: ElementType;
+  color: string;
+  actionText: string;
+  actionLink: string;
+}
 
 const Notifications = () => {
   const [filter, setFilter] = useState('all');
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 1,
       type: 'order',
@@ -19,7 +36,7 @@ const Notifications = () => {
       icon: Package,
       color: 'from-blue-500 to-blue-600',
       actionText: 'Track Order',
-      actionLink: '/checkout'
+      actionLink: '/checkout',
     },
     {
       id: 2,
@@ -31,7 +48,7 @@ const Notifications = () => {
       icon: Truck,
       color: 'from-orange-500 to-orange-600',
       actionText: 'View Location',
-      actionLink: '/checkout'
+      actionLink: '/checkout',
     },
     {
       id: 3,
@@ -43,7 +60,7 @@ const Notifications = () => {
       icon: MapPin,
       color: 'from-green-500 to-green-600',
       actionText: 'Confirm Receipt',
-      actionLink: '/checkout'
+      actionLink: '/checkout',
     },
     {
       id: 4,
@@ -55,7 +72,7 @@ const Notifications = () => {
       icon: CheckCircle,
       color: 'from-green-500 to-green-600',
       actionText: 'Rate Experience',
-      actionLink: '/dashboard'
+      actionLink: '/dashboard',
     },
     {
       id: 5,
@@ -67,8 +84,8 @@ const Notifications = () => {
       icon: Bell,
       color: 'from-purple-500 to-purple-600',
       actionText: 'Browse Products',
-      actionLink: '/categories'
-    }
+      actionLink: '/categories',
+    },
   ]);
 
   const filteredNotifications = notifications.filter(notification => {
@@ -97,6 +114,34 @@ const Notifications = () => {
 
   const deleteNotification = (id: number) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  const navigate = useNavigate();
+  const [showMap, setShowMap] = useState(false);
+  const [mapDeliveries, setMapDeliveries] = useState<{ id: number; address: string }[]>([]);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+
+  const handleAction = (notification: Notification) => {
+    switch (notification.actionText) {
+      case 'Track Order':
+        navigate('/checkout');
+        break;
+      case 'View Location':
+        setMapDeliveries([{ id: notification.id, address: 'Kampala Mall, Kampala' }]);
+        setShowMap(true);
+        break;
+      case 'Confirm Receipt':
+        setShowReceiptDialog(true);
+        break;
+      case 'Rate Experience':
+        navigate('/dashboard');
+        break;
+      case 'Browse Products':
+        navigate('/categories');
+        break;
+      default:
+        if (notification.actionLink) navigate(notification.actionLink);
+    }
   };
 
   return (
@@ -175,9 +220,7 @@ const Notifications = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 ${
-                    !notification.read ? 'ring-2 ring-blue-200' : ''
-                  }`}
+                  className={`bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 ${!notification.read ? 'ring-2 ring-blue-200' : ''}`}
                   onClick={() => !notification.read && markAsRead(notification.id)}
                 >
                   <div className="flex items-start space-x-4">
@@ -211,6 +254,7 @@ const Notifications = () => {
                             variant="ghost"
                             size="sm"
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={(e) => { e.stopPropagation(); handleAction(notification); }}
                           >
                             {notification.actionText}
                           </EdumallButton>
@@ -239,6 +283,26 @@ const Notifications = () => {
               <p className="text-gray-500">You're all caught up! Check back later for updates.</p>
             </div>
           )}
+
+          {/* Map Modal */}
+          <Dialog open={showMap} onOpenChange={setShowMap}>
+            <DialogContent>
+              <DialogTitle>Courier Location</DialogTitle>
+              <DeliveryMap deliveries={mapDeliveries} />
+            </DialogContent>
+          </Dialog>
+
+          {/* Confirm Receipt Dialog */}
+          <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+            <DialogContent>
+              <DialogTitle>Confirm Receipt</DialogTitle>
+              <p>Are you sure you have received your order?</p>
+              <div className="flex space-x-2 mt-4">
+                <EdumallButton variant="primary" onClick={() => { setShowReceiptDialog(false); /* Add confirmation logic here */ }}>Yes, Confirm</EdumallButton>
+                <EdumallButton variant="ghost" onClick={() => setShowReceiptDialog(false)}>Cancel</EdumallButton>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
