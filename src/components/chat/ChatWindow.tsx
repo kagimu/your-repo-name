@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Send, User, Truck, Phone, MapPin } from 'lucide-react';
@@ -14,9 +13,13 @@ interface Message {
 
 interface ChatWindowProps {
   onClose: () => void;
+  orderId: string;
+  customerName: string;
+  customerPhone: string;
+  style?: React.CSSProperties;
 }
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
+export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, orderId, customerName, customerPhone, style }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -116,6 +119,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: 20 }}
       className="fixed bottom-24 right-6 w-80 h-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 flex flex-col"
+      style={style}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-t-2xl">
@@ -124,23 +128,25 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
             <Truck size={16} />
           </div>
           <div>
-            <h3 className="font-semibold">David M.</h3>
+            <h3 className="font-semibold">{customerName}</h3>
             <p className="text-xs opacity-90 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              Online • Your courier
+              Online • Customer
             </p>
+            <p className="text-xs text-white/80">Order #{orderId}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button className="p-1 hover:bg-white/20 rounded-full transition-colors">
+          <a href={`tel:${customerPhone}`} className="p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Call customer">
             <Phone size={16} />
-          </button>
-          <button className="p-1 hover:bg-white/20 rounded-full transition-colors">
+          </a>
+          <button className="p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Show address">
             <MapPin size={16} />
           </button>
           <button
             onClick={onClose}
             className="p-1 hover:bg-white/20 rounded-full transition-colors"
+            aria-label="Close chat"
           >
             <X size={16} />
           </button>

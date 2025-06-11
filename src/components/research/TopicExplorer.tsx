@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lightbulb, ArrowRight, BookOpen, Users, TrendingUp } from 'lucide-react';
@@ -158,7 +157,7 @@ export const TopicExplorer: React.FC<TopicExplorerProps> = ({ onTopicSelect }) =
                 <span>{Math.floor(topic.popularity * 10)} researchers working on this</span>
               </div>
               <div className="flex space-x-2">
-                <EdumallButton variant="ghost" size="sm">
+                <EdumallButton variant="ghost" size="sm" onClick={() => window.alert(`More info about: ${topic.title}`)} aria-label={`Learn more about ${topic.title}`}>
                   Learn More
                 </EdumallButton>
                 <EdumallButton 
@@ -166,6 +165,7 @@ export const TopicExplorer: React.FC<TopicExplorerProps> = ({ onTopicSelect }) =
                   size="sm"
                   onClick={() => onTopicSelect(topic)}
                   className="group-hover:bg-blue-600 transition-colors"
+                  aria-label={`Start research on ${topic.title}`}
                 >
                   Start Research
                   <ArrowRight size={16} className="ml-1" />

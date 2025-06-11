@@ -229,6 +229,10 @@ const Research = () => {
                   query={searchQuery}
                   results={searchResults}
                   isLoading={isSearching}
+                  onViewFullText={handleViewFullText}
+                  onSaveToLibrary={(result) => {
+                    window.alert('Saved to Library!');
+                  }}
                 />
               )}
             </div>
@@ -249,10 +253,8 @@ const Research = () => {
                     <div className={`w-16 h-16 bg-gradient-to-r ${tool.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                       <Icon size={32} className="text-white" />
                     </div>
-                    
                     <h3 className="text-xl font-bold text-gray-900 mb-3">{tool.title}</h3>
                     <p className="text-gray-600 mb-4">{tool.description}</p>
-                    
                     <div className="space-y-2 mb-6">
                       {tool.features.map((feature, idx) => (
                         <div key={idx} className="flex items-center text-sm text-gray-600">
@@ -261,8 +263,11 @@ const Research = () => {
                         </div>
                       ))}
                     </div>
-                    
-                    <EdumallButton variant="primary" className="w-full">
+                    <EdumallButton 
+                      variant="primary" 
+                      className="w-full"
+                      onClick={() => handleAIToolLaunch(tool.title)}
+                    >
                       Launch Tool
                     </EdumallButton>
                   </motion.div>
@@ -281,6 +286,7 @@ const Research = () => {
         isOpen={showAITools}
         onClose={() => setShowAITools(false)}
         content={selectedContent}
+        initialTool={selectedContent || undefined}
       />
     </div>
   );

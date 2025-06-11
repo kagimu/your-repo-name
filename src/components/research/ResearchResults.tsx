@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Download, Star, Calendar } from 'lucide-react';
@@ -20,9 +19,11 @@ interface ResearchResultsProps {
   query: string;
   results: ResearchResult[];
   isLoading: boolean;
+  onViewFullText?: (content: string) => void;
+  onSaveToLibrary?: (result: ResearchResult) => void;
 }
 
-export const ResearchResults: React.FC<ResearchResultsProps> = ({ query, results, isLoading }) => {
+export const ResearchResults: React.FC<ResearchResultsProps> = ({ query, results, isLoading, onViewFullText, onSaveToLibrary }) => {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -104,7 +105,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({ query, results
             
             <div className="flex items-center justify-between">
               <div className="flex space-x-3">
-                <EdumallButton variant="primary" size="sm">
+                <EdumallButton variant="primary" size="sm" onClick={() => onViewFullText && onViewFullText(result.abstract)}>
                   <FileText size={16} className="mr-2" />
                   View Full Text
                 </EdumallButton>
@@ -113,7 +114,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({ query, results
                   Download PDF
                 </EdumallButton>
               </div>
-              <EdumallButton variant="ghost" size="sm">
+              <EdumallButton variant="ghost" size="sm" onClick={() => onSaveToLibrary && onSaveToLibrary(result)}>
                 Save to Library
               </EdumallButton>
             </div>

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Package, MapPin, Phone, Clock, CheckCircle, Navigation } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 
-interface Delivery {
+export interface Delivery {
   id: string;
   status: string;
   customerName: string;

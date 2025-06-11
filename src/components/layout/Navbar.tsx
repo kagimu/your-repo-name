@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ShoppingCart, User, Menu, X, BookOpen, Bell, Truck, Users, FileText, LayoutDashboard } from 'lucide-react';
@@ -131,6 +130,8 @@ export const Navbar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.path);
+              // Special style for 'Our Products' on /categories
+              const isProducts = item.path === '/categories' && location.pathname === '/categories';
               
               return (
                 <Link key={item.path} to={item.path}>
@@ -138,7 +139,9 @@ export const Navbar = () => {
                     className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
                       isActive
                         ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
+                        : isProducts
+                          ? 'text-white' // White text for Our Products on /categories
+                          : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -156,6 +159,7 @@ export const Navbar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.path);
+              const isProducts = item.path === '/categories' && location.pathname === '/categories';
               
               return (
                 <Link key={item.path} to={item.path}>
@@ -163,7 +167,9 @@ export const Navbar = () => {
                     className={`flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-200 ${
                       isActive
                         ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
+                        : isProducts
+                          ? 'text-white'
+                          : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -319,6 +325,7 @@ export const Navbar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.path);
+              const isProducts = item.path === '/categories' && location.pathname === '/categories';
               
               return (
                 <Link 
@@ -329,7 +336,9 @@ export const Navbar = () => {
                   <div className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      : isProducts
+                        ? 'text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
                   }`}>
                     <Icon size={18} />
                     <span className="font-medium">{item.label}</span>

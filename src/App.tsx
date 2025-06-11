@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,6 +23,8 @@ import Notifications from "./pages/Notifications";
 import Courier from "./pages/Courier";
 import Supplier from "./pages/Supplier";
 import NotFound from "./pages/NotFound";
+import AboutUs from "./pages/AboutUs";
+import RoleGuard from "./components/layout/RoleGuard";
 
 const queryClient = new QueryClient();
 
@@ -52,19 +53,21 @@ const App = () => {
               ) : (
                 <BrowserRouter key="app">
                   <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/categories" element={<Categories />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/e-library" element={<ELibrary />} />
-                    <Route path="/research" element={<Research />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/courier" element={<Courier />} />
-                    <Route path="/supplier" element={<Supplier />} />
+                    <Route path="/courier" element={<RoleGuard allowedRoles={["courier"]}><Courier /></RoleGuard>} />
+                    <Route path="/supplier" element={<RoleGuard allowedRoles={["supplier"]}><Supplier /></RoleGuard>} />
+                    {/* All other routes are blocked for courier/supplier */}
+                    <Route path="/" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Index /></RoleGuard>} />
+                    <Route path="/categories" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Categories /></RoleGuard>} />
+                    <Route path="/product/:id" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><ProductDetail /></RoleGuard>} />
+                    <Route path="/cart" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Cart /></RoleGuard>} />
+                    <Route path="/checkout" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Checkout /></RoleGuard>} />
+                    <Route path="/e-library" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><ELibrary /></RoleGuard>} />
+                    <Route path="/research" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Research /></RoleGuard>} />
+                    <Route path="/notifications" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Notifications /></RoleGuard>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Dashboard /></RoleGuard>} />
+                    <Route path="/about-us" element={<AboutUs />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <FloatingChatIcon />

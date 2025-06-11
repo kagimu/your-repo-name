@@ -1,19 +1,27 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Package, MapPin, Clock, Star, LogOut, Navigation } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { DeliveryMap } from './DeliveryMap';
 import { DeliveryList } from './DeliveryList';
+import { FloatingChatIcon } from '../chat/FloatingChatIcon';
+// Remove the import for SolarSystemExperience
+import type { Delivery } from './DeliveryList';
 
 interface CourierDashboardProps {
-  courierData: any;
+  courierData: {
+    id: string;
+    name: string;
+    completedDeliveries: number;
+    rating: number;
+    vehicle: string;
+  };
   onLogout: () => void;
 }
 
 export const CourierDashboard: React.FC<CourierDashboardProps> = ({ courierData, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'deliveries' | 'map'>('deliveries');
-  const [deliveries, setDeliveries] = useState([
+  const [deliveries, setDeliveries] = useState<Delivery[]>([
     {
       id: 'EDU1703847234',
       status: 'pickup',
@@ -23,7 +31,7 @@ export const CourierDashboard: React.FC<CourierDashboardProps> = ({ courierData,
       deliveryAddress: 'Makerere University, Kampala',
       items: ['Educational Books', 'Stationery'],
       estimatedTime: '30 mins',
-      distance: '5.2 km'
+      distance: '5.2 km',
     },
     {
       id: 'EDU1703847235',
@@ -34,8 +42,8 @@ export const CourierDashboard: React.FC<CourierDashboardProps> = ({ courierData,
       deliveryAddress: 'Ntinda Complex, Kampala',
       items: ['Laptop', 'Mouse'],
       estimatedTime: '15 mins',
-      distance: '2.8 km'
-    }
+      distance: '2.8 km',
+    },
   ]);
 
   const updateDeliveryStatus = (deliveryId: string, newStatus: string) => {
@@ -50,6 +58,8 @@ export const CourierDashboard: React.FC<CourierDashboardProps> = ({ courierData,
 
   return (
     <div className="space-y-6">
+      {/* Floating Chat Icon for multi-customer chat */}
+      <FloatingChatIcon deliveries={deliveries} />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 border border-gray-200/50 shadow-xl">
         <div className="flex items-center justify-between">

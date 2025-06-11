@@ -1,10 +1,36 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Star, CheckCircle } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 import { EdumallButton } from '../ui/EdumallButton';
 import { useCart } from '../../contexts/CartContext';
+import type { Delivery } from '../courier/DeliveryList';
+
+// Add courier deliveries mock for demo (replace with real data from props/context in integration)
+const mockDeliveries: Delivery[] = [
+  {
+    id: 'EDU1703847234',
+    customerName: 'John Doe',
+    customerPhone: '+256 701 123 456',
+    status: 'in_transit',
+    pickupAddress: 'Kampala Mall, Kampala',
+    deliveryAddress: 'Makerere University, Kampala',
+    items: ['Educational Books', 'Stationery'],
+    estimatedTime: '30 mins',
+    distance: '5.2 km',
+  },
+  {
+    id: 'EDU1703847235',
+    customerName: 'Sarah Johnson',
+    customerPhone: '+256 701 234 567',
+    status: 'pickup',
+    pickupAddress: 'Tech Store, Kampala',
+    deliveryAddress: 'Ntinda Complex, Kampala',
+    items: ['Laptop', 'Mouse'],
+    estimatedTime: '15 mins',
+    distance: '2.8 km',
+  },
+];
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -94,93 +120,124 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, onSubmit }) 
   );
 };
 
-export const FloatingChatIcon: React.FC = () => {
+// Refactored FloatingChatIcon for multi-customer chat support for couriers
+export const FloatingChatIcon: React.FC<{ deliveries?: Delivery[] }> = ({ deliveries = mockDeliveries }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
+  const [openChats, setOpenChats] = useState<string[]>([]); // order IDs of open chats
+  const [showChatList, setShowChatList] = useState(false);
   const [showRating, setShowRating] = useState(false);
-  const [hasRated, setHasRated] = useState(false);
-  const { items } = useCart();
-  
-  // Check if there's an active order
-  const hasActiveOrder = localStorage.getItem('orderCompleted') === 'true' && !hasRated;
-  
-  const handleConfirmDelivery = () => {
-    setDeliveryConfirmed(true);
-    setShowRating(true);
-    localStorage.removeItem('orderCompleted');
+
+  // Only show for couriers with active deliveries
+  const hasActiveDeliveries = deliveries && deliveries.length > 0;
+
+  const handleChatIconClick = () => {
+    setShowChatList((prev) => !prev);
+  };
+
+  const handleOpenChat = (orderId: string) => {
+    setOpenChats((prev) => (prev.includes(orderId) ? prev : [...prev, orderId]));
+    setShowChatList(false);
+  };
+
+  const handleCloseChat = (orderId: string) => {
+    setOpenChats((prev) => prev.filter((id) => id !== orderId));
   };
 
   const handleRatingSubmit = (rating: number, review: string) => {
-    console.log('Rating submitted:', { rating, review });
-    setHasRated(true);
-    localStorage.setItem('hasRated', 'true');
-    // In real app, send rating to backend
+    console.log('Rating submitted:', rating, review);
+    // TODO: Handle rating submission (e.g., send to server)
   };
 
-  const handleChatToggle = () => {
-    setIsOpen(!isOpen);
-  };
-
-  if (!hasActiveOrder) {
-    return null;
-  }
+  if (!hasActiveDeliveries) return null;
 
   return (
     <>
+      {/* Floating Chat Icon */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className="fixed bottom-6 right-6 z-40"
+        className="fixed bottom-6 right-6 z-50"
       >
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={handleChatToggle}
+          onClick={handleChatIconClick}
           className="w-16 h-16 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-shadow relative"
+          aria-label="Open chat list"
         >
           <MessageCircle size={28} />
-          {/* Notification badge */}
+          {/* Notification badge (show if any unread in real app) */}
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"
           />
         </motion.button>
-        
-        {/* Pulse animation */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 bg-blue-400 rounded-full opacity-30"
-        />
+      </motion.div>
 
-        {/* Delivery confirmation button */}
-        {!deliveryConfirmed && (
+      {/* Chat Card List Modal */}
+      <AnimatePresence>
+        {showChatList && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-20 right-0 bg-white rounded-xl p-3 shadow-lg border border-gray-200 min-w-48"
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-28 right-6 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 w-80 p-4"
           >
-            <p className="text-sm text-gray-700 mb-2">Delivery completed?</p>
-            <EdumallButton
-              variant="primary"
-              size="sm"
-              onClick={handleConfirmDelivery}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 flex items-center gap-2"
-            >
-              <CheckCircle size={16} />
-              Confirm Delivery
-            </EdumallButton>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Active Chats</h3>
+              <button onClick={() => setShowChatList(false)} aria-label="Close chat list">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {deliveries.map((delivery) => (
+                <div
+                  key={delivery.id}
+                  className="flex items-center justify-between bg-blue-50 rounded-xl p-3 mb-2 shadow border border-blue-100"
+                >
+                  <div>
+                    <div className="font-semibold text-gray-900">{delivery.customerName}</div>
+                    <div className="text-xs text-gray-500">Order #{delivery.id}</div>
+                  </div>
+                  <EdumallButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleOpenChat(delivery.id)}
+                    className="bg-gradient-to-r from-blue-500 to-teal-500 px-3"
+                    aria-label={`Chat with ${delivery.customerName}`}
+                  >
+                    Chat
+                  </EdumallButton>
+                </div>
+              ))}
+              {deliveries.length === 0 && (
+                <div className="text-gray-500 text-center py-6">No active deliveries</div>
+              )}
+            </div>
           </motion.div>
-        )}
-      </motion.div>
-
-      <AnimatePresence>
-        {isOpen && (
-          <ChatWindow onClose={() => setIsOpen(false)} />
         )}
       </AnimatePresence>
 
+      {/* Render Chat Windows for each open chat */}
+      <AnimatePresence>
+        {openChats.map((orderId, idx) => {
+          const delivery = deliveries.find((d) => d.id === orderId);
+          if (!delivery) return null;
+          return (
+            <ChatWindow
+              key={orderId}
+              orderId={delivery.id}
+              customerName={delivery.customerName}
+              customerPhone={delivery.customerPhone}
+              onClose={() => handleCloseChat(orderId)}
+              style={{ right: 24 + idx * 340, bottom: 120 }} // stack windows horizontally
+            />
+          );
+        })}
+      </AnimatePresence>
+
+      {/* Rating Modal (optional, can be triggered after delivery) */}
       <AnimatePresence>
         {showRating && (
           <RatingModal

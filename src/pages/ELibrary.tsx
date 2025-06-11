@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Filter, Search, Clock, Eye, ArrowRight, Star, Download, Bookmark } from 'lucide-react';
@@ -11,6 +10,9 @@ const ELibrary = () => {
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Add state for favorite toggling
+  const [favoriteBooks, setFavoriteBooks] = useState<{[id:number]: boolean}>({});
 
   const categories = [
     { id: 'all', name: 'All Categories', icon: '📚' },
@@ -144,7 +146,10 @@ const ELibrary = () => {
     return 'Continue Reading';
   };
 
-  const getButtonVariant = (progress: number) => {
+  // Helper type for EdumallButton variant
+  type EdumallButtonVariant = 'primary' | 'secondary' | 'ghost';
+
+  const getButtonVariant = (progress: number): EdumallButtonVariant => {
     if (progress === 0) return 'primary';
     if (progress === 100) return 'ghost';
     return 'secondary';
@@ -155,6 +160,22 @@ const ELibrary = () => {
     if (progress < 50) return 'bg-gradient-to-r from-red-400 to-orange-400';
     if (progress < 100) return 'bg-gradient-to-r from-yellow-400 to-green-400';
     return 'bg-gradient-to-r from-green-500 to-emerald-500';
+  };
+
+  // Handler to toggle favorite
+  const handleToggleFavorite = (id: number) => {
+    setFavoriteBooks((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Handler for reading actions (feedback)
+  const handleReadAction = (bookTitle: string, progress: number) => {
+    if (progress === 0) {
+      window.alert(`Started reading '${bookTitle}'. Progress will be tracked!`);
+    } else if (progress === 100) {
+      window.alert(`You have completed '${bookTitle}'. Feel free to read again!`);
+    } else {
+      window.alert(`Continue reading '${bookTitle}'. Progress: ${progress}%`);
+    }
   };
 
   return (
@@ -327,19 +348,19 @@ const ELibrary = () => {
                     <div className="w-full h-40 sm:h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex items-center justify-center">
                       <BookOpen size={32} className="text-gray-500" />
                     </div>
-                    
                     {book.isNew && (
                       <span className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                         NEW
                       </span>
                     )}
-
                     <button 
                       className={`absolute top-2 left-2 p-1.5 rounded-full transition-colors ${
-                        book.isFavorite ? 'bg-red-500 text-white' : 'bg-white/80 text-gray-600 hover:text-red-500'
+                        favoriteBooks[book.id] || book.isFavorite ? 'bg-red-500 text-white' : 'bg-white/80 text-gray-600 hover:text-red-500'
                       }`}
+                      onClick={() => handleToggleFavorite(book.id)}
+                      aria-label={favoriteBooks[book.id] || book.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                     >
-                      <Bookmark size={14} fill={book.isFavorite ? 'currentColor' : 'none'} />
+                      <Bookmark size={14} fill={favoriteBooks[book.id] || book.isFavorite ? 'currentColor' : 'none'} />
                     </button>
 
                     {book.progress > 0 && (
@@ -389,9 +410,11 @@ const ELibrary = () => {
 
                   {/* Action Button */}
                   <EdumallButton
-                    variant={getButtonVariant(book.progress) as any}
+                    variant={getButtonVariant(book.progress)}
                     size="sm"
                     className="w-full text-xs sm:text-sm"
+                    aria-label={getButtonText(book.progress) + ' ' + book.title}
+                    onClick={() => handleReadAction(book.title, book.progress)}
                   >
                     {getButtonText(book.progress)}
                     <ArrowRight size={14} className="ml-2" />
@@ -419,9 +442,8 @@ const ELibrary = () => {
                         </span>
                       )}
                     </div>
-                    
                     {/* Book Cover - Desktop */}
-                    <div className="hidden sm:block w-20 h-28 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex-shrink-0 flex items-center justify-center relative">
+                    <div className="sm:block hidden w-20 h-28 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex-shrink-0 items-center justify-center relative">
                       <BookOpen size={20} className="text-gray-500" />
                       {book.isNew && (
                         <span className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -429,7 +451,6 @@ const ELibrary = () => {
                         </span>
                       )}
                     </div>
-                    
                     <div className="flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <div className="flex-1">
@@ -473,15 +494,17 @@ const ELibrary = () => {
                         
                         <div className="flex flex-row sm:flex-col gap-2">
                           <button className={`p-2 rounded-lg transition-colors ${
-                            book.isFavorite ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:text-red-500'
-                          }`}>
-                            <Bookmark size={16} fill={book.isFavorite ? 'currentColor' : 'none'} />
+                            favoriteBooks[book.id] || book.isFavorite ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:text-red-500'
+                          }`} onClick={() => handleToggleFavorite(book.id)} aria-label={favoriteBooks[book.id] || book.isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
+                            <Bookmark size={16} fill={favoriteBooks[book.id] || book.isFavorite ? 'currentColor' : 'none'} />
                           </button>
                           
                           <EdumallButton
-                            variant={getButtonVariant(book.progress) as any}
+                            variant={getButtonVariant(book.progress)}
                             size="sm"
                             className="flex-1 sm:flex-none"
+                            aria-label={getButtonText(book.progress) + ' ' + book.title}
+                            onClick={() => handleReadAction(book.title, book.progress)}
                           >
                             {getButtonText(book.progress)}
                             <ArrowRight size={14} className="ml-2" />

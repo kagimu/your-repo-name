@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -62,10 +61,10 @@ export const HeroSection: React.FC = () => {
             <EdumallButton 
               variant="secondary" 
               size="lg"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/about-us')}
               className="text-lg px-8 py-4"
             >
-              Partner With Us
+              More About Us
             </EdumallButton>
           </motion.div>
         </motion.div>
