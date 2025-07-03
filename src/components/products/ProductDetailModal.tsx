@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { useCart } from '../../contexts/CartContext';
+import axios from 'axios';
 
 interface Product {
   id: number;
   name: string;
   price: number;
+  avatar_url?: string;
   images: string[];
   category: string;
   inStock: boolean;
@@ -43,15 +45,36 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }).format(price);
   };
 
-  const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart({
-        ...product,
-        image: product.images[0]
-      });
-    }
+  const handleAddToCart = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    await axios.post(
+      'http://127.0.0.1:8000/api/cart',
+      {
+        product_id: product.id,
+        name: product.name,
+        avatar_url: product.avatar_url || product.images[0],
+        quantity: quantity
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    addToCart({
+      ...product,
+      image: product.images[0],
+      quantity
+    });
+
     onClose();
-  };
+  } catch (error) {
+    console.error('Failed to add to cart:', error);
+  }
+};
+
 
   return (
     <AnimatePresence>

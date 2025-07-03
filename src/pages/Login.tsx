@@ -6,6 +6,16 @@ import { EdumallButton } from '@/components/ui/EdumallButton';
 import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/contexts/AuthContext';
 import { PreLoader } from '@/components/ui/PreLoader';
+import axios from 'axios';
+
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  type?: string;
+  userType?: string;
+};
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,25 +33,49 @@ const Login = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoggingIn(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      const userData = {
-        id: '1',
-        name: 'John Doe',
+ 
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoggingIn(true);
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         email: formData.email,
-        type: 'individual' as const,
-        userType: 'Parent'
-      };
-      
-      login(userData);
-      setIsLoggingIn(false);
-      navigate('/dashboard');
-    }, 2000);
-  };
+        password: formData.password,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Invalid credentials');
+    }
+
+    // 🟢 Properly type the response
+    const data: { token: string; user: User } = await response.json();
+
+    // Store token
+    localStorage.setItem('token', data.token);
+
+    // Store user in context and localStorage
+   login({
+      ...data.user,
+      type: data.user.type as 'individual' | 'institution' | 'guest',
+    });
+
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('Login failed. Please check your credentials.');
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
+
+
 
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
@@ -92,6 +126,7 @@ const Login = () => {
                 Email Address
               </label>
               <div className="relative">
+
                 <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="email"

@@ -17,8 +17,8 @@ const Register = () => {
   
   const [formData, setFormData] = useState({
     // Institution Info
-    institutionName: '',
-    centreNumber: '',
+    institution_name: '',
+    centre_number: '',
     district: '',
     subcounty: '',
     parish: '',
@@ -35,7 +35,7 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: '',
+    password_confirmation: '',
     userType: '',
     customUserType: '',
     // Payment Options
@@ -76,26 +76,56 @@ const Register = () => {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, accountType === 'institution' ? 4 : 2));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsRegistering(true);
-    
-    // Simulate registration process
-    setTimeout(() => {
-      const userData = {
-        id: Date.now().toString(),
-        name: accountType === 'institution' ? formData.adminName : `${formData.firstName} ${formData.lastName}`,
-        email: accountType === 'institution' ? formData.adminEmail : formData.email,
-        type: accountType,
-        designation: accountType === 'institution' ? (formData.designation === 'Other' ? formData.customDesignation : formData.designation) : undefined,
-        userType: accountType === 'individual' ? (formData.userType === 'Other' ? formData.customUserType : formData.userType) : undefined
-      };
-      
-      login(userData);
-      setIsRegistering(false);
-      navigate('/dashboard');
-    }, 2000);
-  };
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsRegistering(true);
+
+  try {
+    // Fetch CSRF cookie if required
+    await fetch('http://127.0.0.1:8000/sanctum/csrf-cookie', {
+      credentials: 'include',
+    });
+
+    const response = await fetch('http://127.0.0.1:8000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include', // Include cookies for Sanctum
+      body: JSON.stringify({
+        accountType,
+        ...formData,
+        password_confirmation: formData.confirmPassword,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      console.error('Registration error:', errorResponse);
+      throw new Error('Failed to register');
+    }
+
+    const result = await response.json();
+    console.log('Registration successful:', result);
+
+    login({
+      id: result.user.id,
+      name: `${result.user.firstName} ${result.user.lastName}`,
+      email: result.user.email,
+      type: accountType,
+    });
+
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Registration error:', error);
+    alert('Registration failed. Please try again.');
+  } finally {
+    setIsRegistering(false);
+  }
+};
+
+
 
   const renderProgressBar = () => {
     const totalSteps = accountType === 'institution' ? 4 : 2;
@@ -175,16 +205,16 @@ const Register = () => {
             
             <EdumallInput
               label="Institution Name"
-              value={formData.institutionName}
-              onChange={(e) => handleInputChange('institutionName', e.target.value)}
+              value={formData.institution_name}
+              onChange={(e) => handleInputChange('institution_name', e.target.value)}
               placeholder="Enter institution name"
               required
             />
             
             <EdumallInput
               label="Centre Number"
-              value={formData.centreNumber}
-              onChange={(e) => handleInputChange('centreNumber', e.target.value)}
+              value={formData.centre_number}
+              onChange={(e) => handleInputChange('centre_number', e.target.value)}
               placeholder="Enter centre number"
               required
             />
@@ -432,8 +462,8 @@ const Register = () => {
             <EdumallInput
               label="Confirm Password"
               type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+              value={formData.password_confirmation}
+              onChange={(e) => handleInputChange('password_confirmation', e.target.value)}
               placeholder="Confirm password"
               required
             />

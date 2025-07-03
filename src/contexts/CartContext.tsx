@@ -1,5 +1,5 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 
 interface CartItem {
   id: number;
@@ -13,9 +13,9 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: any) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  addToCart: (product: CartItem) => Promise<void>;
+  removeFromCart: (id: number) => Promise<void>;
+  updateQuantity: (id: number, quantity: number) => Promise<void>;
   clearCart: () => void;
   getCartCount: () => number;
   getCartTotal: () => number;
@@ -34,60 +34,87 @@ export const useCart = () => {
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = (product: any) => {
-    setItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  const token = localStorage.getItem('token'); // adjust auth logic as needed
+
+  // Fetch cart items from API on mount
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const response = await axios.get<{ cart: CartItem[] }>('http://127.0.0.1:8000/api/cart', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setItems(response.data.cart || []);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
       }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+    };
+    fetchCart();
+  }, [token]);
+
+  const addToCart = async (product: CartItem) => {
+    try {
+      // Example API call - adjust endpoint and payload as per your backend
+      await axios.post('http://127.0.0.1:8000/api/cart', { product_id: product.id, quantity: 1 }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Update local state by refetching or optimistic update:
+      setItems(prev => {
+        const existing = prev.find(i => i.id === product.id);
+        if (existing) {
+          return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+        }
+        return [...prev, { ...product, quantity: 1 }];
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  const removeFromCart = (id: number) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = async (id: number) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/cart/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setItems(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = async (id: number, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(id);
+      await removeFromCart(id);
       return;
     }
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/cart/${id}`, { quantity }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
   };
 
   const clearCart = () => {
     setItems([]);
+    // Optionally also clear on backend if you have that API endpoint
   };
 
-  const getCartCount = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
-  };
+  const getCartCount = () => items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const getCartTotal = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const value = {
-    items,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    getCartCount,
-    getCartTotal,
-  };
+  const getCartTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider value={{
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getCartCount,
+      getCartTotal
+    }}>
       {children}
     </CartContext.Provider>
   );

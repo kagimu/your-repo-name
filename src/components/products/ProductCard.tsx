@@ -5,17 +5,18 @@ import { Star, ShoppingCart, Eye } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductDetailModal } from './ProductDetailModal';
 import { useCart } from '../../contexts/CartContext';
+import axios from 'axios';
 
 interface Product {
   id: number;
   name: string;
   price: number;
-  image?: string;
-  images?: string[];
+  avatar_url?: string;
+  images_url?: string[];
   category: string;
-  inStock: boolean;
+  in_stock: boolean;
   rating: number;
-  description?: string;
+  desc?: string;
   unit?: string;
   specifications?: Record<string, string>;
   purchaseType: 'purchase' | 'hire';
@@ -38,12 +39,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     }).format(price);
   };
 
-  const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      image: product.image || product.images?.[0] || '/placeholder.svg'
-    });
+ const handleAddToCart = async () => {
+  const cartItem = {
+    product_id: product.id,
+    quantity: 1, // You can make this dynamic
   };
+
+  try {
+     const token = localStorage.getItem('token');
+
+    await axios.post('http://127.0.0.1:8000/api/cart', cartItem, {
+      headers: {
+       Authorization: `Bearer ${token}`,
+      },
+    });
+
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.avatar_url || product.images_url?.[0] || '/placeholder.svg',
+      category: product.category,
+      unit: product.unit,
+    });
+  } catch (error) {
+    console.error('Failed to add to cart via API:', error);
+  }
+};
+
 
   const handleViewDetails = () => {
     setShowDetailModal(true);
@@ -51,12 +75,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
 
   const detailedProduct = {
     ...product,
-    images: product.images || [product.image || '/placeholder.svg'],
-    description: product.description || `High-quality ${product.name} perfect for educational use.`,
+    images_url: product.images_url || [product.avatar_url || '/placeholder.svg'],
+    desc: product.desc || `High-quality ${product.name} perfect for educational use.`,
     unit: product.unit || 'piece',
     specifications: product.specifications || {
       'Category': product.category,
-      'Availability': product.inStock ? 'In Stock' : 'Out of Stock',
+      'Availability': product.in_stock ? 'In Stock' : 'Out of Stock',
       'Rating': product.rating.toString()
     }
   };
@@ -69,11 +93,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden flex-shrink-0">
               <img 
-                src={product.image || product.images?.[0] || '/placeholder.svg'} 
+                src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-[50%] h-[50%] object-cover"
               />
             </div>
             
@@ -100,8 +124,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                   {product.purchaseType === 'hire' && (
                     <span className="text-sm text-gray-600 ml-2">per day</span>
                   )}
-                  <p className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
+                  <p className={`text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
+                    {product.in_stock ? 'In Stock' : 'Out of Stock'}
                   </p>
                 </div>
                 
@@ -112,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                   <EdumallButton 
                     variant="primary" 
                     size="sm"
-                    disabled={!product.inStock}
+                    disabled={!product.in_stock}
                     onClick={handleAddToCart}
                     className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
                   >
@@ -142,7 +166,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
       >
         <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
           <img 
-            src={product.image || product.images?.[0] || '/placeholder.svg'} 
+            src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
@@ -180,17 +204,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
             {product.purchaseType === 'hire' && (
               <span className="text-sm text-gray-600 ml-1">per day</span>
             )}
-            <p className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-              {product.inStock ? 'In Stock' : 'Out of Stock'}
+            <p className={`text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
+              {product.in_stock ? 'In Stock' : 'Out of Stock'}
             </p>
           </div>
+
+
 
           <div className="flex items-center gap-2">
             <EdumallButton 
               variant="primary" 
               size="sm" 
               className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
-              disabled={!product.inStock}
+              disabled={!product.in_stock}
               onClick={handleAddToCart}
             >
               <ShoppingCart size={16} />

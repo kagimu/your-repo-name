@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Grid, List, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -7,11 +7,13 @@ import { EdumallInput } from '@/components/ui/EdumallInput';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CustomCursor } from '@/components/CustomCursor';
-import { products } from '../data/products';
+import axios from 'axios';
 
 const Categories = () => {
   const [searchParams] = useSearchParams();
   const initialFilter = searchParams.get('filter') || '';
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -21,21 +23,56 @@ const Categories = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [purchaseTypeFilter, setPurchaseTypeFilter] = useState<string>('');
   const navigate = useNavigate();
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/labs');
+      const labs = response.data.data.map(item => ({
+        ...item,
+        price: parseInt(item.price.replace(',', '')),
+        rating: parseFloat(item.rating),
+        in_stock: parseInt(item.in_stock) > 0,
+        avatar: item.avatar_url,
+        images: item.images_url
+      }));
+      setProducts(labs);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
+
+
+
 
   // Filter products based on search query and filters
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.category.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = !selectedCategory || product.category.toLowerCase() === selectedCategory.toLowerCase();
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-      const matchesStock = !inStockOnly || product.inStock;
-      const matchesPurchaseType = !purchaseTypeFilter || product.purchaseType === purchaseTypeFilter;
+  return products.filter(product => {
+    const name = product.name || '';
+    const category = product.category || '';
+    const price = product.price || 0;
+    const inStock = product.inStock ?? product.in_stock ?? true;
+    const purchaseType = product.purchaseType ?? product.purchase_type ?? '';
 
-      return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesPurchaseType;
-    });
-  }, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter]);
+    const matchesSearch =
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.toLowerCase().includes(searchQuery.toLowerCase());
 
+    const matchesCategory = !selectedCategory || category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+    const matchesStock = !inStockOnly || inStock;
+    const matchesPurchaseType = !purchaseTypeFilter || purchaseType === purchaseTypeFilter;
+
+    return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesPurchaseType;
+  });
+}, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
+
+  // Categories for quick filters
   const categories = ['Stationery', 'Laboratory', 'Sports', 'IT', 'Library'];
 
   return (
@@ -238,7 +275,7 @@ const Categories = () => {
             {/* Product Grid */}
             <div className="flex-1">
               <div className="mb-4 text-sm text-cyan-400 font-medium">
-                Showing {filteredProducts.length} of {products.length} products
+                Showing {filteredProducts.length} of {loading ? '...' : products.length} products
               </div>
 
               <motion.div 
