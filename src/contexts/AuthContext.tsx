@@ -28,39 +28,30 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+  const storedUser = localStorage.getItem('user');
+  return storedUser ? JSON.parse(storedUser) : null;
+});
 
-  // Load user from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
+  setUser(userData);
+  localStorage.setItem('user', JSON.stringify(userData)); // 👈 persist user
+};
+
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem('token'); // optional
   };
 
   const isAuthenticated = !!user;
 
-  const value = {
-    user,
-    login,
-    logout,
-    isAuthenticated,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
 };
+

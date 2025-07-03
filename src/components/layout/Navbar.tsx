@@ -270,7 +270,7 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 font-medium hidden lg:block">
-                  Hi, {user?.name}
+                    Hi, {user?.name ?? 'Guest'}
                 </span>
                 <Link to="/dashboard">
                   <EdumallButton variant="ghost" size="sm" className="text-gray-600 hover:text-teal-600 flex items-center gap-1">
