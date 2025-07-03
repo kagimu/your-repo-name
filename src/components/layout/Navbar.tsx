@@ -33,8 +33,8 @@ export const Navbar = () => {
     { path: '/categories', label: 'Our Products', icon: BookOpen, mobileLabel: 'Products' },
     { path: '/e-library', label: 'E-Library', icon: FileText, mobileLabel: 'Library' },
     { path: '/research', label: 'Research', icon: Search, mobileLabel: 'Research' },
-    { path: '/courier', label: 'Courier', icon: Truck, mobileLabel: 'Courier' },
-    { path: '/supplier', label: 'Supplier', icon: Users, mobileLabel: 'Supplier' },
+  /*{ path: '/courier', label: 'Courier', icon: Truck, mobileLabel: 'Courier' },
+    { path: '/supplier', label: 'Supplier', icon: Users, mobileLabel: 'Supplier' },*/
   ];
 
   const getSearchSuggestions = () => {
