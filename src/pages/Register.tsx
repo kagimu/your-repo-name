@@ -116,7 +116,7 @@ const Register = () => {
       type: accountType,
     });
 
-    navigate('/dashboard');
+    navigate('/categories');
   } catch (error) {
     console.error('Registration error:', error);
     alert('Registration failed. Please try again.');

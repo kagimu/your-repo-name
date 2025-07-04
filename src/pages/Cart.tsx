@@ -88,7 +88,7 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item, index) => (
                 <motion.div
-                  key={item.id}
+                  key={`${item.id}-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -97,7 +97,7 @@ const Cart = () => {
                   <div className="flex items-center gap-6">
                     <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-blue-100 rounded-xl overflow-hidden flex-shrink-0">
                       <img 
-                        src={item.image} 
+                        src={item.avatar} 
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />

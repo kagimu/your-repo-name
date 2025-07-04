@@ -49,7 +49,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const token = localStorage.getItem('token');
   try {
     await axios.post(
-      'http://127.0.0.1:8000/api/cart',
+      'http://127.0.0.1:8000/api/cart/add',
       {
         product_id: product.id,
         name: product.name,

@@ -43,6 +43,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        
       },
       body: JSON.stringify({
         email: formData.email,
@@ -59,6 +60,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // Store token
     localStorage.setItem('token', data.token);
+    console.log("Stored token:", localStorage.getItem('token'));
 
     // Store user in context and localStorage
    login({
@@ -66,7 +68,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       type: data.user.type as 'individual' | 'institution' | 'guest',
     });
 
-    navigate('/dashboard');
+    navigate('/categories');
   } catch (error) {
     console.error('Login error:', error);
     alert('Login failed. Please check your credentials.');

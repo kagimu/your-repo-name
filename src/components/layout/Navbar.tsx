@@ -15,7 +15,7 @@ export const Navbar = () => {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { isAuthenticated, user, logout } = useAuth();
-  const { getCartCount } = useCart();
+  const { getCartCount, clearCart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -85,7 +85,8 @@ export const Navbar = () => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     setTimeout(() => {
-      logout();
+      clearCart();     
+      logout();        
       setIsLoggingOut(false);
       navigate('/');
     }, 2000);
@@ -270,7 +271,7 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 font-medium hidden lg:block">
-                    Hi, {user?.name ?? 'Guest'}
+                    Hi, {user?.firstName ?? 'Guest'}
                 </span>
                 <Link to="/dashboard">
                   <EdumallButton variant="ghost" size="sm" className="text-gray-600 hover:text-teal-600 flex items-center gap-1">

@@ -1,5 +1,5 @@
-
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useCart } from '@/contexts/CartContext'; // Make sure CartContext does not use useAuth internally to avoid circular dependency
 
 interface User {
   id: string;
@@ -12,7 +12,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
+  token: string | null;
+  login: (userData: User, token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -29,29 +30,36 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-  const storedUser = localStorage.getItem('user');
-  return storedUser ? JSON.parse(storedUser) : null;
-});
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('token');
+  });
 
-  const login = (userData: User) => {
-  setUser(userData);
-  localStorage.setItem('user', JSON.stringify(userData)); // 👈 persist user
-};
+  const { clearCart } = useCart(); // ✅ useCart inside component, not inside logout
 
+  const login = (userData: User, authToken: string) => {
+    setUser(userData);
+    setToken(authToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', authToken);
+  };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('token'); // optional
+    localStorage.removeItem('token');
+    clearCart(); // ✅ clear cart on logout
   };
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
 };
-

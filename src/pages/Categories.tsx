@@ -29,7 +29,7 @@ useEffect(() => {
       const response = await axios.get('http://127.0.0.1:8000/api/labs');
       const labs = response.data.data.map(item => ({
         ...item,
-        price: parseInt(item.price.replace(',', '')),
+        price: parseInt(item.price),
         rating: parseFloat(item.rating),
         in_stock: parseInt(item.in_stock) > 0,
         avatar: item.avatar_url,

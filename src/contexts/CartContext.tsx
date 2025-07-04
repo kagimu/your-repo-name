@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import { useAuth } from './AuthContext';
 
 interface CartItem {
   id: number;
@@ -33,13 +34,15 @@ export const useCart = () => {
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { token } = useAuth();
 
-  const token = localStorage.getItem('token'); // adjust auth logic as needed
-
-  // Fetch cart items from API on mount
   useEffect(() => {
     const fetchCart = async () => {
       try {
+        if (!token) {
+          setItems([]); // Clear cart if no token (logged out)
+          return;
+        }
         const response = await axios.get<{ cart: CartItem[] }>('http://127.0.0.1:8000/api/cart', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -48,20 +51,24 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error('Error fetching cart:', error);
       }
     };
+
     fetchCart();
   }, [token]);
 
   const addToCart = async (product: CartItem) => {
     try {
-      // Example API call - adjust endpoint and payload as per your backend
-      await axios.post('http://127.0.0.1:8000/api/cart', { product_id: product.id, quantity: 1 }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Update local state by refetching or optimistic update:
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+      await axios.post(
+        'http://127.0.0.1:8000/api/cart/add',
+        { product_id: product.id, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setItems(prev => {
         const existing = prev.find(i => i.id === product.id);
         if (existing) {
-          return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+          return prev.map(i => (i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
         }
         return [...prev, { ...product, quantity: 1 }];
       });
@@ -72,6 +79,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const removeFromCart = async (id: number) => {
     try {
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
       await axios.delete(`http://127.0.0.1:8000/api/cart/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -87,10 +97,15 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
     try {
-      await axios.put(`http://127.0.0.1:8000/api/cart/${id}`, { quantity }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+      await axios.put(
+        `http://127.0.0.1:8000/api/cart/${id}`,
+        { quantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setItems(prev => prev.map(item => (item.id === id ? { ...item, quantity } : item)));
     } catch (error) {
       console.error('Error updating quantity:', error);
     }
@@ -98,23 +113,23 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const clearCart = () => {
     setItems([]);
-    // Optionally also clear on backend if you have that API endpoint
   };
 
   const getCartCount = () => items.reduce((sum, item) => sum + item.quantity, 0);
-
   const getCartTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{
-      items,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      getCartCount,
-      getCartTotal
-    }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        getCartCount,
+        getCartTotal
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
