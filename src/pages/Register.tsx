@@ -96,7 +96,8 @@ const Register = () => {
       body: JSON.stringify({
         accountType,
         ...formData,
-        password_confirmation: formData.confirmPassword,
+         paymentMethods: formData.paymentMethods.join(','), // 👈 convert array to string
+
       }),
     });
 
@@ -108,13 +109,20 @@ const Register = () => {
 
     const result = await response.json();
     console.log('Registration successful:', result);
+    localStorage.setItem('token', result.token);
 
+    // ✅ Store token in localStorage
+    localStorage.setItem('token', result.token);
+
+    // ✅ Login with token
     login({
       id: result.user.id,
       name: `${result.user.firstName} ${result.user.lastName}`,
       email: result.user.email,
       type: accountType,
-    });
+      phone: result.user.phone,
+      firstName: result.user.firstName,
+    }, result.token); // ← pass token here too
 
     navigate('/categories');
   } catch (error) {
@@ -260,14 +268,21 @@ const Register = () => {
               <p className="text-gray-600">Who should we contact for this account?</p>
             </div>
             
-            <EdumallInput
-              label="Administrator Name"
-              value={formData.adminName}
-              onChange={(e) => handleInputChange('adminName', e.target.value)}
-              placeholder="Enter administrator name"
+           <EdumallInput
+              label="First Name"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange('firstName', e.target.value)}
+              placeholder="Enter first name"
               required
             />
 
+            <EdumallInput
+              label="Last Name"
+              value={formData.lastName}
+              onChange={(e) => handleInputChange('lastName', e.target.value)}
+              placeholder="Enter last name"
+              required
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
               <select
@@ -296,8 +311,8 @@ const Register = () => {
             <EdumallInput
               label="Email Address"
               type="email"
-              value={formData.adminEmail}
-              onChange={(e) => handleInputChange('adminEmail', e.target.value)}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="Enter email address"
               required
             />
@@ -305,8 +320,8 @@ const Register = () => {
             <EdumallInput
               label="Phone Number"
               type="tel"
-              value={formData.adminPhone}
-              onChange={(e) => handleInputChange('adminPhone', e.target.value)}
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
               placeholder="Enter phone number"
               required
             />
