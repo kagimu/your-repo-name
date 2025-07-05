@@ -39,42 +39,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     }).format(price);
   };
 
- const handleAddToCart = async () => {
-  const token = localStorage.getItem('token');
+  const handleAddToCart = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to add to cart.');
+        return;
+      }
 
-  if (!token) {
-    alert('Please log in to add to cart.');
-    return;
-  }
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.avatar_url || product.images_url?.[0] || '/placeholder.svg',
+        category: product.category,
+        unit: product.unit,
+      });
+    };
 
-  const cartItem = {
-    product_id: product.id,
-    quantity: 1,
-  };
-
-  try {
-    await axios.post('http://127.0.0.1:8000/api/cart/add', cartItem, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    // Update UI cart context
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.avatar_url || product.images_url?.[0] || '/placeholder.svg',
-      category: product.category,
-      unit: product.unit,
-    });
-  } catch (error) {
-    console.error('Failed to add to cart via API:', error);
-  }
-};
 
 
 

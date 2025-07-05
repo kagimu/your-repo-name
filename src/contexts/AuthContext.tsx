@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useCart } from '@/contexts/CartContext'; // Make sure CartContext does not use useAuth internally to avoid circular dependency
+import { useCart } from './CartContext';
 
 interface User {
   id: string;
@@ -38,8 +38,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return localStorage.getItem('token');
   });
 
-  const { clearCart } = useCart(); // ✅ useCart inside component, not inside logout
-
   const login = (userData: User, authToken: string) => {
     setUser(userData);
     setToken(authToken);
@@ -52,10 +50,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    clearCart(); // ✅ clear cart on logout
+
+    try {
+      const { clearCart } = require('./CartContext').useCart();
+      clearCart();
+    } catch (error) {
+      console.warn('Cart context not ready when logging out.');
+    }
   };
 
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>

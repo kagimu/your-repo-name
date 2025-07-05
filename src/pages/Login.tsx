@@ -34,69 +34,69 @@ const Login = () => {
   };
 
  
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoggingIn(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoggingIn(true);
 
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
 
-    if (!response.ok) {
-      throw new Error('Invalid credentials');
-    }
+        if (!response.ok) {
+          throw new Error('Invalid credentials');
+        }
 
-    // 🟢 Properly type the response
-    const data: { token: string; user: User } = await response.json();
+        const data: { token: string; user: User } = await response.json();
 
-    // Store token
-    localStorage.setItem('token', data.token);
-    console.log("Stored token:", localStorage.getItem('token'));
+        // Save token in localStorage (optional because login should do this too)
+        localStorage.setItem('token', data.token);
 
-    // Store user in context and localStorage
-   login({
-      ...data.user,
-      type: data.user.type as 'individual' | 'institution' | 'guest',
-    });
+        // Call login with user AND token
+        login(
+          {
+            ...data.user,
+            type: data.user.type as 'individual' | 'institution' | 'guest',
+          },
+          data.token
+        );
 
-    navigate('/categories');
-  } catch (error) {
-    console.error('Login error:', error);
-    alert('Login failed. Please check your credentials.');
-  } finally {
-    setIsLoggingIn(false);
-  }
-};
+        navigate('/categories');
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please check your credentials.');
+      } finally {
+        setIsLoggingIn(false);
+      }
+    };
 
 
 
-  const handleGoogleLogin = async () => {
-    setIsLoggingIn(true);
-    
-    // Simulate Google login - defaults to individual user
-    setTimeout(() => {
-      const userData = {
-        id: '2',
-        name: 'Google User',
-        email: 'user@gmail.com',
-        type: 'individual' as const,
-        userType: 'Parent' // Default for Google login users
-      };
-      
-      login(userData);
-      setIsLoggingIn(false);
-      navigate('/dashboard');
-    }, 2000);
-  };
+
+    const handleGoogleLogin = async () => {
+      setIsLoggingIn(true);
+      setTimeout(() => {
+        const userData = {
+          id: '2',
+          name: 'Google User',
+          email: 'user@gmail.com',
+          type: 'individual' as const,
+          userType: 'Parent',
+        };
+        const fakeToken = 'google-oauth-fake-token';
+        login(userData, fakeToken);
+        setIsLoggingIn(false);
+        navigate('/dashboard');
+      }, 2000);
+    };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">

@@ -25,6 +25,7 @@ import Supplier from "./pages/Supplier";
 import NotFound from "./pages/NotFound";
 import AboutUs from "./pages/AboutUs";
 import RoleGuard from "./components/layout/RoleGuard";
+import PaymentSuccess from './components/checkout/PaymentSuccess';
 
 const queryClient = new QueryClient();
 
@@ -43,8 +44,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CartProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <CartProvider>
             <Toaster />
             <Sonner />
             <AnimatePresence mode="wait">
@@ -65,6 +66,8 @@ const App = () => {
                     <Route path="/research" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Research /></RoleGuard>} />
                     <Route path="/notifications" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Notifications /></RoleGuard>} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
+
                     <Route path="/register" element={<Register />} />
                     <Route path="/dashboard" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Dashboard /></RoleGuard>} />
                     <Route path="/about-us" element={<AboutUs />} />
@@ -74,8 +77,8 @@ const App = () => {
                 </BrowserRouter>
               )}
             </AnimatePresence>
-          </AuthProvider>
-        </CartProvider>
+          </CartProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

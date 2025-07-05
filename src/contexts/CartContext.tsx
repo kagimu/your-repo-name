@@ -3,12 +3,12 @@ import axios from 'axios';
 import { useAuth } from './AuthContext';
 
 interface CartItem {
-  id: number;
+  id: number;                 // This represents product_id from API
   name: string;
   price: number;
   quantity: number;
-  image: string;
-  category: string;
+  image: string;              // This is the "avatar" field from API
+  category?: string;
   unit?: string;
 }
 
@@ -36,76 +36,83 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [items, setItems] = useState<CartItem[]>([]);
   const { token } = useAuth();
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        if (!token) {
-          setItems([]); // Clear cart if no token (logged out)
-          return;
-        }
-        const response = await axios.get<{ cart: CartItem[] }>('http://127.0.0.1:8000/api/cart', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setItems(response.data.cart || []);
-      } catch (error) {
-        console.error('Error fetching cart:', error);
-      }
-    };
+  const fetchCart = async () => {
+    if (!token) {
+      setItems([]);
+      return;
+    }
 
+    try {
+      const response = await axios.get<{ cart: any[] }>('http://127.0.0.1:8000/api/cart', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const cartData: CartItem[] = response.data.cart.map((item) => ({
+        id: item.product_id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.avatar,
+        category: item.category || '',
+        unit: item.unit || '',
+      }));
+
+      setItems(cartData);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchCart();
   }, [token]);
 
   const addToCart = async (product: CartItem) => {
+    if (!token) {
+      console.warn('User not authenticated');
+      return;
+    }
+
     try {
-      if (!token) {
-        throw new Error('User not authenticated');
-      }
       await axios.post(
         'http://127.0.0.1:8000/api/cart/add',
         { product_id: product.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setItems(prev => {
-        const existing = prev.find(i => i.id === product.id);
-        if (existing) {
-          return prev.map(i => (i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
-        }
-        return [...prev, { ...product, quantity: 1 }];
-      });
+      await fetchCart();
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   };
 
-  const removeFromCart = async (id: number) => {
+  const removeFromCart = async (productId: number) => {
+    if (!token) return;
+
     try {
-      if (!token) {
-        throw new Error('User not authenticated');
-      }
-      await axios.delete(`http://127.0.0.1:8000/api/cart/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.delete(`http://127.0.0.1:8000/api/cart/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setItems(prev => prev.filter(item => item.id !== id));
+      await fetchCart();
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
   };
 
-  const updateQuantity = async (id: number, quantity: number) => {
+  const updateQuantity = async (productId: number, quantity: number) => {
+    if (!token) return;
+
     if (quantity <= 0) {
-      await removeFromCart(id);
+      await removeFromCart(productId);
       return;
     }
+
     try {
-      if (!token) {
-        throw new Error('User not authenticated');
-      }
       await axios.put(
-        `http://127.0.0.1:8000/api/cart/${id}`,
+        `http://127.0.0.1:8000/api/cart/${productId}`,
         { quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setItems(prev => prev.map(item => (item.id === id ? { ...item, quantity } : item)));
+      await fetchCart();
     } catch (error) {
       console.error('Error updating quantity:', error);
     }
@@ -127,7 +134,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateQuantity,
         clearCart,
         getCartCount,
-        getCartTotal
+        getCartTotal,
       }}
     >
       {children}

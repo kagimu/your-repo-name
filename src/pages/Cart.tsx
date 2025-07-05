@@ -7,8 +7,21 @@ import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface CheckoutResponse {
+  order: {
+    id: number;
+    // Add other fields if needed
+  };
+}
+
+interface PaymentResponse {
+  payment_link: string;
+}
 
 const Cart = () => {
+ const { token } = useAuth(); // ✅ Get token
   const { items, updateQuantity, removeFromCart, getCartTotal } = useCart();
 
   const formatPrice = (price: number) => {
@@ -22,6 +35,36 @@ const Cart = () => {
   const deliveryFee = 10000;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
+
+  const handleCheckout = async () => {
+  try {
+    // Step 1: Create order
+    const res = await axios.post<CheckoutResponse>(
+      'http://127.0.0.1:8000/api/checkout',
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const order = res.data.order;
+
+    // Step 2: Initiate payment
+    const payRes = await axios.post<PaymentResponse>(
+      'http://127.0.0.1:8000/api/pay',
+      { order_id: order.id, amount: total },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const paymentInfo = payRes.data;
+
+    // Step 3: Redirect to Flutterwave
+    window.location.href = paymentInfo.payment_link;
+  } catch (err) {
+    console.error(err);
+    alert('Checkout failed.');
+  }
+};
+
+
+
 
   if (items.length === 0) {
     return (
@@ -97,7 +140,7 @@ const Cart = () => {
                   <div className="flex items-center gap-6">
                     <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-blue-100 rounded-xl overflow-hidden flex-shrink-0">
                       <img 
-                        src={item.avatar} 
+                        src={item.image} 
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
@@ -175,10 +218,11 @@ const Cart = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Link to="/checkout" className="block">
+                  <Link to="/checkout" state={{ subtotal, deliveryFee, total }} className="block">
                     <EdumallButton 
                       variant="primary" 
                       size="lg" 
+                      //onClick={handleCheckout}
                       className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white"
                     >
                       Proceed to Checkout
