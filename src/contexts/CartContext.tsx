@@ -89,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!token) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/cart/${productId}`, {
+      await axios.delete(`http://127.0.0.1:8000/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchCart();
