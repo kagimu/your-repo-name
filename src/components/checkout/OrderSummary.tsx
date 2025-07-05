@@ -93,7 +93,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             
             <div className="flex items-center gap-2 text-teal-600">
               <Clock size={16} />
-              <span className="font-medium">Est. delivery: 2-3 days</span>
+              <span className="font-medium">Est. delivery: 1-2 days</span>
             </div>
           </div>
         </div>

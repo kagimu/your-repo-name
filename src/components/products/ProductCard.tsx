@@ -73,7 +73,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
       'Category': product.category,
       'Availability': product.in_stock ? 'In Stock' : 'Out of Stock',
       'Rating': product.rating.toString()
-    }
+    },
+    images: product.images_url || [product.avatar_url || '/placeholder.svg'],
+    inStock: product.in_stock,
+    description: product.desc || `High-quality ${product.name} perfect for educational use.`
   };
 
   if (viewMode === 'list') {

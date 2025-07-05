@@ -64,6 +64,8 @@ const Login = () => {
           {
             ...data.user,
             type: data.user.type as 'individual' | 'institution' | 'guest',
+            firstName: '',
+            phone: ''
           },
           data.token
         );
@@ -89,6 +91,8 @@ const Login = () => {
           email: 'user@gmail.com',
           type: 'individual' as const,
           userType: 'Parent',
+          firstName: '',
+          phone: ''
         };
         const fakeToken = 'google-oauth-fake-token';
         login(userData, fakeToken);

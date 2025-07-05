@@ -244,7 +244,7 @@ export const Navbar = () => {
               </div>
 
               {/* Notifications */}
-              {isAuthenticated && (
+              {/* {isAuthenticated && (
                 <Link to="/notifications">
                   <motion.div
                     className="relative p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
@@ -264,7 +264,7 @@ export const Navbar = () => {
                     )}
                   </motion.div>
                 </Link>
-              )}
+              )} */}
 
               {/* Cart */}
               <Link to="/cart">

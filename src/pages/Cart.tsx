@@ -305,7 +305,7 @@ const Cart = () => {
                   <div className="text-sm text-blue-700 space-y-2">
                     <div className="flex items-center">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                      Free delivery on orders over UGX 50,000
+                      Free delivery on orders over UGX 1,000,000
                     </div>
                     <div className="flex items-center">
                       <div className="w-2 h-2 bg-teal-500 rounded-full mr-2"></div>

@@ -227,7 +227,7 @@ const Checkout = () => {
                       <EdumallButton
                         onClick={handleConfirmPayOnDelivery}
                         disabled={confirmingPayOnDelivery}
-                        variant="warning"
+                        variant="secondary"
                         size="md"
                         className="w-full"
                       >
