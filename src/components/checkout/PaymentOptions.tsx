@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Banknote, CheckCircle, Smartphone } from 'lucide-react';
+import { Banknote, CheckCircle, Smartphone, HandCoins } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 
 interface CustomerInfo {
@@ -28,21 +28,23 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
 
   const [selectedMethod, setSelectedMethod] = useState<string>('airtel');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPendingMessage, setShowPendingMessage] = useState(false);
 
   const paymentMethods = [
-    {
-      id: 'airtel',
-      name: 'Airtel Money',
-      icon: Smartphone,
-      color: 'from-red-600 to-orange-500',
-      description: 'Pay with Airtel Money mobile wallet',
-    },
+    
     {
       id: 'mtn',
-      name: 'MTN Mobile Money',
+      name: 'MTN & Airtel Mobile Money',
       icon: Smartphone,
       color: 'from-yellow-500 to-yellow-600',
       description: 'Pay with MTN Mobile Money',
+    },
+    {
+      id: 'cod',
+      name: 'Pay on Delivery',
+      icon: HandCoins,
+      color: 'from-gray-600 to-gray-800',
+      description: 'Pay cash when the order is delivered',
     },
   ];
 
@@ -53,7 +55,6 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
       minimumFractionDigits: 0,
     }).format(price);
 
-  // Load Flutterwave inline script dynamically
   const loadFlutterwaveScript = () =>
     new Promise<void>((resolve, reject) => {
       if (document.getElementById('flutterwave-script')) {
@@ -70,18 +71,30 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
 
   const handlePayment = async () => {
     if (!selectedMethod) return;
-    setIsProcessing(true);
 
+    // Handle Pay on Delivery
+    if (selectedMethod === 'cod') {
+      setShowPendingMessage(true); // Show the pending message
+      onPaymentComplete({
+        method: selectedMethod,
+        amount: total,
+        status: 'pending',
+        note: 'Payment will be collected upon delivery',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Handle Flutterwave payments
+    setIsProcessing(true);
     try {
       await loadFlutterwaveScript();
-
-      // @ts-ignore
       const FlutterwaveCheckout = (window as any).FlutterwaveCheckout;
 
       if (!FlutterwaveCheckout) throw new Error('Flutterwave not loaded');
 
       FlutterwaveCheckout({
-        public_key: 'FLWPUBK_TEST-d6243ebe0ede1b800000af4bfcae6dc0-X', // replace with your key
+        public_key: 'FLWPUBK_TEST-d6243ebe0ede1b800000af4bfcae6dc0-X',
         tx_ref: `txref-${Date.now()}`,
         amount: total,
         currency: 'UGX',
@@ -94,7 +107,7 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         customizations: {
           title: 'Edumall Payment',
           description: `Payment for your order of ${formatPrice(total)}`,
-          logo: 'http://localhost:8080/img/logo.png', // replace with your logo url
+          logo: 'http://localhost:8080/img/logo.png',
         },
         callback: (response: any) => {
           setIsProcessing(false);
@@ -107,7 +120,7 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
               timestamp: new Date().toISOString(),
             });
           } else {
-            alert('Payment was not successful. Please try again.');
+            alert('Payment was not successful.');
           }
         },
         onclose: () => {
@@ -116,7 +129,7 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
       });
     } catch (error) {
       setIsProcessing(false);
-      alert('Payment initialization failed. Please try again later.');
+      alert('Failed to initiate payment.');
       console.error(error);
     }
   };
@@ -177,8 +190,20 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
         disabled={!isFormValid() || isProcessing}
       >
-        {isProcessing ? 'Processing Payment...' : `Pay ${formatPrice(total)}`}
+        {isProcessing
+          ? 'Processing...'
+          : selectedMethod === 'cod'
+          ? 'Place Order (Pay on Delivery)'
+          : `Pay ${formatPrice(total)}`}
       </EdumallButton>
+
+      {/* Pending Payment Message */}
+      {showPendingMessage && (
+        <div className="mt-6 bg-yellow-100 border border-yellow-300 text-yellow-800 p-4 rounded-xl text-center">
+          <p className="font-semibold">Your order has been placed and is pending payment upon delivery.</p>
+          <p className="text-sm mt-1">You’ll receive a notification once payment is confirmed.</p>
+        </div>
+      )}
     </motion.div>
   );
 };

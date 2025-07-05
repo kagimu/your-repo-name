@@ -8,6 +8,60 @@ import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useRef } from 'react';
+
+interface QuantityInputProps {
+  itemId: string | number;
+  quantity: number;
+  updateQuantity: (id: string | number, qty: number) => void;
+}
+
+const QuantityInput: React.FC<QuantityInputProps> = ({ itemId, quantity, updateQuantity }) => {
+  const [inputValue, setInputValue] = useState(quantity.toString());
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setInputValue(quantity.toString());
+  }, [quantity]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^\d*$/.test(val)) {
+      setInputValue(val);
+
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+      debounceTimeout.current = setTimeout(() => {
+        const parsed = parseInt(val, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          updateQuantity(itemId, parsed);
+        }
+      }, 500);
+    }
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(inputValue, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      updateQuantity(itemId, parsed);
+    } else {
+      setInputValue(quantity.toString());
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={inputValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className="w-16 text-center rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+      inputMode="numeric"
+      pattern="[0-9]*"
+    />
+  );
+};
+
 
 interface CheckoutResponse {
   order: {
@@ -155,16 +209,20 @@ const Cart = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-3">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                         className="w-8 h-8 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-all"
                       >
                         <Minus size={16} />
                       </button>
-                      
-                      <span className="text-gray-900 font-medium w-8 text-center">{item.quantity}</span>
-                      
+
+                      <QuantityInput 
+                        itemId={item.id} 
+                        quantity={item.quantity} 
+                        updateQuantity={updateQuantity} 
+                      />
+
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="w-8 h-8 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-all"
@@ -172,6 +230,7 @@ const Cart = () => {
                         <Plus size={16} />
                       </button>
                     </div>
+
 
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900 mb-2">
