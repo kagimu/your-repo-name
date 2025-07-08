@@ -10,7 +10,7 @@ interface OrderSummaryProps {
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({ 
-  items, 
+  items = [], 
   total, 
   deliveryDetails 
 }) => {
@@ -21,9 +21,6 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       minimumFractionDigits: 0
     }).format(price);
   };
-
-  const deliveryFee = 15000;
-  const grandTotal = total + deliveryFee;
 
   return (
     <motion.div
@@ -65,15 +62,18 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <span className="text-gray-600">Subtotal</span>
           <span className="text-gray-900">{formatPrice(total)}</span>
         </div>
-        
+
+        {/* Optional: Keep this line if you want to show the delivery fee for info */}
+        {/* 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Delivery Fee</span>
-          <span className="text-gray-900">{formatPrice(deliveryFee)}</span>
-        </div>
-        
+          <span className="text-gray-900">{formatPrice(15000)}</span>
+        </div> 
+        */}
+
         <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-3">
           <span className="text-gray-900">Total</span>
-          <span className="text-teal-600">{formatPrice(grandTotal)}</span>
+          <span className="text-teal-600">{formatPrice(total)}</span>
         </div>
       </div>
 
@@ -81,7 +81,6 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       {deliveryDetails && (
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 mb-3">Delivery Details</h4>
-          
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-start gap-2">
               <MapPin size={16} className="mt-0.5 text-gray-400" />
@@ -90,7 +89,6 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
                 <p>{deliveryDetails.city}, {deliveryDetails.district}</p>
               </div>
             </div>
-            
             <div className="flex items-center gap-2 text-teal-600">
               <Clock size={16} />
               <span className="font-medium">Est. delivery: 1-2 days</span>
@@ -109,3 +107,4 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
     </motion.div>
   );
 };
+
