@@ -15,7 +15,7 @@ const Categories = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = searchParams.get('search') || '';
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilter);
@@ -78,7 +78,7 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
       <CustomCursor />
-      <Navbar />
+      <Navbar/>
       
       <main className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

@@ -81,9 +81,9 @@ const Cart = () => {
     }
   };
 
-  const deliveryFee = 10000;
+  //const deliveryFee = 10000;
   const subtotal = getCartTotal();
-  const total = subtotal + deliveryFee;
+  const total = subtotal;
 
   if (items.length === 0) {
     return (
@@ -165,8 +165,9 @@ const Cart = () => {
                   </div>
                   <div className="flex justify-between text-gray-700">
                     <span>Delivery Fee</span>
-                    <span>{formatPrice(deliveryFee)}</span>
+                    <span className="text-gray-500 italic">To be confirmed</span>
                   </div>
+
                   <div className="border-t border-gray-200 pt-4">
                     <div className="flex justify-between text-xl font-bold text-gray-900">
                       <span>Total</span>
@@ -174,7 +175,7 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                <Link to="/checkout" state={{ subtotal, deliveryFee, total }} className="block">
+                <Link to="/checkout" state={{ subtotal }} className="block">
                   <EdumallButton variant="primary" size="lg" className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white">
                     Proceed to Checkout
                     <ArrowRight size={18} className="ml-2" />
