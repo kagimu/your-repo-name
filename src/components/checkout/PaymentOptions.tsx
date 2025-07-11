@@ -100,9 +100,10 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         currency: 'UGX',
         payment_options: 'mobilemoneyuganda',
         customer: {
+          name: customer.name,
           email: customer.email,
           phonenumber: customer.phone,
-          name: customer.name,
+          
         },
         customizations: {
           title: 'Edumall Payment',

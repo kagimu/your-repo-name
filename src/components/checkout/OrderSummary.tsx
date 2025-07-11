@@ -5,12 +5,17 @@ import { Package, Clock, MapPin } from 'lucide-react';
 
 interface OrderSummaryProps {
   items: any[];
+  subtotal: number;
+  deliveryFee: number;
   total: number;
   deliveryDetails?: any;
 }
 
+
 export const OrderSummary: React.FC<OrderSummaryProps> = ({ 
   items = [], 
+  subtotal,
+  deliveryFee,
   total, 
   deliveryDetails 
 }) => {
@@ -60,22 +65,20 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <div className="border-t border-gray-200 pt-4 space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal</span>
-          <span className="text-gray-900">{formatPrice(total)}</span>
+          <span className="text-gray-900">{formatPrice(subtotal)}</span>
         </div>
 
-        {/* Optional: Keep this line if you want to show the delivery fee for info */}
-        {/* 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Delivery Fee</span>
-          <span className="text-gray-900">{formatPrice(15000)}</span>
-        </div> 
-        */}
+          <span className="text-gray-900">{formatPrice(deliveryFee)}</span>
+        </div>
 
         <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-3">
           <span className="text-gray-900">Total</span>
           <span className="text-teal-600">{formatPrice(total)}</span>
         </div>
       </div>
+
 
       {/* Delivery Info */}
       {deliveryDetails && (

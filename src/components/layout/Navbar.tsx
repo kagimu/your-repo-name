@@ -140,9 +140,9 @@ export const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center group">
               <motion.img
-                src="/img/logo.png"
+                src="/img/Edumall.png"
                 alt="Edumall"
-                className="h-20 w-20 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
+                className="h-24 w-24 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
                 whileHover={{ rotate: 5, scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               />
@@ -153,18 +153,18 @@ export const Navbar = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.path);
-                const isProducts = item.path === '/categories' && location.pathname === '/categories';
+                const isProducts = item.path === '/categories' && location.pathname.startsWith('/categories');
 
                 return (
                   <Link key={item.path} to={item.path}>
                     <motion.div
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md'
-                          : isProducts
-                          ? 'text-white'
-                          : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
-                      }`}
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                            isProducts || isActive
+                              ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md font-semibold'
+                              : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
+                          }`}
+                        
+
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -181,18 +181,17 @@ export const Navbar = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.path);
-                const isProducts = item.path === '/categories' && location.pathname === '/categories';
+                const isProducts = item.path === '/categories' && location.pathname.startsWith('/categories');
 
                 return (
                   <Link key={item.path} to={item.path}>
                     <motion.div
-                      className={`flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md'
-                          : isProducts
-                          ? 'text-white'
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                        isProducts || isActive
+                          ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md font-semibold'
                           : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
                       }`}
+                  
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -209,15 +208,22 @@ export const Navbar = () => {
               {/* Search with Suggestions */}
               <div className="hidden sm:block relative">
                 <motion.div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={handleSearchFocus}
-                    onBlur={handleSearchBlur}
-                    placeholder="Search products..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 w-64"
-                  />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      navigate(`/categories?search=${encodeURIComponent(searchQuery)}`);
+                      setShowSearchSuggestions(false);
+                    }
+                  }}
+                  placeholder="Search products..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 w-64"
+                />
+
                   <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </motion.div>
 
@@ -273,12 +279,19 @@ export const Navbar = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <ShoppingCart size={20} />
+                  <Link to="/Cart" className="flex items-center group">
+                  <img
+                    src="/img/Cart.png"
+                    alt="Cart"
+                    className="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
+                    
+                  />
+                </Link>
                   {cartItemCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-lg"
+                      className="absolute top-2 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-lg"
                       style={{ fontSize: '10px', padding: '2px' }}
                     >
                       {cartItemCount > 99 ? '99+' : cartItemCount}
@@ -350,7 +363,7 @@ export const Navbar = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.path);
-                const isProducts = item.path === '/categories' && location.pathname === '/categories';
+                const isProducts = item.path === '/categories' && location.pathname.startsWith('/categories');
 
                 return (
                   <Link key={item.path} to={item.path} onClick={() => setIsMenuOpen(false)}>
