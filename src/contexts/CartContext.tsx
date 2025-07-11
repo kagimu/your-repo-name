@@ -43,7 +43,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const response = await axios.get<{ cart: any[] }>('http://127.0.0.1:8000/api/cart', {
+      const response = await axios.get<{ cart: any[] }>('https://edumall-admin.up.railway.app/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +75,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.post(
-        'http://127.0.0.1:8000/api/cart/add',
+        'https://edumall-admin.up.railway.app/api/cart/add',
         { product_id: product.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!token) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/cart/remove/${productId}`, {
+      await axios.delete(`https://edumall-admin.up.railway.app/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchCart();
@@ -108,7 +108,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.put(
-        `http://127.0.0.1:8000/api/cart/${productId}`,
+        `https://edumall-admin.up.railway.app/api/cart/${productId}`,
         { quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );

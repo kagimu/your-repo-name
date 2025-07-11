@@ -82,11 +82,11 @@ const Register = () => {
 
   try {
     // Fetch CSRF cookie if required
-    await fetch('http://127.0.0.1:8000/sanctum/csrf-cookie', {
+    await fetch('https://edumall-admin.up.railway.app/sanctum/csrf-cookie', {
       credentials: 'include',
     });
 
-    const response = await fetch('http://127.0.0.1:8000/api/register', {
+    const response = await fetch('https://edumall-admin.up.railway.app/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

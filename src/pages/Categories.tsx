@@ -26,7 +26,7 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/labs');
+      const response = await axios.get('https://edumall-admin.up.railway.app/api/labs');
       const labs = response.data.data.map(item => ({
         ...item,
         price: parseInt(item.price),
