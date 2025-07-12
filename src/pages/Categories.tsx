@@ -73,7 +73,7 @@ useEffect(() => {
 }, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
 
   // Categories for quick filters
-  const categories = ['Stationery', 'Laboratory', 'Sports', 'IT', 'Library'];
+  const categories = ['Specimen', 'Apparatus', 'Chemical'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
