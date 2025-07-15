@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
@@ -11,7 +10,7 @@ interface Product {
   name: string;
   price: number;
   avatar_url?: string;
-  images: string[];
+  images_url?: string[];
   category: string;
   inStock: boolean;
   rating: number;
@@ -46,35 +45,39 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleAddToCart = async () => {
-  const token = localStorage.getItem('token');
-  try {
-    await axios.post(
-      'http://127.0.0.1:8000/api/cart/add',
-      {
-        product_id: product.id,
-        name: product.name,
-        avatar_url: product.avatar_url || product.images[0],
-        quantity: quantity
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("User is not authenticated");
+      return;
+    }
+
+    try {
+      await axios.post(
+        'https://edumall-admin.up.railway.app/api/cart/add',
+        {
+          product_id: product.id,
+          name: product.name,
+          avatar_url: product.avatar_url || product.images_url?.[0],
+          quantity: quantity
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      }
-    );
+      );
 
-    addToCart({
-      ...product,
-      image: product.images[0],
-      quantity
-    });
+      addToCart({
+        ...product,
+        image: product.images_url?.[0],
+        quantity
+      });
 
-    onClose();
-  } catch (error) {
-    console.error('Failed to add to cart:', error);
-  }
-};
-
+      onClose();
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -108,13 +111,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div className="space-y-4">
                 <div className="aspect-square bg-gray-200 rounded-2xl overflow-hidden">
                   <img
-                    src={product.images[selectedImage]}
+                    src={product.images_url?.[selectedImage]}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain transition-transform duration-300"
                   />
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {product.images.map((image, index) => (
+                  {product.images_url?.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
@@ -125,7 +128,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       <img
                         src={image}
                         alt={`${product.name} ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </button>
                   ))}

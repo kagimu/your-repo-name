@@ -73,10 +73,10 @@ useEffect(() => {
 }, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
 
   // Categories for quick filters
-  const categories = ['Stationery', 'Laboratory', 'Sports', 'IT', 'Library'];
+  const categories = ['Specimen', 'Apparatus', 'Chemical'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+    <div className="min-h-screen">
       <CustomCursor />
       <Navbar/>
       
@@ -85,9 +85,9 @@ useEffect(() => {
           {/* Breadcrumb */}
           <nav className="mb-6">
             <ol className="flex items-center space-x-2 text-sm text-purple-200">
-              <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
+              <li><a href="/" className="text-black">Home</a></li>
               <li>/</li>
-              <li className="text-cyan-400 font-medium">All Categories</li>
+              <li className="text-cyan-500 font-medium">All Categories</li>
             </ol>
           </nav>
 
@@ -97,10 +97,10 @@ useEffect(() => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Educational Supplies
             </h1>
-            <p className="text-lg text-purple-200 max-w-2xl">
+            <p className="text-lg text-gray-600 max-w-2xl">
               Discover our comprehensive range of educational supplies for institutions and individuals.
             </p>
           </motion.div>
@@ -110,7 +110,7 @@ useEffect(() => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-purple-900/40 via-blue-900/40 to-indigo-900/40 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-purple-300/20 shadow-xl"
+            className="bg-white backdrop-blur-xl rounded-2xl p-6 mb-8 border border-[#64b3f4] shadow-xl"
           >
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex-1 max-w-md">
@@ -119,7 +119,7 @@ useEffect(() => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   icon={<Search size={20} />}
-                  className="bg-white/10 border-purple-300/30 text-white placeholder-purple-200 focus:border-cyan-400"
+                  className="bg-white/10 border-[#64b3f4] text-white placeholder-gray-300 focus:border-[#64b3f4]"
                 />
               </div>
               
@@ -128,7 +128,7 @@ useEffect(() => {
                   variant="secondary"
                   size="md"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="md:hidden bg-white/10 border-purple-300/30 text-purple-200 hover:text-white"
+                  className="md:hidden bg-white border-[#64b3f4] text-white hover:text-white"
                 >
                   <Filter size={20} />
                   Filters
@@ -162,7 +162,7 @@ useEffect(() => {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   !selectedCategory 
                     ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                    : 'bg-white/10 text-purple-200 hover:bg-white/20 border border-purple-300/30'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-purple-300/30'
                 }`}
               >
                 All Categories
@@ -174,7 +174,7 @@ useEffect(() => {
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     selectedCategory === category 
                       ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                      : 'bg-white/10 text-purple-200 hover:bg-white/20 border border-purple-300/30'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-[#64b3f4]-300'
                   }`}
                 >
                   {category}
@@ -190,13 +190,13 @@ useEffect(() => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-purple-900/40 via-blue-900/40 to-indigo-900/40 backdrop-blur-xl rounded-2xl p-6 border border-purple-300/20 shadow-xl"
+                className="bg-[#64b3f4] backdrop-blur-xl rounded-2xl p-6 border border-purple-300/20 shadow-xl"
               >
                 <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
                 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-purple-200 mb-2">
+                    <label className="block text-sm font-medium text-white mb-2">
                       Price Range (UGX)
                     </label>
                     <div className="space-y-2">
@@ -209,7 +209,7 @@ useEffect(() => {
                         onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
                         className="w-full accent-cyan-400"
                       />
-                      <div className="flex justify-between text-sm text-purple-200">
+                      <div className="flex justify-between text-sm text-white">
                         <span>0</span>
                         <span>{priceRange[1].toLocaleString()}</span>
                       </div>
@@ -217,7 +217,7 @@ useEffect(() => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-purple-200 mb-2">
+                    <label className="block text-sm font-medium text-white mb-2">
                       Purchase Type
                     </label>
                     <div className="space-y-2">
@@ -230,7 +230,7 @@ useEffect(() => {
                           onChange={(e) => setPurchaseTypeFilter(e.target.value)}
                           className="text-cyan-500 focus:ring-cyan-500"
                         />
-                        <span className="text-sm text-purple-200">All</span>
+                        <span className="text-sm text-white">All</span>
                       </label>
                       <label className="flex items-center space-x-2">
                         <input
@@ -241,7 +241,7 @@ useEffect(() => {
                           onChange={(e) => setPurchaseTypeFilter(e.target.value)}
                           className="text-cyan-500 focus:ring-cyan-500"
                         />
-                        <span className="text-sm text-purple-200">Purchase</span>
+                        <span className="text-sm text-white">Purchase</span>
                       </label>
                       <label className="flex items-center space-x-2">
                         <input
@@ -252,7 +252,7 @@ useEffect(() => {
                           onChange={(e) => setPurchaseTypeFilter(e.target.value)}
                           className="text-cyan-500 focus:ring-cyan-500"
                         />
-                        <span className="text-sm text-purple-200">For Hire</span>
+                        <span className="text-sm text-white">For Hire</span>
                       </label>
                     </div>
                   </div>
@@ -265,7 +265,7 @@ useEffect(() => {
                         onChange={(e) => setInStockOnly(e.target.checked)}
                         className="rounded border-purple-300 text-cyan-500 focus:ring-cyan-500 bg-white/20"
                       />
-                      <span className="text-sm text-purple-200">In stock only</span>
+                      <span className="text-sm text-white">In stock only</span>
                     </label>
                   </div>
                 </div>
@@ -306,9 +306,9 @@ useEffect(() => {
                   animate={{ opacity: 1 }}
                   className="text-center py-12"
                 >
-                  <div className="bg-gradient-to-br from-purple-900/40 via-blue-900/40 to-indigo-900/40 backdrop-blur-xl rounded-2xl p-8 border border-purple-300/20 shadow-xl">
-                    <MapPin size={48} className="mx-auto text-cyan-400 mb-4" />
-                    <p className="text-purple-200 text-lg mb-4">No products found matching your criteria.</p>
+                  <div className="bg-cyan-300 backdrop-blur-xl rounded-2xl p-8 border border-purple-300/20 shadow-xl">
+                    <MapPin size={48} className="mx-auto text-cyan-600 mb-4" />
+                    <p className="text-black text-lg mb-4">No products found matching your criteria.</p>
                     <EdumallButton 
                       variant="secondary" 
                       size="md" 
