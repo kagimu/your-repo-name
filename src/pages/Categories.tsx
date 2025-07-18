@@ -15,7 +15,7 @@ const Categories = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const searchQuery = searchParams.get('search') || '';
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilter);
@@ -27,7 +27,7 @@ useEffect(() => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get('https://edumall-admin.up.railway.app/api/labs');
-      const labs = response.data.data.map(item => ({
+      const labs = (response.data as { data: any[] }).data.map(item => ({
         ...item,
         price: parseInt(item.price),
         rating: parseFloat(item.rating),
@@ -100,9 +100,7 @@ useEffect(() => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Educational Supplies
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl">
-              Discover our comprehensive range of educational supplies for institutions and individuals.
-            </p>
+           
           </motion.div>
 
           {/* Search and Controls */}

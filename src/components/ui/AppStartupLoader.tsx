@@ -80,7 +80,7 @@ export const AppStartupLoader: React.FC<{ onComplete: () => void }> = ({ onCompl
             
             <div className="absolute inset-6 bg-white rounded-full flex items-center justify-center shadow-2xl">
               <img 
-                src="/img/logo.png" 
+                src="/img/Edumall.png" 
                 alt="Edumall" 
                 className="w-16 h-16 object-contain"
               />

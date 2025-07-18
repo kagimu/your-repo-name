@@ -38,7 +38,7 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
+            className="text-md md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
           >
             Your trusted partner for premium educational supplies. From cutting-edge laboratory equipment 
             to modern IT solutions and quality furniture - we deliver excellence to institutions across Uganda.
@@ -58,14 +58,7 @@ export const HeroSection: React.FC = () => {
             >
               Shop Now
             </EdumallButton>
-            <EdumallButton 
-              variant="secondary" 
-              size="lg"
-              onClick={() => navigate('/about-us')}
-              className="text-lg px-8 py-4"
-            >
-              More About Us
-            </EdumallButton>
+            
           </motion.div>
         </motion.div>
       </div>

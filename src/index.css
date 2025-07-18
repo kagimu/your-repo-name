@@ -116,8 +116,9 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    cursor: none; /* We'll use custom cursor */
+    @apply bg-background text-foreground font-poppins;
+    cursor: none;/* We'll use custom cursor */
+    
   }
   
   html {

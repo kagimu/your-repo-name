@@ -163,19 +163,22 @@ const Checkout = () => {
   }, [isAuthenticated, token]);
 
   const handleDetailsSubmit = async (details: any) => {
-    setDeliveryDetails(details);
+  setDeliveryDetails(details);
 
-    try {
-      const distance = await getDistanceInKm(details.coordinates);
-      const fee = calculateDeliveryFee(distance);
-      setDeliveryFee(fee);
-    } catch (err) {
-      console.error('Distance fetch failed:', err);
-      setDeliveryFee(10000); // fallback fee
-    }
-
+  try {
+   // const distance = await getDistanceInKm(details.coordinates);
+   // const fee = calculateDeliveryFee(distance);
+    setDeliveryFee(10000);
+  } catch (err) {
+    console.error('Distance fetch failed:', err);
+    alert('Google Maps distance check failed. Using default delivery fee.');
+    setDeliveryFee(10000); // Fallback fee
+  } finally {
+    // Always move to payment step, even if distance fails
     setCurrentStep('payment');
-  };
+  }
+};
+
 
   const handlePaymentComplete = async (paymentData: any) => {
     if (pendingOrder) {
