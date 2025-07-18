@@ -32,13 +32,7 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
 
   const paymentMethods = [
     
-    {
-      id: 'mtn',
-      name: 'MTN & Airtel Mobile Money',
-      icon: Smartphone,
-      color: 'from-yellow-500 to-yellow-600',
-      description: 'Pay with MTN Mobile Money',
-    },
+   
     {
       id: 'cod',
       name: 'Pay on Delivery',
