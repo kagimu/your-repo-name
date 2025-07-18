@@ -70,6 +70,7 @@ export default {
 				'edumall-mustard': 'hsl(45 93% 58%)',
 				'edumall-rose': 'hsl(350 100% 75%)',
 			},
+			
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
@@ -98,7 +99,7 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out'
 			},
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
+				poppins: ['Poppins', 'system-ui', 'sans-serif'],
 			},
 		}
 	},

@@ -24,7 +24,7 @@ const PaymentSuccess = () => {
           [key: string]: any;
         }
 
-        const res = await axios.post<VerifyPaymentResponse>('http://127.0.0.1:8000/api/payment/verify', {
+        const res = await axios.post<VerifyPaymentResponse>('https://edumall-admin.up.railway.app/api/payment/verify', {
           tx_ref: txRef,
           status: paymentStatus,
         });
