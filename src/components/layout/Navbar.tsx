@@ -54,7 +54,7 @@ export const Navbar = () => {
 
   const navItems = [
     { path: '/categories', label: 'Our Products', icon: BookOpen, mobileLabel: 'Products' },
-    { path: '/e-library', label: 'E-Library', icon: LayoutDashboard, mobileLabel: 'Library' },
+    //{ path: '/e-library', label: 'E-Library', icon: LayoutDashboard, mobileLabel: 'Library' },
     { path: '/research', label: 'Research', icon: Search, mobileLabel: 'Research' },
   ];
 
