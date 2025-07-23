@@ -26,8 +26,16 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://edumall-admin.up.railway.app/api/labs');
-      const labs = (response.data as { data: any[] }).data.map(item => ({
+      const response = await axios.get('http://localhost:8080/api/labs');
+     const labData = response.data.data ?? response.data; // Fallback to response.data if data is missing
+
+      if (!Array.isArray(labData)) {
+        console.error("Invalid lab data format", response.data);
+        setProducts([]);
+        return;
+      }
+      
+      const labs = labData.map(item => ({
         ...item,
         price: parseInt(item.price),
         rating: parseFloat(item.rating),
@@ -35,6 +43,7 @@ useEffect(() => {
         avatar: item.avatar_url,
         images: item.images_url
       }));
+
       setProducts(labs);
     } catch (error) {
       console.error('Error fetching products:', error);

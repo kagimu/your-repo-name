@@ -275,18 +275,15 @@ export const Navbar = () => {
               {/* Cart */}
               <Link to="/cart">
                 <motion.div
-                  className="relative p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
+                  className="relative p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-xl transition-all duration-200 flex items-center group"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Link to="/Cart" className="flex items-center group">
                   <img
                     src="/img/Cart.png"
                     alt="Cart"
                     className="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
-                    
                   />
-                </Link>
                   {cartItemCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
@@ -299,6 +296,7 @@ export const Navbar = () => {
                   )}
                 </motion.div>
               </Link>
+
 
               {/* User Menu */}
               {isAuthenticated ? (

@@ -36,7 +36,7 @@ const Checkout = () => {
       setConfirmingPayOnDelivery(true);
 
       const response = await axios.post(
-        `https://edumall-admin.up.railway.app/api/checkout/confirm-pay-on-delivery`,
+        `http://127.0.0.1:8000/api/checkout/confirm-pay-on-delivery`,
         {},
         {
           headers: {
@@ -144,7 +144,7 @@ const Checkout = () => {
   useEffect(() => {
     const checkPending = async () => {
       try {
-        const res = await axios.get('https://edumall-admin.up.railway.app/api/orders/pending', {
+        const res = await axios.get('http://127.0.0.1:8000/api/orders/pending', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -203,7 +203,7 @@ const Checkout = () => {
         payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
       };
 
-      const response = await axios.post('https://edumall-admin.up.railway.app/api/orders', orderPayload, {
+      const response = await axios.post('http://127.0.0.1:8000/api/orders', orderPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
