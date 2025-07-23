@@ -23,30 +23,35 @@ const Categories = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [purchaseTypeFilter, setPurchaseTypeFilter] = useState<string>('');
   const navigate = useNavigate();
+
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://edumall-uganda.netlify.app/api/labs');
-     const labData = response.data.data ?? response.data; // Fallback to response.data if data is missing
+      const response = await axios.get(
+        'https://edumall-admin.up.railway.app/api/labs'
+      );
+
+      const labData = response.data?.data ?? response.data;
 
       if (!Array.isArray(labData)) {
-        console.error("Invalid lab data format", response.data);
+        console.error('Invalid lab data format:', response.data);
         setProducts([]);
         return;
       }
-      
+
       const labs = labData.map(item => ({
         ...item,
-        price: parseInt(item.price),
+        price: parseFloat(item.price),
         rating: parseFloat(item.rating),
         in_stock: parseInt(item.in_stock) > 0,
-        avatar: item.avatar_url,
-        images: item.images_url
+        avatar: item.avatar_url || '', // fallback if avatar_url missing
+        images: item.images_url || [], // fallback to empty array
       }));
 
       setProducts(labs);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]); // clear products on failure
     } finally {
       setLoading(false);
     }
@@ -54,7 +59,6 @@ useEffect(() => {
 
   fetchProducts();
 }, []);
-
 
 
 

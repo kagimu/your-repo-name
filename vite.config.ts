@@ -8,12 +8,12 @@ export default defineConfig(({ mode }) => ({
   server: {
      proxy: {
     '/api': {
-      target: 'https://edumall-uganda.netlify.app',
+      target: 'http://127.0.0.1:8000',
       changeOrigin: true,
     },
   },
     host: "::",
-    port: 9000,
+    port: 8080,
   },
   plugins: [
     react(),
