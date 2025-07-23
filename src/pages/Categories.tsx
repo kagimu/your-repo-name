@@ -7,6 +7,7 @@ import { EdumallInput } from '@/components/ui/EdumallInput';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CustomCursor } from '@/components/CustomCursor';
+import { products as localProducts } from '@/data/products';
 import axios from 'axios';
 
 const Categories = () => {
@@ -24,43 +25,26 @@ const Categories = () => {
   const [purchaseTypeFilter, setPurchaseTypeFilter] = useState<string>('');
   const navigate = useNavigate();
 
+
 useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get('https://edumall-admin.up.railway.app/api/labs', {
-      headers: {
-        Accept: 'application/json',
-      }
-    }); 
+  // simulate API delay if needed
+  const loadLocalProducts = () => {
+    const formatted = localProducts.map(item => ({
+      ...item,
+      price: parseFloat(item.price),
+      rating: parseFloat(item.rating),
+      in_stock: Boolean(item.in_stock),
+      avatar: item.avatar || '',
+      images: item.images || [],
+    }));
 
-      const labData = response.data?.data ?? response.data;
-
-      if (!Array.isArray(labData)) {
-        console.error('Invalid lab data format:', response.data);
-        setProducts([]);
-        return;
-      }
-
-      const labs = labData.map(item => ({
-        ...item,
-        price: parseFloat(item.price),
-        rating: parseFloat(item.rating),
-        in_stock: parseInt(item.in_stock) > 0,
-        avatar: item.avatar_url || '', // fallback if avatar_url missing
-        images: item.images_url || [], // fallback to empty array
-      }));
-
-      setProducts(labs);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]); // clear products on failure
-    } finally {
-      setLoading(false);
-    }
+    setProducts(formatted);
+    setLoading(false);
   };
 
-  fetchProducts();
+  loadLocalProducts();
 }, []);
+
 
 
 
