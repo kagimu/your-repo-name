@@ -7,7 +7,7 @@ export const products = [
     "name": "Albino Rat",
     "category": "specimen",
     "avatar": "/img/new rats.jpg",
-    "images": "[\"images\\/labs\\/Xiddkl2fXlcWOKKMxuMyGJJBp0xZycTzVLRj0Swe.jpg\",\"images\\/labs\\/RFvh4YRXOuPBR9T5pH1CWtBFl9gg1GrW33DRNKFW.jpg\"]",
+    "images": "['https://i.imgur.com/QMLhcYp.jpg','https://i.imgur.com/RbGLZu6.jpg']",
     "color": "any",
     "rating": "5",
     "in_stock": "10000",

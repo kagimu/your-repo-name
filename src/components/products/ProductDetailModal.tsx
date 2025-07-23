@@ -4,73 +4,101 @@ import { X, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { useCart } from '../../contexts/CartContext';
 import axios from 'axios';
+import { products as rawProducts } from '../../data/products';
 
 interface Product {
   id: number;
   name: string;
-  price: number;
-  avatar_url?: string;
-  images_url?: string[];
   category: string;
+  avatar: string;
+  images?: string[];
+  price: number;
   inStock: boolean;
   rating: number;
-  description: string;
-  unit: string;
-  specifications: Record<string, string>;
+  description?: string;
+  unit?: string;
+  specifications?: { [key: string]: string };
 }
 
 interface ProductDetailModalProps {
-  product: Product | null;
+  productId: number;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
-  product,
+const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
+  productId,
   isOpen,
   onClose,
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(0); // ✅ Added
   const { addToCart } = useCart();
 
-  if (!product) return null;
-
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number) => { // ✅ Added
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
       currency: 'UGX',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
-  const handleAddToCart = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error("User is not authenticated");
-      return;
-    }
+ const products: Product[] = rawProducts.map((p: any) => {
+  let images: string[] = [];
 
+  if (Array.isArray(p.images)) {
+    images = p.images;
+  } else if (typeof p.images === 'string') {
+    try {
+      const parsed = JSON.parse(p.images);
+      images = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      images = p.images ? [p.images] : [];// Fallback if JSON parsing fails
+    }
+  }
+
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    avatar: p.avatar,
+    images,
+    price: Number(p.price),
+    inStock: p.in_stock === 'true' || p.in_stock === '1',
+    rating: Number(p.rating),
+    description: p.desc || '',
+    unit: p.unit || '',
+    specifications: p.specifications || {},
+  };
+});
+
+
+  const product = products.find((p) => p.id === productId);
+  const token = localStorage.getItem('token');
+
+  if (!product) return null;
+
+  const handleAddToCart = async () => {
     try {
       await axios.post(
         'https://edumall-admin.up.railway.app/api/cart/add',
         {
           product_id: product.id,
           name: product.name,
-          avatar_url: product.avatar_url || product.images_url?.[0],
-          quantity: quantity
+          avatar: product.avatar || product.images?.[0],
+          quantity,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       addToCart({
         ...product,
-        image: product.images_url?.[0],
-        quantity
+        image: product.images?.[0],
+        quantity,
       });
 
       onClose();
@@ -109,19 +137,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Image Gallery */}
               <div className="space-y-4">
-                <div className="aspect-square bg-gray-200 rounded-2xl overflow-hidden">
+                <div className="aspect-square rounded-2xl overflow-hidden">
                   <img
-                    src={product.images_url?.[selectedImage]}
+                    src={
+                      product.images?.[selectedImage] ||
+                      product.avatar ||
+                      '/placeholder.svg'
+                    }
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-300"
                   />
+
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {product.images_url?.map((image, index) => (
+                  {(product.images?.length ? product.images : [product.avatar || '/placeholder.svg']).map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square bg-gray-200 rounded-lg overflow-hidden border-2 transition-colors ${
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
                         selectedImage === index ? 'border-teal-500' : 'border-transparent'
                       }`}
                     >
@@ -132,6 +165,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       />
                     </button>
                   ))}
+
                 </div>
               </div>
 
@@ -144,7 +178,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         <Star
                           key={i}
                           size={16}
-                          className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+                          className={
+                            i < Math.floor(product.rating)
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                          }
                         />
                       ))}
                     </div>
@@ -157,10 +195,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-teal-600">{formatPrice(product.price)}</span>
+                    <span className="text-3xl font-bold text-teal-600">
+                      {formatPrice(product.price)}
+                    </span>
                     <span className="text-gray-900">per {product.unit}</span>
                   </div>
-                  <p className={`text-sm font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                  <p
+                    className={`text-sm font-medium ${
+                      product.inStock ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
                     {product.inStock ? 'In Stock' : 'Out of Stock'}
                   </p>
                 </div>
@@ -171,7 +215,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Specifications</h4>
                   <div className="space-y-2">
-                    {Object.entries(product.specifications).map(([key, value]) => (
+                    {Object.entries(product.specifications || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between py-1 border-b border-gray-100">
                         <span className="text-gray-900">{key}:</span>
                         <span className="font-medium text-gray-900">{value}</span>
@@ -219,3 +263,5 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     </AnimatePresence>
   );
 };
+
+export default ProductDetailModal;
