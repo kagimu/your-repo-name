@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AppStartupLoader } from "./components/ui/AppStartupLoader";
-import { FloatingChatIcon } from "./components/chat/FloatingChatIcon";
+//import { FloatingChatIcon } from "./components/chat/FloatingChatIcon";
 import { AnimatePresence } from 'framer-motion';
 import Index from "./pages/Index";
 import Categories from "./pages/Categories";
@@ -73,7 +73,7 @@ const App = () => {
                     <Route path="/about-us" element={<AboutUs />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                  <FloatingChatIcon />
+                  {/* <FloatingChatIcon /> */}
                 </BrowserRouter>
               )}
             </AnimatePresence>
