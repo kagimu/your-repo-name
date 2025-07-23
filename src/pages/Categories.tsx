@@ -27,9 +27,11 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(
-        'https://edumall-admin.up.railway.app/api/labs'
-      );
+      const response = await axios.get('https://edumall-admin.up.railway.app/api/labs', {
+      headers: {
+        Accept: 'application/json',
+      }
+    }); 
 
       const labData = response.data?.data ?? response.data;
 
