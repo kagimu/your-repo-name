@@ -11,8 +11,8 @@ interface Product {
   id: number;
   name: string;
   price: number;
-  avatar_url?: string;
-  images_url?: string[];
+  avatar?: string;
+  images?: string[];
   category: string;
   in_stock: boolean;
   rating: number;
@@ -51,7 +51,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         name: product.name,
         price: product.price,
         quantity: 1,
-        image: product.avatar_url || product.images_url?.[0] || '/placeholder.svg',
+        image: product.avatar || product.images?.[0] || '/placeholder.svg',
         category: product.category,
         unit: product.unit,
       });
@@ -66,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
 
   const detailedProduct = {
     ...product,
-    images_url: product.images_url || [product.avatar_url || '/placeholder.svg'],
+    images: product.images || [product.avatar || '/placeholder.svg'],
     desc: product.desc || `High-quality ${product.name} perfect for educational use.`,
     unit: product.unit || 'piece',
     specifications: product.specifications || {
@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
       'Availability': product.in_stock ? 'In Stock' : 'Out of Stock',
       'Rating': product.rating.toString()
     },
-    images: product.images_url || [product.avatar_url || '/placeholder.svg'],
+   
     inStock: product.in_stock,
     description: product.desc || `High-quality ${product.name} perfect for educational use.`
   };
@@ -89,7 +89,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden flex-shrink-0">
               <img 
-                src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
+                src={product.avatar || product.images?.[0] || '/placeholder.svg'} 
                 alt={product.name}
                 className="w-full h-full"
               />
@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 {/* 🔹 Image fills the top */}
                 <div className="w-full h-60 overflow-hidden bg-gray-100">
                   <img 
-                    src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
+                    src={product.avatar || product.images?.[0] || '/placeholder.svg'} 
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                   />
