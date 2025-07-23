@@ -26,7 +26,7 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/labs');
+      const response = await axios.get('https://edumall-uganda.netlify.app/api/labs');
      const labData = response.data.data ?? response.data; // Fallback to response.data if data is missing
 
       if (!Array.isArray(labData)) {
