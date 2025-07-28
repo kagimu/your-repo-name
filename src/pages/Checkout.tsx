@@ -210,7 +210,7 @@ const Checkout = () => {
       const newOrderId = response.data.order_id || `EDU${Date.now()}`;
       setOrderId(newOrderId);
 
-      sendOrderToWhatsApp(orderPayload, ['256762833491', '256700123456']);
+      sendOrderToWhatsApp(orderPayload, ['256727010781', '256700123456',]);
 
       if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
         clearCart();

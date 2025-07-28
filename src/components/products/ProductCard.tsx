@@ -159,7 +159,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 text-sm"
               >
                 {/* 🔹 Image fills the top */}
-                <div className="w-full h-60 overflow-hidden bg-gray-100">
+                <div className="w-full h-60 overflow-hidden">
                   <img 
                     src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                     alt={product.name}
