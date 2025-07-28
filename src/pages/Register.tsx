@@ -81,10 +81,7 @@ const Register = () => {
   setIsRegistering(true);
 
   try {
-    // Fetch CSRF cookie if required
-    await fetch('https://edumall-admin.up.railway.app/sanctum/csrf-cookie', {
-      credentials: 'include',
-    });
+   
 
     const response = await fetch('https://edumall-admin.up.railway.app/api/register', {
       method: 'POST',
@@ -92,7 +89,7 @@ const Register = () => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      credentials: 'include', // Include cookies for Sanctum
+      
       body: JSON.stringify({
         accountType,
         ...formData,
