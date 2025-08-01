@@ -14,12 +14,14 @@ interface PaymentOptionsProps {
   subtotal: number;
   deliveryFee: number;
   customer: CustomerInfo;
+   items: { id: number; quantity: number; price: number }[];
 }
 
 const PaymentOptions: React.FC<PaymentOptionsProps> = ({
   onPaymentComplete,
   subtotal,
   deliveryFee,
+    items,
 }) => {
   const safeSubtotal = Number(subtotal) || 0;
   const safeDeliveryFee = Number(deliveryFee) || 0;
@@ -54,6 +56,11 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         status: 'pending',
         note: 'Payment will be collected upon delivery',
         timestamp: new Date().toISOString(),
+         items: items.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+          })),
       });
     }
   };

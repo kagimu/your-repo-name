@@ -302,9 +302,9 @@ export const Navbar = () => {
               {isAuthenticated ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700 font-medium hidden lg:block">
-                    Hi, {user?.firstName ?? 'Guest'}
+                    Hi, {user?.firstName ?? user?.lastName ?? 'Guest'}
                   </span>
-                  <Link to="/dashboard">
+                  <Link to="">
                     <EdumallButton
                       variant="ghost"
                       size="sm"

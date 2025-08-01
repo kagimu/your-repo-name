@@ -69,7 +69,7 @@ const Cart = () => {
     if (!token) return alert('Please log in to modify your cart.');
     setLoadingItemId(productId);
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/cart/remove/${productId}`, {
+      await axios.delete(`https://admin.edumallug.com/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await removeFromCart(productId);

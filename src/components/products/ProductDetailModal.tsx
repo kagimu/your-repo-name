@@ -53,7 +53,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     try {
       await axios.post(
-        'https://edumall-admin.up.railway.app/api/cart/add',
+        'https://admin.edumallug.com/api/cart/add',
         {
           product_id: product.id,
           name: product.name,

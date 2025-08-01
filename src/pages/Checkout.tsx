@@ -36,7 +36,7 @@ const Checkout = () => {
       setConfirmingPayOnDelivery(true);
 
       const response = await axios.post(
-        `https://edumall-admin.up.railway.app/api/checkout/confirm-pay-on-delivery`,
+        `https://edumallug.com/api/checkout/confirm-pay-on-delivery`,
         {},
         {
           headers: {
@@ -122,29 +122,13 @@ const Checkout = () => {
     return 15000 + (distanceKm - 20) * 500;
   };
 
-  const sendOrderToWhatsApp = (order: any, numbers: string[]) => {
-    const delivery = order.address || {};
-    const location = delivery.address || 'N/A';
-    const coords = delivery.coordinates ? `${delivery.coordinates.lat}, ${delivery.coordinates.lng}` : 'N/A';
-
-    const message = `🛒 NEW ORDER RECEIVED\nName: ${order.customer_name}\nPhone: ${order.customer_phone}\nEmail: ${order.customer_email}\nLocation: ${location}\nCoords: ${coords}\nTotal: UGX ${order.total.toLocaleString()}\nOrder ID: #${order.order_id || 'N/A'}`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const adminNumbers = numbers;
-
-    adminNumbers.forEach(number => {
-      const url = `https://wa.me/${number}?text=${encodedMessage}`;
-      window.open(url, '_blank');
-    });
-  };
-
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
   useEffect(() => {
     const checkPending = async () => {
       try {
-        const res = await axios.get('https://edumall-admin.up.railway.app/api/orders/pending', {
+        const res = await axios.get('https://edumallug.com/api/orders/pending', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -203,14 +187,14 @@ const Checkout = () => {
         payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
       };
 
-      const response = await axios.post('https://edumall-admin.up.railway.app/api/orders', orderPayload, {
+      const response = await axios.post('https://edumallug.com/api/orders', orderPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const newOrderId = response.data.order_id || `EDU${Date.now()}`;
       setOrderId(newOrderId);
 
-      sendOrderToWhatsApp(orderPayload, ['256727010781', '256700123456',]);
+      
 
       if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
         clearCart();
@@ -277,6 +261,7 @@ const Checkout = () => {
                         email: deliveryDetails?.email || '',
                         phone: deliveryDetails?.phone || '',
                       }}
+                      items={items}
                     />
                   ) : (
                     <GuestCheckout

@@ -12,6 +12,7 @@ const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [accountType, setAccountType] = useState<'institution' | 'individual'>('institution');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   
@@ -83,7 +84,7 @@ const Register = () => {
   try {
    
 
-    const response = await fetch('https://edumall-admin.up.railway.app/api/register', {
+    const response = await fetch('https://edumallug.com/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,6 +120,7 @@ const Register = () => {
       type: accountType,
       phone: result.user.phone,
       firstName: result.user.firstName,
+      lastName: result.user.lastName,
     }, result.token); // ← pass token here too
 
     navigate('/categories');
@@ -464,21 +466,40 @@ const Register = () => {
             
             <EdumallInput
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
               placeholder="Enter password"
               required
+              rightElement={
+                <button 
+                type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              }
             />
-            
+
             <EdumallInput
               label="Confirm Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={formData.password_confirmation}
               onChange={(e) => handleInputChange('password_confirmation', e.target.value)}
               placeholder="Confirm password"
               required
-            />
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              }
+/>
+
           </div>
         );
       default:
