@@ -8,6 +8,7 @@ interface EdumallInputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   icon?: React.ReactNode;
   onIconClick?: () => void;
+  rightElement?: React.ReactNode;
 }
 
 export const EdumallInput: React.FC<EdumallInputProps> = ({
@@ -15,6 +16,7 @@ export const EdumallInput: React.FC<EdumallInputProps> = ({
   error,
   icon,
   onIconClick,
+  rightElement,
   className,
   ...props
 }) => {
@@ -28,7 +30,7 @@ export const EdumallInput: React.FC<EdumallInputProps> = ({
         </label>
       )}
       <div className="relative">
-        <motion.input
+        <input
           className={cn(
             'w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 focus:outline-none interactive',
             isFocused
@@ -40,16 +42,23 @@ export const EdumallInput: React.FC<EdumallInputProps> = ({
           )}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          {...(props as any)}
+          {...props}
         />
-        {icon && (
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-500 transition-colors interactive"
-            onClick={onIconClick}
-          >
-            {icon}
-          </button>
+        {(icon || rightElement) && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+            {icon && (
+              <button
+                type="button"
+                className="text-gray-400 hover:text-teal-500 transition-colors interactive"
+                onClick={onIconClick}
+              >
+                {icon}
+              </button>
+            )}
+            {rightElement && (
+              <div className="text-gray-400">{rightElement}</div>
+            )}
+          </div>
         )}
       </div>
       {error && (

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useCart } from './CartContext';
 
 interface User {
+  lastName: string;
   phone: string;
   firstName: string;
   id: string;
