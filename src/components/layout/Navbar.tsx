@@ -304,7 +304,7 @@ export const Navbar = () => {
                   <span className="text-sm text-gray-700 font-medium hidden lg:block">
                     Hi, {user?.firstName ?? user?.lastName ?? 'Guest'}
                   </span>
-                  <Link to="">
+                  <Link to="/dashboard">
                     <EdumallButton
                       variant="ghost"
                       size="sm"

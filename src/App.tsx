@@ -10,6 +10,8 @@ import { AppStartupLoader } from "./components/ui/AppStartupLoader";
 //import { FloatingChatIcon } from "./components/chat/FloatingChatIcon";
 import { AnimatePresence } from 'framer-motion';
 import Index from "./pages/Index";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Categories from "./pages/Categories";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -53,7 +55,9 @@ const App = () => {
                 <AppStartupLoader key="loader" onComplete={() => setIsLoading(false)} />
               ) : (
                 <BrowserRouter key="app">
+                  <ToastContainer position="top-right" autoClose={3000} />
                   <Routes>
+                    
                     <Route path="/courier" element={<RoleGuard allowedRoles={["courier"]}><Courier /></RoleGuard>} />
                     <Route path="/supplier" element={<RoleGuard allowedRoles={["supplier"]}><Supplier /></RoleGuard>} />
                     {/* All other routes are blocked for courier/supplier */}

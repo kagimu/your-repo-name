@@ -29,6 +29,7 @@ const Checkout = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
 
+
   if (!state?.subtotal) return <Navigate to="/cart" replace />;
 
   const confirmDeliveryReceived = async () => {
@@ -47,7 +48,6 @@ const Checkout = () => {
 
       if (response.data.order?.payment_status === 'paid') {
         setConfirmMessage('Payment confirmed! Thank you.');
-        clearCart();
         localStorage.removeItem('pendingPayment');
         setPendingOrder(null);
       } else {
@@ -194,14 +194,13 @@ const Checkout = () => {
       const newOrderId = response.data.order_id || `EDU${Date.now()}`;
       setOrderId(newOrderId);
 
+      clearCart();
       
 
-      if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
-        clearCart();
-        localStorage.removeItem('pendingPayment');
-        navigate('/categories');
+      if (paymentData.status === 'success' && paymentData.method === 'flutterwave') { 
+        navigate('/Dashboard');
       } else {
-        setCurrentStep('confirmation');
+        navigate('/Dashboard');
 
         if (paymentData.status !== 'success') {
           localStorage.setItem('pendingPayment', JSON.stringify({
@@ -213,7 +212,7 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Order failed:', error);
-      alert('Order placement failed.');
+      alert('Your Order placement has failed. Please Refresh and try placing the order again.');
     } finally {
       setIsProcessing(false);
     }
@@ -224,21 +223,6 @@ const Checkout = () => {
       <CustomCursor />
       <Navbar />
 
-      {pendingOrder && (
-        <div className="fixed top-0 left-0 w-full z-50 bg-yellow-100 border-b border-yellow-400 text-yellow-800 p-4 text-center shadow-md">
-          <p>{pendingOrder.message}</p>
-          <EdumallButton
-            onClick={confirmDeliveryReceived}
-            className="mt-2 bg-green-600 hover:bg-green-700 text-white"
-            disabled={confirmingPayOnDelivery}
-          >
-            {confirmingPayOnDelivery ? 'Confirming...' : 'Confirm Delivery Received'}
-          </EdumallButton>
-          {confirmMessage && (
-            <p className="mt-2 text-sm text-gray-700">{confirmMessage}</p>
-          )}
-        </div>
-      )}
 
       <main className="pt-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -270,37 +254,7 @@ const Checkout = () => {
                     />
                   )
                 )}
-                {currentStep === 'confirmation' && (
-                  <div className="text-center p-6 bg-white rounded-lg shadow">
-                    <h2 className="text-xl font-bold text-green-600 mb-2">Order Confirmed</h2>
-                    <p className="text-gray-700 mb-4">Your order has been placed successfully.</p>
-                    <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                      <Package className="w-4 h-4" />
-                      <span>Order ID: #{orderId}</span>
-                      <Clock className="w-4 h-4" />
-                      <span>Status: Processing</span>
-                    </div>
-
-                    {paymentDetails?.status === 'pending' && paymentDetails?.method === 'cod' && (
-                      <div className="mt-6">
-                        <EdumallButton
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={confirmDeliveryReceived}
-                          disabled={confirmingPayOnDelivery}
-                        >
-                          {confirmingPayOnDelivery ? 'Confirming...' : 'Confirm Delivery Received'}
-                        </EdumallButton>
-                        {confirmMessage && (
-                          <p className="mt-2 text-sm text-gray-700">{confirmMessage}</p>
-                        )}
-                      </div>
-                    )}
-
-                    <Link to="/categories">
-                      <EdumallButton className="mt-6">Continue Shopping</EdumallButton>
-                    </Link>
-                  </div>
-                )}
+              
               </div>
 
               <OrderSummary
