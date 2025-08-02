@@ -137,10 +137,7 @@ const Checkout = () => {
 
 
   const handlePaymentComplete = async (paymentData: any) => {
-    if (pendingOrder) {
-      alert('You have a pending order. Please confirm it before placing a new one.');
-      return;
-    }
+
 
     setIsProcessing(true);
     setPaymentDetails(paymentData);
@@ -171,8 +168,12 @@ const Checkout = () => {
 
       if (paymentData.status === 'success' && paymentData.method === 'flutterwave') { 
         navigate('/dashboard');
+        localStorage.removeItem('pendingPayment');
+
       } else {
         navigate('/dashboard');
+        localStorage.removeItem('pendingPayment');
+
 
         if (paymentData.status !== 'success') {
           localStorage.setItem('pendingPayment', JSON.stringify({
