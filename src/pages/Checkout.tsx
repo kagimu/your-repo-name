@@ -32,35 +32,7 @@ const Checkout = () => {
 
   if (!state?.subtotal) return <Navigate to="/cart" replace />;
 
-  const confirmDeliveryReceived = async () => {
-    try {
-      setConfirmingPayOnDelivery(true);
-
-      const response = await axios.post(
-        `https://edumallug.com/api/checkout/confirm-pay-on-delivery`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.order?.payment_status === 'paid') {
-        setConfirmMessage('Payment confirmed! Thank you.');
-        localStorage.removeItem('pendingPayment');
-        setPendingOrder(null);
-      } else {
-        setConfirmMessage('Failed to confirm payment. Please try again.');
-      }
-    } catch (error) {
-      console.error('Confirmation failed:', error);
-      setConfirmMessage('Something went wrong while confirming payment.');
-    } finally {
-      setConfirmingPayOnDelivery(false);
-    }
-  };
-
+ 
   const waitForGoogleMaps = () => {
     return new Promise<void>((resolve, reject) => {
       if (window.google && window.google.maps) {
@@ -198,9 +170,9 @@ const Checkout = () => {
       
 
       if (paymentData.status === 'success' && paymentData.method === 'flutterwave') { 
-        navigate('/Dashboard');
+        navigate('/dashboard');
       } else {
-        navigate('/Dashboard');
+        navigate('/dashboard');
 
         if (paymentData.status !== 'success') {
           localStorage.setItem('pendingPayment', JSON.stringify({
