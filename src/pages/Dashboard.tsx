@@ -181,7 +181,7 @@ const Dashboard = () => {
           );
           
           // Extract just the orders array from the response
-          return { data: response.data.data };
+          return { data: response.data.orders };
         } catch (error) {
           if (retries > 0 && error.code === 'ECONNABORTED') {
             console.log(`Retrying orders fetch, ${retries} attempts remaining`);
@@ -195,10 +195,11 @@ const Dashboard = () => {
       const fetchOrdersPromise = fetchOrders()
         .then(data => {
           console.log('Orders API Response:', {
-            status: 'success',
-            data: data,
-            structure: data ? Object.keys(data) : null
-          });
+                status: 'success',
+                total: data.length,
+                firstOrderId: data[0]?.id
+                });
+
           setOrdersError(null);
           return data;
         })
