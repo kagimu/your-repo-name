@@ -100,7 +100,7 @@ const Checkout = () => {
   useEffect(() => {
     const checkPending = async () => {
       try {
-        const res = await axios.get('https://edumallug.com/api/orders/pending', {
+        const res = await axios.get('https://admin.edumallug.com/api/orders/pending', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -156,7 +156,7 @@ const Checkout = () => {
         payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
       };
 
-      const response = await axios.post('https://edumallug.com/api/orders', orderPayload, {
+      const response = await axios.post('https://admin.edumallug.com/api/orders', orderPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

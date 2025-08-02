@@ -172,7 +172,7 @@ const Dashboard = () => {
       const fetchOrders = async (retries = 2): Promise<{ data: Order[] }> => {
         try {
           const response = await axios.get<{ data: Order[], status: number, message: string }>(
-            `https://edumallug.com/api/orders`,
+            `https://admin.edumallug.com/api/orders`,
             { 
               timeout: 3000, 
               headers,
@@ -335,7 +335,7 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
 
     const response = await axios.post(
-      `https://edumallug.com/api/checkout/confirm-pay-on-delivery`,
+      `https://admin.edumallug.com/api/checkout/confirm-pay-on-delivery`,
       { order_id: orderId },
       {
         headers: {

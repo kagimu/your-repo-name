@@ -43,7 +43,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const response = await axios.get<{ cart: any[] }>('https://edumallug.com/api/cart', {
+      const response = await axios.get<{ cart: any[] }>('https://admin.edumallug.com/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +75,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.post(
-        'https://edumallug.com/api/cart/add',
+        'https://admin.edumallug.com/api/cart/add',
         { product_id: product.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!token) return;
 
     try {
-      await axios.delete(`https://edumallug.com/api/cart/remove/${productId}`, {
+      await axios.delete(`https://admin.edumallug.com/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchCart();
@@ -108,7 +108,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.put(
-        `https://edumallug.com/api/cart/${productId}`,
+        `https://admin.edumallug.com/api/cart/${productId}`,
         { quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -124,7 +124,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   try {
     await Promise.all(
       items.map(item =>
-        axios.delete(`https://edumallug.com/api/cart/remove/${item.id}`, {
+        axios.delete(`https://admin.edumallug.com/api/cart/remove/${item.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       )
