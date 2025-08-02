@@ -118,9 +118,24 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+  if (!token) return;
+
+  try {
+    await Promise.all(
+      items.map(item =>
+        axios.delete(`https://edumallug.com/api/cart/remove/${item.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+    );
+
     setItems([]);
-  };
+  } catch (error) {
+    console.error('Failed to clear cart:', error);
+  }
+};
+
 
   const getCartCount = () => items.length;
 
