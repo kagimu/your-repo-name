@@ -56,7 +56,7 @@ const Register = () => {
   const userTypeOptions = [
     'Parent',
     'Student', 
-    'Teacher',
+    'Teacher', 
     'Guardian',
     'Other'
   ];
@@ -77,62 +77,59 @@ const Register = () => {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, accountType === 'institution' ? 4 : 2));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsRegistering(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-   
-
-    const response = await fetch('https://admin.edumallug.com/api/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      
-      body: JSON.stringify({
-        accountType,
-        ...formData,
-         paymentMethods: formData.paymentMethods.join(','), // 👈 convert array to string
-
-      }),
-    });
-
-    if (!response.ok) {
-      const errorResponse = await response.json();
-      console.error('Registration error:', errorResponse);
-      throw new Error('Failed to register');
+    // Prevent submission unless on final step
+    if (!isLastStep()) {
+      console.warn("Attempted submission before final step");
+      return;
     }
 
-    const result = await response.json();
-    console.log('Registration successful:', result);
-    localStorage.setItem('token', result.token);
+    setIsRegistering(true);
 
-    // ✅ Store token in localStorage
-    localStorage.setItem('token', result.token);
+    try {
+      const response = await fetch('https://admin.edumallug.com/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          accountType,
+          ...formData,
+          paymentMethods: formData.paymentMethods.join(','), // Convert array to string
+        }),
+      });
 
-    // ✅ Login with token
-    login({
-      id: result.user.id,
-      name: `${result.user.firstName} ${result.user.lastName}`,
-      email: result.user.email,
-      type: accountType,
-      phone: result.user.phone,
-      firstName: result.user.firstName,
-      lastName: result.user.lastName,
-    }, result.token); // ← pass token here too
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error('Registration error:', errorResponse);
+        throw new Error('Failed to register');
+      }
 
-    navigate('/categories');
-  } catch (error) {
-    console.error('Registration error:', error);
-    alert('Registration failed. Please try again.');
-  } finally {
-    setIsRegistering(false);
-  }
-};
+      const result = await response.json();
+      console.log('Registration successful:', result);
+      localStorage.setItem('token', result.token);
 
+      login({
+        id: result.user.id,
+        name: `${result.user.firstName} ${result.user.lastName}`,
+        email: result.user.email,
+        type: accountType,
+        phone: result.user.phone,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+      }, result.token);
 
+      navigate('/categories');
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert('Registration failed. Please try again.');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const renderProgressBar = () => {
     const totalSteps = accountType === 'institution' ? 4 : 2;
@@ -259,7 +256,70 @@ const Register = () => {
             </div>
           </div>
         );
+      // CORRECTED STEP 3
       case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Options</h2>
+              <p className="text-gray-600">How would you like to pay for orders?</p>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Select Payment Methods</h3>
+              
+              {[
+                { id: 'mobileMoney', label: 'Mobile Money', description: 'Pay via MTN, Airtel, or other mobile money services' },
+                { id: 'bankTransfer', label: 'Bank Transfer', description: 'Direct bank account transfer' },
+                { id: 'cash', label: 'Cash on Delivery', description: 'Pay when items are delivered' }
+              ].map((method) => (
+                <div
+                  key={method.id}
+                  className={`glass-medium rounded-xl p-4 cursor-pointer border-2 transition-all ${
+                    formData.paymentMethods.includes(method.id) ? 'border-teal-500 bg-teal-50' : 'border-transparent'
+                  }`}
+                  onClick={() => handlePaymentMethodToggle(method.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-gray-900">{method.label}</h4>
+                      <p className="text-sm text-gray-600">{method.description}</p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 ${
+                      formData.paymentMethods.includes(method.id) 
+                        ? 'bg-teal-500 border-teal-500' 
+                        : 'border-gray-300'
+                    }`}>
+                      {formData.paymentMethods.includes(method.id) && (
+                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {formData.paymentMethods.includes('mobileMoney') && (
+              <EdumallInput
+                label="Mobile Money Number"
+                value={formData.mobileMoneyNumber}
+                onChange={(e) => handleInputChange('mobileMoneyNumber', e.target.value)}
+                placeholder="Enter mobile money number"
+              />
+            )}
+            
+            {formData.paymentMethods.includes('bankTransfer') && (
+              <EdumallInput
+                label="Bank Account Number"
+                value={formData.bankAccount}
+                onChange={(e) => handleInputChange('bankAccount', e.target.value)}
+                placeholder="Enter bank account number"
+              />
+            )}
+          </div>
+        );
+      // CORRECTED STEP 4 (NOW THE FINAL STEP)
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -324,67 +384,6 @@ const Register = () => {
               placeholder="Enter phone number"
               required
             />
-          </div>
-        );
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Options</h2>
-              <p className="text-gray-600">How would you like to pay for orders?</p>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Select Payment Methods</h3>
-              
-              {[
-                { id: 'mobileMoney', label: 'Mobile Money', description: 'Pay via MTN, Airtel, or other mobile money services' },
-                { id: 'bankTransfer', label: 'Bank Transfer', description: 'Direct bank account transfer' },
-                { id: 'cash', label: 'Cash on Delivery', description: 'Pay when items are delivered' }
-              ].map((method) => (
-                <div
-                  key={method.id}
-                  className={`glass-medium rounded-xl p-4 cursor-pointer border-2 transition-all ${
-                    formData.paymentMethods.includes(method.id) ? 'border-teal-500 bg-teal-50' : 'border-transparent'
-                  }`}
-                  onClick={() => handlePaymentMethodToggle(method.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{method.label}</h4>
-                      <p className="text-sm text-gray-600">{method.description}</p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 ${
-                      formData.paymentMethods.includes(method.id) 
-                        ? 'bg-teal-500 border-teal-500' 
-                        : 'border-gray-300'
-                    }`}>
-                      {formData.paymentMethods.includes(method.id) && (
-                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {formData.paymentMethods.includes('mobileMoney') && (
-              <EdumallInput
-                label="Mobile Money Number"
-                value={formData.mobileMoneyNumber}
-                onChange={(e) => handleInputChange('mobileMoneyNumber', e.target.value)}
-                placeholder="Enter mobile money number"
-              />
-            )}
-            
-            {formData.paymentMethods.includes('bankTransfer') && (
-              <EdumallInput
-                label="Bank Account Number"
-                value={formData.bankAccount}
-                onChange={(e) => handleInputChange('bankAccount', e.target.value)}
-                placeholder="Enter bank account number"
-              />
-            )}
           </div>
         );
       default:
@@ -508,8 +507,13 @@ const Register = () => {
   };
 
   const isLastStep = () => {
-    return currentStep === (accountType === 'institution' ? 4 : 2);
+    return (
+      (accountType === 'institution' && currentStep === 4) ||
+      (accountType === 'individual' && currentStep === 2)
+    );
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
@@ -537,7 +541,16 @@ const Register = () => {
 
           {currentStep > 1 && renderProgressBar()}
 
-          <form onSubmit={handleSubmit}>
+          <form 
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isLastStep()) {
+                e.preventDefault();
+              }
+            }}
+          >
+
+
             {accountType === 'institution' ? renderInstitutionSteps() : renderIndividualSteps()}
 
             <div className="flex items-center justify-between mt-8">
