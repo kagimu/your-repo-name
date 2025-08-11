@@ -53,7 +53,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     try {
       await axios.post(
-        'https://admin.edumallug.com/api/cart/add',
+        'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
         {
           product_id: product.id,
           name: product.name,
