@@ -28,7 +28,7 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://edumall-main-khkttx.laravel.cloud/api/labs', {
+      const response = await axios.get('https://edumallug.com/api/labs', {
       headers: {
         Accept: 'application/json',
       }
