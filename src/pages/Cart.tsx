@@ -69,7 +69,7 @@ const Cart = () => {
     if (!token) return alert('Please log in to modify your cart.');
     setLoadingItemId(productId);
     try {
-      await axios.delete(`https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${productId}`, {
+      await axios.delete(`https://admin.edumallug.com/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await removeFromCart(productId);
