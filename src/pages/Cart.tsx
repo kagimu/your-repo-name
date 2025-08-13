@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 
 const QuantityInput = ({ itemId, quantity, updateQuantity, isLoading }) => {
@@ -69,7 +69,7 @@ const Cart = () => {
     if (!token) return alert('Please log in to modify your cart.');
     setLoadingItemId(productId);
     try {
-      await axios.delete(`https://admin.edumallug.com/api/cart/remove/${productId}`, {
+      await axios.delete(`https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await removeFromCart(productId);

@@ -5,7 +5,7 @@ import { Calendar, Clock, MapPin, Users, Search, Filter } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/hooks/useCart';
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState('');

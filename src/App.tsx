@@ -54,24 +54,95 @@ const App = () => {
               ) : (
                 <BrowserRouter key="app">
                   <Routes>
-                    <Route path="/courier" element={<RoleGuard allowedRoles={["courier"]}><Courier /></RoleGuard>} />
-                    <Route path="/supplier" element={<RoleGuard allowedRoles={["supplier"]}><Supplier /></RoleGuard>} />
-                    {/* All other routes are blocked for courier/supplier */}
-                    <Route path="/" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Index /></RoleGuard>} />
-                    <Route path="/categories" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Categories /></RoleGuard>} />
-                    <Route path="/product/:id" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><ProductDetail /></RoleGuard>} />
-                    <Route path="/cart" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Cart /></RoleGuard>} />
-                    <Route path="/checkout" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Checkout /></RoleGuard>} />
-                    <Route path="/e-library" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><ELibrary /></RoleGuard>} />
-                    <Route path="/research" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Research /></RoleGuard>} />
-                    <Route path="/notifications" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Notifications /></RoleGuard>} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
+                    {/* Public routes that don't require authentication */}
+                    <Route path="/" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <Index />
+                      </RoleGuard>
+                    } />
+                    <Route path="/categories" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <Categories />
+                      </RoleGuard>
+                    } />
+                    <Route path="/product/:id" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <ProductDetail />
+                      </RoleGuard>
+                    } />
+                    <Route path="/about-us" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <AboutUs />
+                      </RoleGuard>
+                    } />
 
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/dashboard" element={<RoleGuard allowedRoles={["institution","individual","guest"]}><Dashboard /></RoleGuard>} />
-                    <Route path="/about-us" element={<AboutUs />} />
-                    <Route path="*" element={<NotFound />} />
+                    {/* Protected routes that require authentication */}
+                    <Route path="/cart" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <Cart />
+                      </RoleGuard>
+                    } />
+                    <Route path="/checkout" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <Checkout />
+                      </RoleGuard>
+                    } />
+                    <Route path="/e-library" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <ELibrary />
+                      </RoleGuard>
+                    } />
+                    <Route path="/research" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <Research />
+                      </RoleGuard>
+                    } />
+                    <Route path="/notifications" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <Notifications />
+                      </RoleGuard>
+                    } />
+
+                    {/* Role-specific dashboard routes */}
+                    <Route path="/dashboard" element={
+                      <RoleGuard allowedRoles={["institution", "individual"]}>
+                        <Dashboard />
+                      </RoleGuard>
+                    } />
+                    <Route path="/courier" element={
+                      <RoleGuard allowedRoles={["courier"]}>
+                        <Courier />
+                      </RoleGuard>
+                    } />
+                    <Route path="/supplier" element={
+                      <RoleGuard allowedRoles={["supplier"]}>
+                        <Supplier />
+                      </RoleGuard>
+                    } />
+
+                    {/* Authentication routes */}
+                    <Route path="/login" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <Login />
+                      </RoleGuard>
+                    } />
+                    <Route path="/register" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <Register />
+                      </RoleGuard>
+                    } />
+                    <Route path="/payment-success" element={
+                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                        <PaymentSuccess />
+                      </RoleGuard>
+                    } />
+
+                    {/* Fallback route */}
+                    <Route path="*" element={
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
+                        <NotFound />
+                      </RoleGuard>
+                    } />
                   </Routes>
                   {/* <FloatingChatIcon /> */}
                 </BrowserRouter>

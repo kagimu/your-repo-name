@@ -1,36 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import { useAuth } from './AuthContext';
-
-interface CartItem {
-  id: number;                 // This represents product_id from API
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;              // This is the "avatar" field from API
-  category?: string;
-  unit?: string;
-}
-
-interface CartContextType {
-  items: CartItem[];
-  addToCart: (product: CartItem) => Promise<void>;
-  removeFromCart: (id: number) => Promise<void>;
-  updateQuantity: (id: number, quantity: number) => Promise<void>;
-  clearCart: () => void;
-  getCartCount: () => number;
-  getCartTotal: () => number;
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-};
+import { useAuth } from '../hooks/useAuth';
+import { CartContext } from './cart-context';
+import { CartItem, ApiCartItem } from './cart-types';
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -43,7 +15,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const response = await axios.get<{ cart: any[] }>('https://edumallug.com/api/cart', {
+      const response = await axios.get<{ cart: ApiCartItem[] }>('https://edumall-main-khkttx.laravel.cloud/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +47,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.post(
-        'https://edumallug.com/api/cart/add',
+        'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
         { product_id: product.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,7 +61,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!token) return;
 
     try {
-      await axios.delete(`https://edumallug.com/api/cart/remove/${productId}`, {
+      await axios.delete(`https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchCart();
@@ -108,7 +80,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       await axios.put(
-        `https://edumallug.com/api/cart/${productId}`,
+        `https://edumall-main-khkttx.laravel.cloud/api/cart/${productId}`,
         { quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );

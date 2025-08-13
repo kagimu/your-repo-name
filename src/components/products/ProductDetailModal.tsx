@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
-import { useCart } from '../../contexts/CartContext';
+import { useCart } from '../../hooks/useCart';
 import axios from 'axios';
 
 interface Product {

@@ -10,6 +10,53 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { CustomCursor } from '@/components/CustomCursor';
 import axios from 'axios';
 
+// Type definitions for the API response and product structure
+interface ApiProduct {
+  id: number;
+  name: string;
+  category: string;
+  avatar: string;
+  images: string;
+  color: string;
+  rating: string;
+  in_stock: string;
+  condition: string;
+  price: string;
+  unit: string;
+  desc: string;
+  purchaseType: string;
+  created_at: string;
+  updated_at: string;
+  avatar_url?: string;
+  images_url?: string[];
+}
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  avatar: string;
+  images: string[];
+  color: string;
+  rating: number;
+  in_stock: boolean;
+  condition: string;
+  price: number;
+  unit: string;
+  desc: string;
+  purchaseType: string;
+  created_at: string;
+  updated_at: string;
+  avatar_url: string;
+  images_url: string[];
+  inStock?: boolean;
+  purchase_type?: string;
+}
+
+interface ApiResponse {
+  data?: ApiProduct[];
+}
+
 const Categories = () => {
   const [searchParams] = useSearchParams();
   const initialFilter = searchParams.get('filter') || '';
@@ -28,13 +75,15 @@ const Categories = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://edumallug.com/api/labs', {
-      headers: {
-        Accept: 'application/json',
-      }
-    }); 
+      const response = await axios.get<ApiResponse>('https://edumall-main-khkttx.laravel.cloud/api/labs', {
+        headers: {
+          Accept: 'application/json',
+        }
+      });
 
-      const labData = response.data?.data ?? response.data;
+      // Type-safe access to response data
+      const apiData = response.data;
+      const labData = apiData?.data ?? (Array.isArray(apiData) ? apiData : []);
 
       if (!Array.isArray(labData)) {
         console.error('Invalid lab data format:', response.data);
@@ -42,19 +91,23 @@ useEffect(() => {
         return;
       }
 
-      const labs = labData.map(item => ({
+      const labs: Product[] = labData.map((item: ApiProduct) => ({
         ...item,
-        price: parseFloat(item.price),
-        rating: parseFloat(item.rating),
+        price: parseFloat(item.price) || 0,
+        rating: parseFloat(item.rating) || 0,
         in_stock: parseInt(item.in_stock) > 0,
-        avatar: item.avatar_url || '', // fallback if avatar_url missing
-        images: item.images_url || [], // fallback to empty array
+        inStock: parseInt(item.in_stock) > 0, // Add both variants for compatibility
+        avatar: item.avatar_url || item.avatar || '',
+        avatar_url: item.avatar_url || item.avatar || '',
+        images: item.images_url || [],
+        images_url: item.images_url || [],
+        purchase_type: item.purchaseType, // Add snake_case variant for compatibility
       }));
 
       setProducts(labs);
     } catch (error) {
       console.error('Error fetching products:', error);
-      setProducts([]); // clear products on failure
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -68,25 +121,25 @@ useEffect(() => {
 
   // Filter products based on search query and filters
   const filteredProducts = useMemo(() => {
-  return products.filter(product => {
-    const name = product.name || '';
-    const category = product.category || '';
-    const price = product.price || 0;
-    const inStock = product.inStock ?? product.in_stock ?? true;
-    const purchaseType = product.purchaseType ?? product.purchase_type ?? '';
+    return products.filter((product: Product) => {
+      const name = product.name || '';
+      const category = product.category || '';
+      const price = product.price || 0;
+      const inStock = product.inStock ?? product.in_stock ?? true;
+      const purchaseType = product.purchaseType ?? product.purchase_type ?? '';
 
-    const matchesSearch =
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = !selectedCategory || category.toLowerCase() === selectedCategory.toLowerCase();
-    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
-    const matchesStock = !inStockOnly || inStock;
-    const matchesPurchaseType = !purchaseTypeFilter || purchaseType === purchaseTypeFilter;
+      const matchesCategory = !selectedCategory || category.toLowerCase() === selectedCategory.toLowerCase();
+      const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+      const matchesStock = !inStockOnly || inStock;
+      const matchesPurchaseType = !purchaseTypeFilter || purchaseType === purchaseTypeFilter;
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesPurchaseType;
-  });
-}, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
+      return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesPurchaseType;
+    });
+  }, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
 
   // Categories for quick filters
   const categories = ['Specimen', 'Apparatus', 'Chemical'];

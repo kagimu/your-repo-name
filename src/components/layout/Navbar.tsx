@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ShoppingCart, User, Menu, X, BookOpen, Bell, LayoutDashboard } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { PreLoader } from '@/components/ui/PreLoader';
 
@@ -54,8 +54,8 @@ export const Navbar = () => {
 
   const navItems = [
     { path: '/categories', label: 'Our Products', icon: BookOpen, mobileLabel: 'Products' },
-    //{ path: '/e-library', label: 'E-Library', icon: LayoutDashboard, mobileLabel: 'Library' },
     { path: '/research', label: 'Research', icon: Search, mobileLabel: 'Research' },
+    { path: '/courier', label: 'Courier', icon: BookOpen, mobileLabel: 'Courier', requiredType: 'courier' },
   ];
 
   const isActivePath = (path: string) => {
@@ -154,6 +154,16 @@ export const Navbar = () => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.path);
                 const isProducts = item.path === '/categories' && location.pathname.startsWith('/categories');
+                
+                // Skip courier/supplier specific items for regular users
+                if (item.requiredType && (!user || user.type !== item.requiredType)) {
+                  return null;
+                }
+
+                // Skip regular user items for couriers/suppliers
+                if (!item.requiredType && user?.type && ['courier', 'supplier'].includes(user.type)) {
+                  return null;
+                }
 
                 return (
                   <Link key={item.path} to={item.path}>
@@ -163,10 +173,8 @@ export const Navbar = () => {
                               ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md font-semibold'
                               : 'text-gray-700 hover:bg-gray-100 hover:text-teal-600'
                           }`}
-                        
-
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                     >
                       <Icon size={18} />
                       <span className="font-medium">{item.label}</span>
@@ -302,18 +310,34 @@ export const Navbar = () => {
               {isAuthenticated ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700 font-medium hidden lg:block">
-                    Hi, {user?.firstName ?? user?.lastName ?? 'Guest'}
+                    Hi, {user?.firstName ?? user?.lastName ?? user?.userType ?? 'Guest'}
                   </span>
-                  <Link to="">
-                    <EdumallButton
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-600 hover:text-teal-600 flex items-center gap-1"
-                    >
-                      <LayoutDashboard size={16} />
-                      <span className="hidden sm:inline">Dashboard</span>
-                    </EdumallButton>
-                  </Link>
+                  {/* Show dashboard button only for regular users (institution/individual) */}
+                  {(user?.accountType === 'institution' || user?.accountType === 'individual') && (
+                    <Link to="/dashboard">
+                      <EdumallButton
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-600 hover:text-teal-600 flex items-center gap-1"
+                      >
+                        <LayoutDashboard size={16} />
+                        <span className="hidden sm:inline">Dashboard</span>
+                      </EdumallButton>
+                    </Link>
+                  )}
+                  {/* Show courier dashboard button only for couriers */}
+                  {user?.accountType === 'courier' && (
+                    <Link to="/courier">
+                      <EdumallButton
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-600 hover:text-teal-600 flex items-center gap-1"
+                      >
+                        <LayoutDashboard size={16} />
+                        <span className="hidden sm:inline">Courier Dashboard</span>
+                      </EdumallButton>
+                    </Link>
+                  )}
                   <EdumallButton
                     variant="ghost"
                     size="sm"
@@ -388,13 +412,34 @@ export const Navbar = () => {
                 </div>
 
                 {isAuthenticated && (
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl w-full"
-                  >
-                    <User size={18} />
-                    <span className="font-medium">Logout</span>
-                  </button>
+                  <>
+                    {/* Show dashboard button in mobile menu */}
+                    {(user?.accountType === 'institution' || user?.accountType === 'individual') && (
+                      <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                        <button className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl w-full">
+                          <LayoutDashboard size={18} />
+                          <span className="font-medium">Dashboard</span>
+                        </button>
+                      </Link>
+                    )}
+                    {/* Show courier dashboard in mobile menu */}
+                    {user?.accountType === 'courier' && (
+                      <Link to="/courier" onClick={() => setIsMenuOpen(false)}>
+                        <button className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl w-full">
+                          <LayoutDashboard size={18} />
+                          <span className="font-medium">Courier Dashboard</span>
+                        </button>
+                      </Link>
+                    )}
+                    {/* Logout button */}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl w-full"
+                    >
+                      <User size={18} />
+                      <span className="font-medium">Logout</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>

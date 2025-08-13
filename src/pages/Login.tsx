@@ -4,7 +4,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { CustomCursor } from '@/components/CustomCursor';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { PreLoader } from '@/components/ui/PreLoader';
 import axios from 'axios';
 
@@ -13,8 +13,13 @@ type User = {
   id: string;
   name: string;
   email: string;
-  type?: string;
+  accountType: 'institution' | 'individual' | 'guest' | 'courier' | 'supplier';
+  type?: 'institution' | 'individual' | 'guest' | 'courier' | 'supplier';
+  firstName: string;
+  lastName: string;
+  phone: string;
   userType?: string;
+  designation?: string;
 };
 
 const Login = () => {
@@ -39,7 +44,7 @@ const Login = () => {
       setIsLoggingIn(true);
 
       try {
-        const response = await fetch('https://edumallug.com/api/login', {
+        const response = await fetch('https://edumall-main-khkttx.laravel.cloud/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,21 +61,25 @@ const Login = () => {
 
         const data: { token: string; user: User } = await response.json();
 
-        // Save token in localStorage (optional because login should do this too)
-        localStorage.setItem('token', data.token);
-
         // Call login with user AND token
         login(
           {
             ...data.user,
-            type: data.user.type as 'individual' | 'institution' | 'guest',
-            firstName: '',
-            phone: ''
+            accountType: (data.user.type || 'individual') as 'individual' | 'institution' | 'guest' | 'courier' | 'supplier',
+            type: data.user.type as 'individual' | 'institution' | 'guest' | 'courier' | 'supplier',
+            firstName: data.user.firstName || '',
+            lastName: data.user.lastName || '',
+            phone: data.user.phone || ''
           },
           data.token
         );
 
-        navigate('/categories');
+        // Get return URL from localStorage and clear it
+        const returnUrl = localStorage.getItem('returnUrl');
+        localStorage.removeItem('returnUrl');
+
+        // Navigate to return URL or default to categories
+        navigate(returnUrl || '/categories');
       } catch (error) {
         console.error('Login error:', error);
         alert('Login failed. Please check your credentials.');
@@ -89,13 +98,22 @@ const Login = () => {
           id: '2',
           name: 'Google User',
           email: 'user@gmail.com',
+          accountType: 'individual' as const,
           type: 'individual' as const,
           userType: 'Parent',
           firstName: '',
+          lastName: '',
           phone: ''
         };
         const fakeToken = 'google-oauth-fake-token';
         login(userData, fakeToken);
+        
+        // Get return URL from localStorage and clear it
+        const returnUrl = localStorage.getItem('returnUrl');
+        localStorage.removeItem('returnUrl');
+
+        // Navigate to return URL or default to categories
+        navigate(returnUrl || '/categories');
         setIsLoggingIn(false);
         navigate('/dashboard');
       }, 2000);
