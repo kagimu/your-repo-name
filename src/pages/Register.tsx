@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { EdumallInput } from '@/components/ui/EdumallInput';
 import { CustomCursor } from '@/components/CustomCursor';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { PreLoader } from '@/components/ui/PreLoader';
 
 const Register = () => {
@@ -84,7 +84,7 @@ const Register = () => {
   try {
    
 
-    const response = await fetch('https://edumallug.com/api/register', {
+    const response = await fetch('https://edumall-main-khkttx.laravel.cloud/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -117,6 +117,7 @@ const Register = () => {
       id: result.user.id,
       name: `${result.user.firstName} ${result.user.lastName}`,
       email: result.user.email,
+      accountType: accountType,
       type: accountType,
       phone: result.user.phone,
       firstName: result.user.firstName,

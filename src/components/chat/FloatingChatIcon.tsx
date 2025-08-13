@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Star, CheckCircle } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 import { EdumallButton } from '../ui/EdumallButton';
-import { useCart } from '../../contexts/CartContext';
+import { useCart } from '../../hooks/useCart';
 import type { Delivery } from '../courier/DeliveryList';
 
 // Add courier deliveries mock for demo (replace with real data from props/context in integration)

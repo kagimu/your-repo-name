@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/hooks/useCart';
 import { Navbar } from '@/components/layout/Navbar';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { LoaderCircle } from 'lucide-react';

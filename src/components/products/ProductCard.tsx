@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, ShoppingCart, Eye } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import  {ProductDetailModal}  from './ProductDetailModal';
-import { useCart } from '../../contexts/CartContext';
+import { useCart } from '../../hooks/useCart';
 import axios from 'axios';
 
 interface Product {
@@ -39,14 +39,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     }).format(price);
   };
 
-  const handleAddToCart = () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to add to cart.');
-        return;
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Save current URL to return after login
+      localStorage.setItem('returnUrl', window.location.pathname);
+      // Show a more user-friendly message using toast if available
+      const confirmation = window.confirm('You need to log in to add items to your cart. Would you like to log in now?');
+      if (confirmation) {
+        window.location.href = '/login';
       }
+      return;
+    }
 
-      addToCart({
+    addToCart({
         id: product.id,
         name: product.name,
         price: product.price,

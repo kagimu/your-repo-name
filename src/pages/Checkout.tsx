@@ -5,29 +5,140 @@ import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 import { GuestCheckout } from '@/components/checkout/GuestCheckout';
 import PaymentOptions from '@/components/checkout/PaymentOptions';
 import { DeliveryFormWithMaps } from '@/components/checkout/DeliveryFormWithMaps';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import axios from 'axios';
 
+// Type definitions
+interface DeliveryDetails {
+  fullName: string;
+  email: string;
+  phone: string;
+  coordinates: { lat: number; lng: number };
+  address?: string;
+  district?: string;
+  city?: string;
+  postalCode?: string;
+  instructions?: string; // New field for delivery instructions
+}
+
+interface PaymentDetails {
+  method: string;
+  status: string;
+  amount?: number;
+  transactionId?: string;
+  reference?: string;
+}
+
+interface PendingOrderResponse {
+  pending: boolean;
+  order_id?: string;
+}
+
+interface OrderResponse {
+  order_id: string;
+  order?: {
+    payment_status: string;
+  };
+}
+
+interface PaymentConfirmResponse {
+  order?: {
+    payment_status: string;
+  };
+}
+
+// Google Maps type definitions
+interface GoogleMapsLatLng {
+  lat(): number;
+  lng(): number;
+}
+
+interface GoogleMapsDistanceElement {
+  status: string;
+  distance: { value: number; text: string };
+  duration: { value: number; text: string };
+}
+
+interface GoogleMapsDistanceRow {
+  elements: GoogleMapsDistanceElement[];
+}
+
+interface GoogleMapsDistanceResponse {
+  rows: GoogleMapsDistanceRow[];
+}
+
+interface GoogleMapsDistanceMatrixService {
+  getDistanceMatrix(
+    request: {
+      origins: GoogleMapsLatLng[];
+      destinations: GoogleMapsLatLng[];
+      travelMode: unknown;
+      unitSystem: unknown;
+    },
+    callback: (response: GoogleMapsDistanceResponse, status: string) => void
+  ): void;
+}
+
+// Extend Window interface for Google Maps
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        DistanceMatrixService: new () => GoogleMapsDistanceMatrixService;
+        LatLng: new (lat: number, lng: number) => GoogleMapsLatLng;
+        TravelMode: {
+          DRIVING: unknown;
+        };
+        UnitSystem: {
+          METRIC: unknown;
+        };
+      };
+    };
+  }
+}
+
 const Checkout = () => {
   const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'confirmation'>('details');
-  const [deliveryDetails, setDeliveryDetails] = useState<any>(null);
+  const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails | null>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(0);
-  const [paymentDetails, setPaymentDetails] = useState<any>(null);
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [orderId, setOrderId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmingPayOnDelivery, setConfirmingPayOnDelivery] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
-  const [pendingOrder, setPendingOrder] = useState<any>(null);
+  const [pendingOrder, setPendingOrder] = useState<{ orderId: string; message: string } | null>(null);
 
   const { items, clearCart } = useCart();
   const { isAuthenticated, user, token } = useAuth();
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  // Move useEffect before early return to comply with Rules of Hooks
+  useEffect(() => {
+    const checkPending = async () => {
+      try {
+        const res = await axios.get<PendingOrderResponse>('https://edumall-main-khkttx.laravel.cloud/api/orders/pending', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.pending) {
+          setPendingOrder({
+            orderId: res.data.order_id || '',
+            message: 'You have a pending order. Please confirm receipt before placing a new one.',
+          });
+        }
+      } catch (error) {
+        console.error('Pending check failed:', error);
+      }
+    };
+
+    if (isAuthenticated) checkPending();
+  }, [isAuthenticated, token]);
 
   if (!state?.subtotal) return <Navigate to="/cart" replace />;
 
@@ -35,8 +146,8 @@ const Checkout = () => {
     try {
       setConfirmingPayOnDelivery(true);
 
-      const response = await axios.post(
-        `https://edumallug.com/api/checkout/confirm-pay-on-delivery`,
+      const response = await axios.post<PaymentConfirmResponse>(
+        `https://edumall-main-khkttx.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
         {},
         {
           headers: {
@@ -98,7 +209,7 @@ const Checkout = () => {
           travelMode: window.google.maps.TravelMode.DRIVING,
           unitSystem: window.google.maps.UnitSystem.METRIC,
         },
-        (response, status) => {
+        (response: GoogleMapsDistanceResponse, status: string) => {
           if (status === 'OK' && response.rows.length > 0) {
             const element = response.rows[0].elements[0];
             if (element.status === 'OK') {
@@ -125,99 +236,118 @@ const Checkout = () => {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
-  useEffect(() => {
-    const checkPending = async () => {
-      try {
-        const res = await axios.get('https://edumallug.com/api/orders/pending', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
 
-        if (res.data.pending) {
-          setPendingOrder({
-            orderId: res.data.order_id,
-            message: 'You have a pending order. Please confirm receipt before placing a new one.',
-          });
-        }
-      } catch (error) {
-        console.error('Pending check failed:', error);
-      }
-    };
+const handleDetailsSubmit = async (details: DeliveryDetails) => {
+  // Ensure all fields are defined
+  const sanitizedDetails: DeliveryDetails = {
+    fullName: details.fullName?.trim() || '',
+    email: details.email?.trim() || '',
+    phone: details.phone?.trim() || '',
+    address: details.address?.trim() || '',
+    city: details.city?.trim() || '',
+    district: details.district?.trim() || '',
+    postalCode: details.postalCode?.trim() || '',
+    instructions: details.instructions?.trim() || '',
+    coordinates: {
+      lat: typeof details.coordinates?.lat === 'number' ? details.coordinates.lat : 0,
+      lng: typeof details.coordinates?.lng === 'number' ? details.coordinates.lng : 0,
+    },
+  };
 
-    if (isAuthenticated) checkPending();
-  }, [isAuthenticated, token]);
-
-  const handleDetailsSubmit = async (details: any) => {
-  setDeliveryDetails(details);
+  setDeliveryDetails(sanitizedDetails);
 
   try {
-   // const distance = await getDistanceInKm(details.coordinates);
-   // const fee = calculateDeliveryFee(distance);
-    setDeliveryFee(10000);
+    // Optional: calculate delivery fee based on distance
+    // const distance = await getDistanceInKm(sanitizedDetails.coordinates);
+    // const fee = calculateDeliveryFee(distance);
+    setDeliveryFee(90000); // fallback / default fee
   } catch (err) {
     console.error('Distance fetch failed:', err);
     alert('Google Maps distance check failed. Using default delivery fee.');
-    setDeliveryFee(10000); // Fallback fee
+    setDeliveryFee(90000);
   } finally {
-    // Always move to payment step, even if distance fails
     setCurrentStep('payment');
   }
 };
 
+const handlePaymentComplete = async (paymentData: PaymentDetails) => {
+  if (pendingOrder) {
+    alert('You have a pending order. Please confirm it before placing a new one.');
+    return;
+  }
 
-  const handlePaymentComplete = async (paymentData: any) => {
-    if (pendingOrder) {
-      alert('You have a pending order. Please confirm it before placing a new one.');
-      return;
-    }
+  if (!deliveryDetails) {
+    alert('Delivery details are missing.');
+    return;
+  }
 
-    setIsProcessing(true);
-    setPaymentDetails(paymentData);
+  setIsProcessing(true);
+  setPaymentDetails(paymentData);
 
-    try {
-      const orderPayload = {
-        customer_name: deliveryDetails.fullName,
-        customer_email: deliveryDetails.email,
-        customer_phone: deliveryDetails.phone,
-        address: deliveryDetails,
-        items: items.map(item => ({ product_id: item.id, quantity: item.quantity, price: item.price })),
-        subtotal,
-        delivery_fee: deliveryFee,
-        total,
-        payment_method: paymentData.method,
-        payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
-      };
+  try {
+    const orderPayload = {
+      customer_name: deliveryDetails.fullName,
+      customer_email: deliveryDetails.email,
+      customer_phone: deliveryDetails.phone,
+      address: [
+        {
+          street: deliveryDetails.address,
+          city: deliveryDetails.city,
+          district: deliveryDetails.district,
+          postal_code: deliveryDetails.postalCode,
+          coordinates: deliveryDetails.coordinates,
+          instructions: deliveryDetails.instructions,
+        },
+      ],
+      items: items.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: Number(item.price),
 
-      const response = await axios.post('https://edumallug.com/api/orders', orderPayload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      })),
+      subtotal,
+      delivery_fee: deliveryFee,
+      total,
+      payment_method: paymentData.method,
+      payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
+    };
 
-      const newOrderId = response.data.order_id || `EDU${Date.now()}`;
-      setOrderId(newOrderId);
+    const response = await axios.post<OrderResponse>(
+      'https://edumall-main-khkttx.laravel.cloud/api/orders',
+      orderPayload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      
+    const newOrderId = response.data.order_id || `EDU${Date.now()}`;
+    setOrderId(newOrderId);
 
-      if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
-        clearCart();
-        localStorage.removeItem('pendingPayment');
-        navigate('/categories');
-      } else {
-        setCurrentStep('confirmation');
-
-        if (paymentData.status !== 'success') {
-          localStorage.setItem('pendingPayment', JSON.stringify({
+    if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
+      clearCart();
+      localStorage.removeItem('pendingPayment');
+      navigate('/Dashboard');
+    } else {
+      navigate('/Dashboard');
+      if (paymentData.status !== 'success') {
+        localStorage.setItem(
+          'pendingPayment',
+          JSON.stringify({
             orderId: newOrderId,
             method: paymentData.method,
             amount: paymentData.amount,
-          }));
-        }
+          })
+        );
       }
-    } catch (error) {
-      console.error('Order failed:', error);
-      alert('Order placement failed.');
-    } finally {
-      setIsProcessing(false);
     }
-  };
+  } catch (error) {
+    console.error('Order failed:', error);
+    alert('Order placement failed. Please check your details and try again.');
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative">
@@ -265,8 +395,7 @@ const Checkout = () => {
                     />
                   ) : (
                     <GuestCheckout
-                      onPaymentComplete={handlePaymentComplete}
-                      total={total}
+                      onDetailsSubmit={handleDetailsSubmit}
                     />
                   )
                 )}
