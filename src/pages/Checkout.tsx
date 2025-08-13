@@ -324,8 +324,10 @@ const handlePaymentComplete = async (paymentData: PaymentDetails) => {
     if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
       clearCart();
       localStorage.removeItem('pendingPayment');
+      clearCart();
       navigate('/Dashboard');
     } else {
+      clearCart();
       navigate('/Dashboard');
       if (paymentData.status !== 'success') {
         localStorage.setItem(
