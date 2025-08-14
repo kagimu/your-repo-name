@@ -1,47 +1,67 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
 
-interface DeliveryFormProps {
-  user?: any;
-  onDetailsSubmit: (details: any) => void;
+interface Coordinates {
+  lat: number;
+  lng: number;
 }
 
-export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDetailsSubmit }) => {
-  const [formData, setFormData] = useState({
-    fullName: user?.name || '',
-    email: user?.email || '',
-    phone: '',
-    address: '',
-    city: 'Kampala',
-    district: 'Central',
-    postalCode: '',
-    instructions: '',
-    useCurrentLocation: false,
-    coordinates: { lat: 0.3476, lng: 32.5825 } // Default to Kampala
+interface DeliveryFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  district: string;
+  postalCode: string;
+  instructions: string;
+  useCurrentLocation: boolean;
+  coordinates: Coordinates;
+}
+
+interface DeliveryFormProps {
+  user?: any;
+  defaultValues?: Partial<DeliveryFormData>;
+  onDetailsSubmit: (details: DeliveryFormData) => void;
+}
+
+export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
+  user,
+  defaultValues,
+  onDetailsSubmit,
+}) => {
+  const [formData, setFormData] = useState<DeliveryFormData>({
+    fullName: defaultValues?.fullName || user?.name || '',
+    email: defaultValues?.email || user?.email || '',
+    phone: defaultValues?.phone || '',
+    address: defaultValues?.address || '',
+    city: defaultValues?.city || 'Kampala',
+    district: defaultValues?.district || 'Central',
+    postalCode: defaultValues?.postalCode || '',
+    instructions: defaultValues?.instructions || '',
+    useCurrentLocation: defaultValues?.useCurrentLocation || false,
+    coordinates: defaultValues?.coordinates || { lat: 0.3476, lng: 32.5825 },
   });
 
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // Mock address suggestions (in real app, this would call Google Places API)
   const mockAddressSuggestions = [
     'Makerere University, Kampala, Uganda',
     'Nakawa Campus, Kampala, Uganda',
     'Garden City Mall, Kampala, Uganda',
     'Kampala International University, Kampala, Uganda',
-    'Mulago Hospital, Kampala, Uganda'
+    'Mulago Hospital, Kampala, Uganda',
   ];
 
   const handleAddressChange = (value: string) => {
     setFormData(prev => ({ ...prev, address: value }));
-    
+
     if (value.length > 2) {
-      // Filter suggestions based on input
       const filtered = mockAddressSuggestions.filter(suggestion =>
         suggestion.toLowerCase().includes(value.toLowerCase())
       );
@@ -59,7 +79,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
 
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
-    
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -67,15 +87,9 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
           setFormData(prev => ({
             ...prev,
             coordinates: { lat: latitude, lng: longitude },
-            useCurrentLocation: true
+            useCurrentLocation: true,
+            address: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
           }));
-          
-          // Mock reverse geocoding (in real app, use Google Geocoding API)
-          setFormData(prev => ({
-            ...prev,
-            address: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`
-          }));
-          
           setIsLoadingLocation(false);
         },
         (error) => {
@@ -113,16 +127,13 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
               value={formData.fullName}
               onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
               required
-              className="bg-white border-gray-300 text-gray-900"
             />
-            
             <EdumallInput
               label="Email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
-              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
 
@@ -132,10 +143,8 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
             value={formData.phone}
             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
             required
-            className="bg-white border-gray-300 text-gray-900"
           />
 
-          {/* Address with Google Maps integration */}
           <div className="relative">
             <EdumallInput
               label="Delivery Address"
@@ -143,10 +152,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
               onChange={(e) => handleAddressChange(e.target.value)}
               placeholder="Start typing your address..."
               required
-              className="bg-white border-gray-300 text-gray-900"
             />
-            
-            {/* Address Suggestions */}
             {showSuggestions && addressSuggestions.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -168,19 +174,16 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
             )}
           </div>
 
-          {/* Current Location Button */}
           <div className="flex items-center space-x-4">
             <EdumallButton
               type="button"
               variant="secondary"
               onClick={getCurrentLocation}
               disabled={isLoadingLocation}
-              className="bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100"
             >
               <Navigation size={16} className="mr-2" />
               {isLoadingLocation ? 'Getting Location...' : 'Use Current Location'}
             </EdumallButton>
-            
             {formData.useCurrentLocation && (
               <div className="flex items-center text-green-600">
                 <Check size={16} className="mr-1" />
@@ -195,22 +198,17 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
               value={formData.city}
               onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
               required
-              className="bg-white border-gray-300 text-gray-900"
             />
-            
             <EdumallInput
               label="District"
               value={formData.district}
               onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
               required
-              className="bg-white border-gray-300 text-gray-900"
             />
-            
             <EdumallInput
               label="Postal Code (Optional)"
               value={formData.postalCode}
               onChange={(e) => setFormData(prev => ({ ...prev, postalCode: e.target.value }))}
-              className="bg-white border-gray-300 text-gray-900"
             />
           </div>
 
@@ -227,12 +225,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({ user, onDeta
             />
           </div>
 
-          <EdumallButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white"
-          >
+          <EdumallButton type="submit" variant="primary" size="lg" className="w-full">
             Continue to Payment
           </EdumallButton>
         </form>

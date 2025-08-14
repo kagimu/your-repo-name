@@ -55,7 +55,7 @@ export const Navbar = () => {
   const navItems = [
     { path: '/categories', label: 'Our Products', icon: BookOpen, mobileLabel: 'Products' },
     { path: '/research', label: 'Research', icon: Search, mobileLabel: 'Research' },
-    { path: '/courier', label: 'Courier', icon: BookOpen, mobileLabel: 'Courier', requiredType: 'courier' },
+   // { path: '/courier', label: 'Courier', icon: BookOpen, mobileLabel: 'Courier', requiredType: 'courier' },
   ];
 
   const isActivePath = (path: string) => {
@@ -281,7 +281,7 @@ export const Navbar = () => {
               )} */}
 
               {/* Cart */}
-              <Link to="/cart">
+              <Link to="/cart" className="relative">
                 <motion.div
                   className="relative p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-xl transition-all duration-200 flex items-center group"
                   whileHover={{ scale: 1.05 }}

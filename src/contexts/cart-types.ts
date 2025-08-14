@@ -18,12 +18,32 @@ export interface ApiCartItem {
   unit?: string;
 }
 
+export interface DeliveryDetails {
+  fullName: string;
+  email: string;
+  phone: string;
+  coordinates: { lat: number; lng: number };
+  address?: string;
+  district?: string;
+  city?: string;
+  postalCode?: string;
+  instructions?: string;
+}
+
+export interface PendingCheckoutDetails {
+  deliveryDetails?: DeliveryDetails;
+}
+
 export interface CartContextType {
   items: CartItem[];
-  addToCart: (product: CartItem) => Promise<void>;
+  addToCart: (product: CartItem, qty?: number) => Promise<void>;
   removeFromCart: (id: number) => Promise<void>;
   updateQuantity: (id: number, quantity: number) => Promise<void>;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   getCartCount: () => number;
   getCartTotal: () => number;
+  mergeGuestCart: () => Promise<void>;
+  pendingCheckoutDetails: PendingCheckoutDetails | null;
+  savePendingCheckout: (details: PendingCheckoutDetails) => void;
+  clearPendingCheckout: () => void;
 }

@@ -1,30 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Package } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
-import { GuestCheckout } from '@/components/checkout/GuestCheckout';
 import PaymentOptions from '@/components/checkout/PaymentOptions';
 import { DeliveryFormWithMaps } from '@/components/checkout/DeliveryFormWithMaps';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
+import { DeliveryDetails } from '@/contexts/cart-types';
 import axios from 'axios';
-
-// Type definitions
-interface DeliveryDetails {
-  fullName: string;
-  email: string;
-  phone: string;
-  coordinates: { lat: number; lng: number };
-  address?: string;
-  district?: string;
-  city?: string;
-  postalCode?: string;
-  instructions?: string; // New field for delivery instructions
-}
 
 interface PaymentDetails {
   method: string;
@@ -34,72 +21,8 @@ interface PaymentDetails {
   reference?: string;
 }
 
-interface PendingOrderResponse {
-  pending: boolean;
-  order_id?: string;
-}
-
 interface OrderResponse {
   order_id: string;
-  order?: {
-    payment_status: string;
-  };
-}
-
-interface PaymentConfirmResponse {
-  order?: {
-    payment_status: string;
-  };
-}
-
-// Google Maps type definitions
-interface GoogleMapsLatLng {
-  lat(): number;
-  lng(): number;
-}
-
-interface GoogleMapsDistanceElement {
-  status: string;
-  distance: { value: number; text: string };
-  duration: { value: number; text: string };
-}
-
-interface GoogleMapsDistanceRow {
-  elements: GoogleMapsDistanceElement[];
-}
-
-interface GoogleMapsDistanceResponse {
-  rows: GoogleMapsDistanceRow[];
-}
-
-interface GoogleMapsDistanceMatrixService {
-  getDistanceMatrix(
-    request: {
-      origins: GoogleMapsLatLng[];
-      destinations: GoogleMapsLatLng[];
-      travelMode: unknown;
-      unitSystem: unknown;
-    },
-    callback: (response: GoogleMapsDistanceResponse, status: string) => void
-  ): void;
-}
-
-// Extend Window interface for Google Maps
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        DistanceMatrixService: new () => GoogleMapsDistanceMatrixService;
-        LatLng: new (lat: number, lng: number) => GoogleMapsLatLng;
-        TravelMode: {
-          DRIVING: unknown;
-        };
-        UnitSystem: {
-          METRIC: unknown;
-        };
-      };
-    };
-  }
 }
 
 const Checkout = () => {
@@ -109,268 +32,120 @@ const Checkout = () => {
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [orderId, setOrderId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [confirmingPayOnDelivery, setConfirmingPayOnDelivery] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
-  const [pendingOrder, setPendingOrder] = useState<{ orderId: string; message: string } | null>(null);
 
-  const { items, clearCart } = useCart();
+  const { items: cartItems, clearCart, mergeGuestCart, pendingCheckoutDetails, savePendingCheckout, clearPendingCheckout } = useCart();
   const { isAuthenticated, user, token } = useAuth();
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  // Move useEffect before early return to comply with Rules of Hooks
+  const [items, setItems] = useState(cartItems || []);
+
+  // Restore pending checkout or state from Cart page
   useEffect(() => {
-    const checkPending = async () => {
-      try {
-        const res = await axios.get<PendingOrderResponse>('https://edumall-main-khkttx.laravel.cloud/api/orders/pending', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.data.pending) {
-          setPendingOrder({
-            orderId: res.data.order_id || '',
-            message: 'You have a pending order. Please confirm receipt before placing a new one.',
-          });
-        }
-      } catch (error) {
-        console.error('Pending check failed:', error);
-      }
-    };
-
-    if (isAuthenticated) checkPending();
-  }, [isAuthenticated, token]);
-
-  if (!state?.subtotal) return <Navigate to="/cart" replace />;
-
-  const confirmDeliveryReceived = async () => {
-    try {
-      setConfirmingPayOnDelivery(true);
-
-      const response = await axios.post<PaymentConfirmResponse>(
-        `https://edumall-main-khkttx.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.order?.payment_status === 'paid') {
-        setConfirmMessage('Payment confirmed! Thank you.');
-        clearCart();
-        localStorage.removeItem('pendingPayment');
-        setPendingOrder(null);
-      } else {
-        setConfirmMessage('Failed to confirm payment. Please try again.');
-      }
-    } catch (error) {
-      console.error('Confirmation failed:', error);
-      setConfirmMessage('Something went wrong while confirming payment.');
-    } finally {
-      setConfirmingPayOnDelivery(false);
+    if (state?.items?.length) {
+      setItems(state.items);
+    } else if (isAuthenticated && pendingCheckoutDetails) {
+      setItems(pendingCheckoutDetails.items || []);
+      setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
+      setCurrentStep('payment');
+      mergeGuestCart();
+      clearPendingCheckout();
+    } else if (!isAuthenticated && pendingCheckoutDetails?.items?.length) {
+      setItems(pendingCheckoutDetails.items);
+      setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
     }
-  };
+  }, [state, isAuthenticated, pendingCheckoutDetails, mergeGuestCart, clearPendingCheckout]);
 
-  const waitForGoogleMaps = () => {
-    return new Promise<void>((resolve, reject) => {
-      if (window.google && window.google.maps) {
-        resolve();
-        return;
-      }
-
-      let attempts = 0;
-      const interval = setInterval(() => {
-        if (window.google && window.google.maps) {
-          clearInterval(interval);
-          resolve();
-        } else if (attempts > 50) {
-          clearInterval(interval);
-          reject(new Error('Google Maps API failed to load.'));
-        }
-        attempts++;
-      }, 100);
-    });
-  };
-
-  const getDistanceInKm = async (destination: { lat: number; lng: number }) => {
-    await waitForGoogleMaps();
-
-    return new Promise<number>((resolve, reject) => {
-      const service = new window.google.maps.DistanceMatrixService();
-
-      const origin = new window.google.maps.LatLng(0.3476, 32.5825); // Kampala city center
-      const dest = new window.google.maps.LatLng(destination.lat, destination.lng);
-
-      service.getDistanceMatrix(
-        {
-          origins: [origin],
-          destinations: [dest],
-          travelMode: window.google.maps.TravelMode.DRIVING,
-          unitSystem: window.google.maps.UnitSystem.METRIC,
-        },
-        (response: GoogleMapsDistanceResponse, status: string) => {
-          if (status === 'OK' && response.rows.length > 0) {
-            const element = response.rows[0].elements[0];
-            if (element.status === 'OK') {
-              const distanceMeters = element.distance.value;
-              resolve(distanceMeters / 1000); // km
-            } else {
-              reject(new Error('DistanceMatrix element status: ' + element.status));
-            }
-          } else {
-            reject(new Error('DistanceMatrix status: ' + status));
-          }
-        }
-      );
-    });
-  };
-
-  const calculateDeliveryFee = (distanceKm: number) => {
-    if (distanceKm <= 5) return 40000;
-    if (distanceKm <= 10) return 70000;
-    if (distanceKm <= 20) return 100000;
-    return 15000 + (distanceKm - 20) * 500;
-  };
+  // Prevent checkout if no items
+  if (!items || !items.length) return <Navigate to="/cart" replace />;
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
-
-const handleDetailsSubmit = async (details: DeliveryDetails) => {
-  // Ensure all fields are defined
-  const sanitizedDetails: DeliveryDetails = {
-    fullName: details.fullName?.trim() || '',
-    email: details.email?.trim() || '',
-    phone: details.phone?.trim() || '',
-    address: details.address?.trim() || '',
-    city: details.city?.trim() || '',
-    district: details.district?.trim() || '',
-    postalCode: details.postalCode?.trim() || '',
-    instructions: details.instructions?.trim() || '',
-    coordinates: {
-      lat: typeof details.coordinates?.lat === 'number' ? details.coordinates.lat : 0,
-      lng: typeof details.coordinates?.lng === 'number' ? details.coordinates.lng : 0,
-    },
-  };
-
-  setDeliveryDetails(sanitizedDetails);
-
-  try {
-    // Optional: calculate delivery fee based on distance
-    // const distance = await getDistanceInKm(sanitizedDetails.coordinates);
-    // const fee = calculateDeliveryFee(distance);
-    setDeliveryFee(90000); // fallback / default fee
-  } catch (err) {
-    console.error('Distance fetch failed:', err);
-    alert('Google Maps distance check failed. Using default delivery fee.');
-    setDeliveryFee(90000);
-  } finally {
-    setCurrentStep('payment');
-  }
-};
-
-const handlePaymentComplete = async (paymentData: PaymentDetails) => {
-  if (pendingOrder) {
-    alert('You have a pending order. Please confirm it before placing a new one.');
-    return;
-  }
-
-  if (!deliveryDetails) {
-    alert('Delivery details are missing.');
-    return;
-  }
-
-  setIsProcessing(true);
-  setPaymentDetails(paymentData);
-
-  try {
-    const orderPayload = {
-      customer_name: deliveryDetails.fullName,
-      customer_email: deliveryDetails.email,
-      customer_phone: deliveryDetails.phone,
-      address: [
-        {
-          street: deliveryDetails.address,
-          city: deliveryDetails.city,
-          district: deliveryDetails.district,
-          postal_code: deliveryDetails.postalCode,
-          coordinates: deliveryDetails.coordinates,
-          instructions: deliveryDetails.instructions,
-        },
-      ],
-      items: items.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        price: Number(item.price),
-
-      })),
-      subtotal,
-      delivery_fee: deliveryFee,
-      total,
-      payment_method: paymentData.method,
-      payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
+  /** Step 1: Delivery Details */
+  const handleDetailsSubmit = (details: DeliveryDetails) => {
+    const sanitized: DeliveryDetails = {
+      ...details,
+      fullName: details.fullName?.trim() || '',
+      email: details.email?.trim() || '',
+      phone: details.phone?.trim() || '',
+      address: details.address?.trim() || '',
+      city: details.city?.trim() || '',
+      district: details.district?.trim() || '',
+      postalCode: details.postalCode?.trim() || '',
+      instructions: details.instructions?.trim() || '',
     };
 
-    const response = await axios.post<OrderResponse>(
-      'https://edumall-main-khkttx.laravel.cloud/api/orders',
-      orderPayload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    setDeliveryDetails(sanitized);
+    setDeliveryFee(90000); // placeholder fee
 
-    const newOrderId = response.data.order_id || `EDU${Date.now()}`;
-    setOrderId(newOrderId);
-
-    if (paymentData.status === 'success' && paymentData.method === 'flutterwave') {
-      clearCart();
-      localStorage.removeItem('pendingPayment');
-      clearCart();
-      navigate('/Dashboard');
-    } else {
-      clearCart();
-      navigate('/Dashboard');
-      if (paymentData.status !== 'success') {
-        localStorage.setItem(
-          'pendingPayment',
-          JSON.stringify({
-            orderId: newOrderId,
-            method: paymentData.method,
-            amount: paymentData.amount,
-          })
-        );
-      }
+    if (!isAuthenticated) {
+      savePendingCheckout({ items, deliveryDetails: sanitized });
     }
-  } catch (error) {
-    console.error('Order failed:', error);
-    alert('Order placement failed. Please check your details and try again.');
-  } finally {
-    setIsProcessing(false);
-  }
-};
 
+    setCurrentStep('payment');
+  };
 
+  /** Step 2: Payment */
+  const handlePaymentComplete = async (paymentData: PaymentDetails) => {
+    if (!deliveryDetails) {
+      alert('Delivery details missing.');
+      return;
+    }
 
+    setIsProcessing(true);
+    setPaymentDetails(paymentData);
+
+    try {
+      const orderPayload = {
+        customer_name: deliveryDetails.fullName,
+        customer_email: deliveryDetails.email,
+        customer_phone: deliveryDetails.phone,
+        address: [
+          {
+            street: deliveryDetails.address,
+            city: deliveryDetails.city,
+            district: deliveryDetails.district,
+            postal_code: deliveryDetails.postalCode,
+            coordinates: deliveryDetails.coordinates,
+            instructions: deliveryDetails.instructions,
+          },
+        ],
+        items: items.map((item) => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        payment_method: paymentData.method,
+        payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
+      };
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.post<OrderResponse>(
+        'https://edumall-main-khkttx.laravel.cloud/api/orders',
+        orderPayload,
+        { headers }
+      );
+
+      setOrderId(response.data.order_id || `EDU${Date.now()}`);
+      clearCart();
+      clearPendingCheckout();
+      setCurrentStep('confirmation');
+    } catch (err) {
+      console.error('Order failed:', err);
+      alert('Order placement failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative">
       <CustomCursor />
       <Navbar />
-
-      {pendingOrder && (
-        <div className="fixed top-0 left-0 w-full z-50 bg-yellow-100 border-b border-yellow-400 text-yellow-800 p-4 text-center shadow-md">
-          <p>{pendingOrder.message}</p>
-          <EdumallButton
-            onClick={confirmDeliveryReceived}
-            className="mt-2 bg-green-600 hover:bg-green-700 text-white"
-            disabled={confirmingPayOnDelivery}
-          >
-            {confirmingPayOnDelivery ? 'Confirming...' : 'Confirm Delivery Received'}
-          </EdumallButton>
-          {confirmMessage && (
-            <p className="mt-2 text-sm text-gray-700">{confirmMessage}</p>
-          )}
-        </div>
-      )}
 
       <main className="pt-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -379,54 +154,42 @@ const handlePaymentComplete = async (paymentData: PaymentDetails) => {
               <ArrowLeft className="w-4 h-4 mr-1" /> Back to Cart
             </Link>
 
+            {!isAuthenticated && (
+              <div className="p-4 bg-yellow-50 border border-yellow-300 rounded mb-4 text-yellow-700">
+                You are checking out as a guest. Your order will be processed, but your cart will not be saved.
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="md:col-span-2 space-y-6">
-                {currentStep === 'details' && <DeliveryFormWithMaps onDetailsSubmit={handleDetailsSubmit} user={user} />}
-                {currentStep === 'payment' && (
-                  isAuthenticated ? (
-                    <PaymentOptions
-                      onPaymentComplete={handlePaymentComplete}
-                      subtotal={subtotal}
-                      deliveryFee={deliveryFee}
-                      customer={{
-                        name: deliveryDetails?.fullName || '',
-                        email: deliveryDetails?.email || '',
-                        phone: deliveryDetails?.phone || '',
-                      }}
-                      items={items}
-                    />
-                  ) : (
-                    <GuestCheckout
-                      onDetailsSubmit={handleDetailsSubmit}
-                    />
-                  )
+                {currentStep === 'details' && (
+                  <DeliveryFormWithMaps
+                    onDetailsSubmit={handleDetailsSubmit}
+                    user={user}
+                    defaultValues={deliveryDetails}
+                  />
                 )}
+
+                {currentStep === 'payment' && (
+                  <PaymentOptions
+                    onPaymentComplete={handlePaymentComplete}
+                    subtotal={subtotal}
+                    deliveryFee={deliveryFee}
+                    customer={{
+                      name: deliveryDetails?.fullName || '',
+                      email: deliveryDetails?.email || '',
+                      phone: deliveryDetails?.phone || '',
+                    }}
+                    items={items}
+                    isProcessing={isProcessing}
+                  />
+                )}
+
                 {currentStep === 'confirmation' && (
                   <div className="text-center p-6 bg-white rounded-lg shadow">
                     <h2 className="text-xl font-bold text-green-600 mb-2">Order Confirmed</h2>
                     <p className="text-gray-700 mb-4">Your order has been placed successfully.</p>
-                    <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                      <Package className="w-4 h-4" />
-                      <span>Order ID: #{orderId}</span>
-                      <Clock className="w-4 h-4" />
-                      <span>Status: Processing</span>
-                    </div>
-
-                    {paymentDetails?.status === 'pending' && paymentDetails?.method === 'cod' && (
-                      <div className="mt-6">
-                        <EdumallButton
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={confirmDeliveryReceived}
-                          disabled={confirmingPayOnDelivery}
-                        >
-                          {confirmingPayOnDelivery ? 'Confirming...' : 'Confirm Delivery Received'}
-                        </EdumallButton>
-                        {confirmMessage && (
-                          <p className="mt-2 text-sm text-gray-700">{confirmMessage}</p>
-                        )}
-                      </div>
-                    )}
-
+                    <p className="text-sm text-gray-600">Order ID: {orderId}</p>
                     <Link to="/categories">
                       <EdumallButton className="mt-6">Continue Shopping</EdumallButton>
                     </Link>
