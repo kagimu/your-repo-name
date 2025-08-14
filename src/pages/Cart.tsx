@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, LogIn } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
-import axios from 'axios';
 
 const QuantityInput = ({ itemId, quantity, updateQuantity, isLoading }) => {
   const [inputValue, setInputValue] = useState(quantity.toString());
@@ -55,23 +54,21 @@ const QuantityInput = ({ itemId, quantity, updateQuantity, isLoading }) => {
 };
 
 const Cart = () => {
-  const { token } = useAuth();
-  const { items, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const { token, user, isAuthenticated } = useAuth();
+  const { items, updateQuantity, removeFromCart, getCartTotal, pendingCheckoutDetails } = useCart();
   const [loadingItemId, setLoadingItemId] = useState(null);
+  const navigate = useNavigate();
 
-  const formatPrice = (price) => new Intl.NumberFormat('en-UG', {
-    style: 'currency',
-    currency: 'UGX',
-    minimumFractionDigits: 0
-  }).format(price);
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-UG', {
+      style: 'currency',
+      currency: 'UGX',
+      minimumFractionDigits: 0,
+    }).format(price);
 
   const handleRemoveItem = async (productId) => {
-    if (!token) return alert('Please log in to modify your cart.');
     setLoadingItemId(productId);
     try {
-      await axios.delete(`https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       await removeFromCart(productId);
     } catch (err) {
       console.error('Remove failed:', err);
@@ -81,9 +78,11 @@ const Cart = () => {
     }
   };
 
-  //const deliveryFee = 10000;
   const subtotal = getCartTotal();
-  const total = subtotal;
+  const total = subtotal; // delivery fee calculated in checkout
+
+  // Check if user has a pending order
+  const hasPendingOrder = pendingCheckoutDetails?.status === 'pending';
 
   if (items.length === 0) {
     return (
@@ -92,12 +91,16 @@ const Cart = () => {
         <Navbar />
         <main className="pt-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center py-16">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl"
+            >
               <ShoppingBag size={64} className="mx-auto text-blue-600 mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-              <p className="text-gray-600 mb-6">Discover amazing products and add them to your cart.</p>
+              <p className="text-gray-600 mb-8">Browse our categories to find what you need.</p>
               <Link to="/categories">
-                <EdumallButton variant="primary" size="lg" className="bg-gradient-to-r from-teal-500 to-blue-600 text-white">
+                <EdumallButton variant="primary" size="lg">
                   Start Shopping
                 </EdumallButton>
               </Link>
@@ -122,7 +125,13 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {items.map((item, index) => (
-                <motion.div key={`${item.id}-${index}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-lg">
+                <motion.div
+                  key={`${item.id}-${index}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-lg"
+                >
                   <div className="flex items-center gap-6">
                     <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl" />
                     <div className="flex-1">
@@ -132,17 +141,34 @@ const Cart = () => {
                       {item.unit && <p className="text-xs text-gray-500">per {item.unit}</p>}
                     </div>
                     <div className="flex items-center gap-3">
-                      <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} disabled={loadingItemId === item.id} className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200">
+                      <button
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        disabled={loadingItemId === item.id}
+                        className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
+                      >
                         <Minus size={16} />
                       </button>
-                      <QuantityInput itemId={item.id} quantity={item.quantity} updateQuantity={updateQuantity} isLoading={loadingItemId === item.id} />
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} disabled={loadingItemId === item.id} className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200">
+                      <QuantityInput
+                        itemId={item.id}
+                        quantity={item.quantity}
+                        updateQuantity={updateQuantity}
+                        isLoading={loadingItemId === item.id}
+                      />
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={loadingItemId === item.id}
+                        className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
+                      >
                         <Plus size={16} />
                       </button>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900 mb-2">{formatPrice(item.price * item.quantity)}</p>
-                      <button onClick={() => handleRemoveItem(item.id)} disabled={loadingItemId === item.id} className="text-red-500 hover:text-red-700">
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        disabled={loadingItemId === item.id}
+                        className="text-red-500 hover:text-red-700"
+                      >
                         {loadingItemId === item.id ? (
                           <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
                         ) : (
@@ -156,8 +182,17 @@ const Cart = () => {
             </div>
 
             <div className="lg:col-span-1">
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border shadow-lg sticky top-24">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border shadow-lg sticky top-24"
+              >
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                {hasPendingOrder && (
+                  <p className="text-red-600 text-sm mb-4">
+                    You have a pending order. Please complete or cancel it before placing a new order.
+                  </p>
+                )}
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-700">
                     <span>Subtotal ({items.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
@@ -175,12 +210,51 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                <Link to="/checkout" state={{ subtotal }} className="block">
-                  <EdumallButton variant="primary" size="lg" className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white">
-                    Proceed to Checkout
-                    <ArrowRight size={18} className="ml-2" />
-                  </EdumallButton>
-                </Link>
+
+                <div className="space-y-4">
+                  {!isAuthenticated ? (
+                    <>
+                      <EdumallButton
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white"
+                        onClick={() => navigate('/checkout', { state: { items, subtotal, mode: 'guest' } })}
+                      >
+                        Continue as Guest
+                        <ArrowRight size={18} className="ml-2" />
+                      </EdumallButton>
+                      <EdumallButton
+                        variant="outline"
+                        size="lg"
+                        className="w-full"
+                        onClick={() => navigate('/login', { state: { from: '/cart' } })}
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Login to Checkout
+                      </EdumallButton>
+                      <p className="text-sm text-gray-600 text-center">
+                        Login to save your cart and access more features
+                      </p>
+                    </>
+                  ) : (
+                    <EdumallButton
+                      variant="primary"
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white"
+                      disabled={hasPendingOrder}
+                      onClick={() => navigate('/checkout', { state: { items, subtotal } })}
+                    >
+                      Proceed to Checkout
+                      <ArrowRight size={18} className="ml-2" />
+                    </EdumallButton>
+                  )}
+                </div>
+
+                {hasPendingOrder && (
+                  <p className="text-sm text-red-600 mt-2">
+                    Please complete or cancel your pending order before placing a new one.
+                  </p>
+                )}
               </motion.div>
             </div>
           </div>

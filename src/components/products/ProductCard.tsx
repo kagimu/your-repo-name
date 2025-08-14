@@ -41,17 +41,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      // Save current URL to return after login
-      localStorage.setItem('returnUrl', window.location.pathname);
-      // Show a more user-friendly message using toast if available
-      const confirmation = window.confirm('You need to log in to add items to your cart. Would you like to log in now?');
-      if (confirmation) {
-        window.location.href = '/login';
-      }
-      return;
-    }
-
+  
     addToCart({
         id: product.id,
         name: product.name,

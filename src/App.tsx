@@ -76,9 +76,9 @@ const App = () => {
                       </RoleGuard>
                     } />
 
-                    {/* Protected routes that require authentication */}
+                    {/* Cart route - accessible to all */}
                     <Route path="/cart" element={
-                      <RoleGuard allowedRoles={["institution", "individual", "guest"]}>
+                      <RoleGuard allowedRoles={["*"]} requireAuth={false}>
                         <Cart />
                       </RoleGuard>
                     } />
