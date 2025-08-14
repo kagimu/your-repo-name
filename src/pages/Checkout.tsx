@@ -12,6 +12,7 @@ import { DeliveryFormWithMaps } from '@/components/checkout/DeliveryFormWithMaps
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { DeliveryDetails } from '@/contexts/cart-types';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 interface PaymentDetails {
   method: string;
@@ -40,21 +41,44 @@ const Checkout = () => {
 
   const [items, setItems] = useState(cartItems || []);
 
-  // Restore pending checkout or state from Cart page
+  // Effect to handle cart initialization and cleanup
   useEffect(() => {
-    if (state?.items?.length) {
-      setItems(state.items);
-    } else if (isAuthenticated && pendingCheckoutDetails) {
-      setItems(pendingCheckoutDetails.items || []);
-      setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
-      setCurrentStep('payment');
-      mergeGuestCart();
-      clearPendingCheckout();
-    } else if (!isAuthenticated && pendingCheckoutDetails?.items?.length) {
-      setItems(pendingCheckoutDetails.items);
-      setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
-    }
-  }, [state, isAuthenticated, pendingCheckoutDetails, mergeGuestCart, clearPendingCheckout]);
+    const initCart = async () => {
+      if (state?.items?.length) {
+        setItems(state.items);
+      } else if (isAuthenticated && pendingCheckoutDetails) {
+        setItems(pendingCheckoutDetails.items || []);
+        setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
+        setCurrentStep('payment');
+        await mergeGuestCart();
+        clearPendingCheckout();
+      } else if (!isAuthenticated && pendingCheckoutDetails?.items?.length) {
+        setItems(pendingCheckoutDetails.items);
+        setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
+      }
+    };
+
+    initCart();
+
+    // Cleanup function to ensure cart is cleared
+    return () => {
+      const cleanup = async () => {
+        try {
+          if (currentStep === 'confirmation') {
+            // Clear everything
+            await clearCart();
+            localStorage.removeItem('guest_cart');
+            localStorage.removeItem('pendingCheckoutDetails');
+            clearPendingCheckout();
+            setItems([]);
+          }
+        } catch (err) {
+          console.error('Cleanup error:', err);
+        }
+      };
+      cleanup();
+    };
+  }, [state, isAuthenticated, pendingCheckoutDetails, mergeGuestCart, clearPendingCheckout, currentStep, clearCart]);
 
   // Prevent checkout if no items
   if (!items || !items.length) return <Navigate to="/cart" replace />;
@@ -97,6 +121,7 @@ const Checkout = () => {
     setPaymentDetails(paymentData);
 
     try {
+      // 1. First create the order
       const orderPayload = {
         customer_name: deliveryDetails.fullName,
         customer_email: deliveryDetails.email,
@@ -130,13 +155,61 @@ const Checkout = () => {
         { headers }
       );
 
-      setOrderId(response.data.order_id || `EDU${Date.now()}`);
-      clearCart();
-      clearPendingCheckout();
-      setCurrentStep('confirmation');
+      const generatedOrderId = response.data.order_id || `EDU${Date.now()}`;
+      setOrderId(generatedOrderId);
+
+      // Clear the cart and navigate
+      try {
+        // Set order confirmation first
+        setCurrentStep('confirmation');
+        
+        // Clear cart using the context method (which now handles both backend and local)
+        await clearCart();
+        
+        // Clear all local state
+        setItems([]);
+        clearPendingCheckout();
+
+        // Show success message and navigate
+        toast.success('Order placed successfully! Your cart has been cleared.');
+        
+        // Navigate after a short delay to ensure state updates
+        setTimeout(() => {
+          navigate('/Dashboard', { 
+            state: { 
+              orderId: generatedOrderId,
+              orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
+            },
+            replace: true
+          });
+        }, 500);
+      } catch (err) {
+        console.error('Error during cart clearing:', err);
+        // Even if cart clearing fails, still navigate but show warning
+        toast.warning('Order placed but cart clearing had issues. Please refresh the page.');
+        navigate('/Dashboard', { 
+          state: { 
+            orderId: generatedOrderId,
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
+          },
+          replace: true
+        });
+      }
+      toast.success('Order placed successfully! Your cart has been cleared.');
+      
+      // Use setTimeout to ensure state updates have propagated
+      setTimeout(() => {
+        navigate('/Dashboard', { 
+          state: { 
+            orderId: generatedOrderId,
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
+          },
+          replace: true
+        });
+      }, 100);
     } catch (err) {
-      console.error('Order failed:', err);
-      alert('Order placement failed. Please try again.');
+      console.error('Order or cart clearing failed:', err);
+      toast.error('There was an issue processing your order. Please contact support.');
     } finally {
       setIsProcessing(false);
     }
@@ -167,6 +240,7 @@ const Checkout = () => {
                     onDetailsSubmit={handleDetailsSubmit}
                     user={user}
                     defaultValues={deliveryDetails}
+                     openCageApiKey="be6ffe3a1191428ba1127565d1b9f62c"
                   />
                 )}
 
@@ -181,7 +255,6 @@ const Checkout = () => {
                       phone: deliveryDetails?.phone || '',
                     }}
                     items={items}
-                    isProcessing={isProcessing}
                   />
                 )}
 

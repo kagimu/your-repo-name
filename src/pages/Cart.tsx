@@ -133,7 +133,15 @@ const Cart = () => {
                   className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-lg"
                 >
                   <div className="flex items-center gap-6">
-                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl" />
+                    <img
+                      src={
+                        item.image?.startsWith('http')
+                          ? item.image
+                          : `edumall-main-khkttx.laravel.cloud/storage/${item.image}`
+                      }
+                      alt={item.name}
+                      className="w-20 h-20 object-cover rounded-xl"
+                    />
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
                       <p className="text-sm text-gray-600 mb-2">{item.category}</p>

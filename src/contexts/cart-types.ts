@@ -36,6 +36,9 @@ export interface PendingCheckoutDetails {
 
 export interface CartContextType {
   items: CartItem[];
+  isLoading: boolean;
+  error: string | null;
+  isInitialized: boolean;
   addToCart: (product: CartItem, qty?: number) => Promise<void>;
   removeFromCart: (id: number) => Promise<void>;
   updateQuantity: (id: number, quantity: number) => Promise<void>;

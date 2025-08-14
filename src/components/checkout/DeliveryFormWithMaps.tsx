@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
+import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
 
 interface Coordinates {
   lat: number;
@@ -26,12 +27,14 @@ interface DeliveryFormProps {
   user?: any;
   defaultValues?: Partial<DeliveryFormData>;
   onDetailsSubmit: (details: DeliveryFormData) => void;
+  openCageApiKey: string; // API key passed as prop
 }
 
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   user,
   defaultValues,
   onDetailsSubmit,
+  openCageApiKey,
 }) => {
   const [formData, setFormData] = useState<DeliveryFormData>({
     fullName: defaultValues?.fullName || user?.name || '',
@@ -46,61 +49,76 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     coordinates: defaultValues?.coordinates || { lat: 0.3476, lng: 32.5825 },
   });
 
-  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  const mockAddressSuggestions = [
-    'Makerere University, Kampala, Uganda',
-    'Nakawa Campus, Kampala, Uganda',
-    'Garden City Mall, Kampala, Uganda',
-    'Kampala International University, Kampala, Uganda',
-    'Mulago Hospital, Kampala, Uganda',
-  ];
-
-  const handleAddressChange = (value: string) => {
-    setFormData(prev => ({ ...prev, address: value }));
-
-    if (value.length > 2) {
-      const filtered = mockAddressSuggestions.filter(suggestion =>
-        suggestion.toLowerCase().includes(value.toLowerCase())
-      );
-      setAddressSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
+  // Handle selection from autocomplete
+  const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
+    const parts = locationData.name.split(',').map(p => p.trim());
+    setFormData(prev => ({
+      ...prev,
+      address: locationData.name,
+      coordinates: locationData.coordinates,
+      useCurrentLocation: false,
+      city: parts[1] || 'Kampala',
+      district: parts[2] || 'Central',
+    }));
   };
 
-  const selectSuggestion = (suggestion: string) => {
-    setFormData(prev => ({ ...prev, address: suggestion }));
-    setShowSuggestions(false);
-  };
-
+  // Get current location
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const { latitude, longitude } = coords;
+
+        try {
+          const res = await fetch(
+            `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${openCageApiKey}&limit=1&no_annotations=1`
+          );
+
+          if (!res.ok) throw new Error('Failed to reverse geocode location');
+
+          const data = await res.json();
+          const result = data.results?.[0];
+
+          if (result) {
+            const components = result.components || {};
+            const formatted = result.formatted || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            setFormData(prev => ({
+              ...prev,
+              coordinates: { lat: latitude, lng: longitude },
+              useCurrentLocation: true,
+              address: formatted,
+              city: components.city || components.town || 'Kampala',
+              district: components.county || components.state_district || components.state || 'Central',
+            }));
+          }
+        } catch (err) {
+          console.error('Error fetching location:', err);
           setFormData(prev => ({
             ...prev,
             coordinates: { lat: latitude, lng: longitude },
             useCurrentLocation: true,
-            address: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           }));
-          setIsLoadingLocation(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
+        } finally {
           setIsLoadingLocation(false);
         }
-      );
-    } else {
-      alert('Geolocation is not supported by this browser.');
-      setIsLoadingLocation(false);
-    }
+      },
+      err => {
+        console.error('Geolocation error:', err);
+        alert('Could not get your location. Please enable location services.');
+        setIsLoadingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -109,11 +127,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="space-y-6"
-    >
+    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
       <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
           <MapPin className="mr-3 text-teal-600" size={28} />
@@ -146,32 +160,15 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
           />
 
           <div className="relative">
-            <EdumallInput
-              label="Delivery Address"
-              value={formData.address}
-              onChange={(e) => handleAddressChange(e.target.value)}
-              placeholder="Start typing your address..."
-              required
-            />
-            {showSuggestions && addressSuggestions.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute top-full left-0 right-0 z-10 bg-white border border-gray-200 rounded-xl mt-2 shadow-lg"
-              >
-                {addressSuggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => selectSuggestion(suggestion)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-gray-800 border-b border-gray-100 last:border-b-0"
-                  >
-                    <MapPin size={16} className="inline mr-2 text-teal-600" />
-                    {suggestion}
-                  </button>
-                ))}
-              </motion.div>
-            )}
+            <label className="text-sm font-medium text-gray-900 mb-2 block">Delivery Address</label>
+            <OpenCageAutocomplete
+            onAddressSelect={handleAddressSelect}
+            value={formData.address} // <-- controlled input
+            onChange={(newAddress) => setFormData(prev => ({ ...prev, address: newAddress }))}
+            className="w-full"
+            apiKey={openCageApiKey}
+          />
+
           </div>
 
           <div className="flex items-center space-x-4">
