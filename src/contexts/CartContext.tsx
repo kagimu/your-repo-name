@@ -2,13 +2,16 @@ import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { CartContext } from './cart-context';
-import { CartItem, ApiCartItem, PendingCheckoutDetails } from './cart-types';
+import { CartItem, ApiCartItem, PendingCheckoutDetails, CartContextType } from './cart-types';
 
 const LOCAL_STORAGE_KEY = 'guest_cart';
 const PENDING_CHECKOUT_KEY = 'pendingCheckoutDetails';
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [pendingCheckoutDetails, setPendingCheckoutDetails] = useState<PendingCheckoutDetails | null>(null);
 
   const { token, isAuthenticated } = useAuth();
@@ -54,6 +57,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    ------------------ */
   const fetchAuthCart = useCallback(async () => {
     if (!token) return;
+    setIsLoading(true);
+    setError(null);
     try {
       const res = await axios.get<{ cart: ApiCartItem[] }>(
         'https://edumall-main-khkttx.laravel.cloud/api/cart',
@@ -73,73 +78,76 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setItems(cartData);
     } catch (err) {
       console.error('Error fetching authenticated cart:', err);
+      setError('Failed to load cart');
+    } finally {
+      setIsLoading(false);
     }
   }, [token]);
 
   /** -----------------
-   * Merge Guest → Auth Cart
-   ------------------ */
-  const mergeGuestCartToAuthCart = useCallback(async () => {
-    const guestCart = loadGuestCart();
-    if (!guestCart.length || !token) return;
-
-    try {
-      for (const product of guestCart) {
-        await axios.post(
-          'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
-          { product_id: product.id, quantity: product.quantity },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      await fetchAuthCart();
-    } catch (err) {
-      console.error('Error merging guest cart:', err);
-    }
-  }, [token, fetchAuthCart]);
-
-  /** -----------------
-   * Initial Load
+   * Initialize Cart
    ------------------ */
   useEffect(() => {
-    const pending = loadPendingCheckout();
-    if (pending) setPendingCheckoutDetails(pending);
+    const initializeCart = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        if (isAuthenticated && token) {
+          await fetchAuthCart();
+        } else {
+          setItems(loadGuestCart());
+        }
+      } catch (err) {
+        console.error('Error initializing cart:', err);
+        setError('Failed to load cart');
+        if (isAuthenticated) {
+          setItems(loadGuestCart());
+        }
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
+    };
 
-    if (isAuthenticated && token) {
-      mergeGuestCartToAuthCart();
-    } else {
-      setItems(loadGuestCart());
-    }
-  }, [isAuthenticated, token, mergeGuestCartToAuthCart]);
+    // Load initial cart data
+    initializeCart();
+  }, [isAuthenticated, token, fetchAuthCart]);
 
   /** -----------------
-   * Cart Actions
+   * Cart Operations
    ------------------ */
   const addToCart = async (product: CartItem, qty = 1) => {
+    setError(null);
     if (isAuthenticated && token) {
       try {
         await axios.post(
           'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
-          { product_id: product.id, quantity: qty },
+          { 
+            product_id: product.id, 
+            quantity: qty 
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         await fetchAuthCart();
       } catch (err) {
         console.error('Error adding to authenticated cart:', err);
+        setError('Failed to add item to cart');
       }
     } else {
-      const updatedCart = [...items];
-      const existing = updatedCart.find((i) => i.id === product.id);
-      if (existing) {
-        existing.quantity += qty;
+      const existingItem = items.find((i) => i.id === product.id);
+      if (existingItem) {
+        const updatedCart = items.map((i) =>
+          i.id === product.id ? { ...i, quantity: i.quantity + qty } : i
+        );
+        saveGuestCart(updatedCart);
       } else {
-        updatedCart.push({ ...product, quantity: qty });
+        saveGuestCart([...items, { ...product, quantity: qty }]);
       }
-      saveGuestCart(updatedCart);
     }
   };
 
   const removeFromCart = async (productId: number) => {
+    setError(null);
     if (isAuthenticated && token) {
       try {
         await axios.delete(
@@ -149,6 +157,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await fetchAuthCart();
       } catch (err) {
         console.error('Error removing from authenticated cart:', err);
+        setError('Failed to remove item from cart');
       }
     } else {
       const updatedCart = items.filter((i) => i.id !== productId);
@@ -157,6 +166,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateQuantity = async (productId: number, quantity: number) => {
+    setError(null);
     if (quantity <= 0) return removeFromCart(productId);
 
     if (isAuthenticated && token) {
@@ -169,6 +179,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await fetchAuthCart();
       } catch (err) {
         console.error('Error updating quantity:', err);
+        setError('Failed to update quantity');
       }
     } else {
       const updatedCart = items.map((i) =>
@@ -179,44 +190,105 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const clearCart = async () => {
+    setError(null);
     if (isAuthenticated && token) {
       try {
-        await axios.post(
-          'https://edumall-main-khkttx.laravel.cloud/api/cart/clear',
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
+        // Remove each item individually since clear endpoint doesn't work
+        const currentItems = [...items];
+        const deletePromises = currentItems.map(item =>
+          axios.delete(
+            `https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${item.id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
         );
+        await Promise.all(deletePromises);
+        
+        // Verify cart is empty
+        await fetchAuthCart();
+        
+        // If any items remain, try one more time
+        if (items.length > 0) {
+          const remainingItems = [...items];
+          const retryPromises = remainingItems.map(item =>
+            axios.delete(
+              `https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${item.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            )
+          );
+          await Promise.all(retryPromises);
+          await fetchAuthCart();
+        }
       } catch (err) {
         console.error('Error clearing authenticated cart:', err);
+        setError('Failed to clear cart');
       }
     }
+    
+    // Always clear local storage and state
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    localStorage.removeItem(PENDING_CHECKOUT_KEY);
     setItems([]);
-    clearPendingCheckout();
+    setPendingCheckoutDetails(null);
   };
 
+  const getCartCount = () => items.reduce((sum, item) => sum + item.quantity, 0);
+  const getCartTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
   /** -----------------
-   * Summary Helpers
+   * Merge Guest → Auth Cart
    ------------------ */
-  const getCartCount = () => items.reduce((sum, i) => sum + i.quantity, 0);
-  const getCartTotal = () => items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const mergeGuestCart = useCallback(async () => {
+    setError(null);
+    const guestCart = loadGuestCart();
+    if (!guestCart.length || !token) return;
+
+    try {
+      for (const product of guestCart) {
+        await axios.post(
+          'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
+          { 
+            product_id: product.id, 
+            quantity: product.quantity
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+      
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      await fetchAuthCart();
+    } catch (err) {
+      console.error('Error merging guest cart:', err);
+      setError('Failed to merge guest cart');
+    }
+  }, [token, fetchAuthCart]);
+
+  // Initialize pending checkout details
+  useEffect(() => {
+    const pending = loadPendingCheckout();
+    if (pending) {
+      setPendingCheckoutDetails(pending);
+    }
+  }, []);
+
+  const value: CartContextType = {
+    items,
+    isLoading,
+    error,
+    isInitialized,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartCount,
+    getCartTotal,
+    mergeGuestCart,
+    pendingCheckoutDetails,
+    savePendingCheckout,
+    clearPendingCheckout,
+  };
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getCartCount,
-        getCartTotal,
-        mergeGuestCart: mergeGuestCartToAuthCart,
-        pendingCheckoutDetails,
-        savePendingCheckout,
-        clearPendingCheckout,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
