@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Grid, List, MapPin } from 'lucide-react';
+import { Search, Filter, Grid, List, MapPin, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { EdumallInput } from '@/components/ui/EdumallInput';
@@ -149,14 +149,14 @@ useEffect(() => {
       <CustomCursor />
       <Navbar/>
       
-      <main className="pt-20 px-4 sm:px-6 lg:px-8">
+      <main className="pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
-          <nav className="mb-6">
-            <ol className="flex items-center space-x-2 text-sm text-purple-200">
-              <li><a href="/" className="text-black">Home</a></li>
+          <nav className="mb-4 sm:mb-6" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-2 text-base sm:text-sm text-purple-200">
+              <li><a href="/" className="text-black hover:underline">Home</a></li>
               <li>/</li>
-              <li className="text-cyan-500 font-medium">All Categories</li>
+              <li className="text-cyan-500 font-medium" aria-current="page">All Categories</li>
             </ol>
           </nav>
 
@@ -177,78 +177,204 @@ useEffect(() => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white backdrop-blur-xl rounded-2xl p-6 mb-8 border border-[#64b3f4] shadow-xl"
+            className="bg-white backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8 border border-[#64b3f4] shadow-xl"
           >
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+              {/* Search Bar */}
+              <div className="w-full">
                 <EdumallInput
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  icon={<Search size={20} />}
-                  className="bg-white/10 border-[#64b3f4] text-white placeholder-gray-300 focus:border-[#64b3f4]"
+                  icon={<Search size={20} className="sm:size-[22px]" />}
+                  className="w-full h-10 sm:h-12 text-sm sm:text-base bg-white/10 border-[#64b3f4] text-white placeholder-gray-300 focus:border-[#64b3f4]"
                 />
               </div>
               
-              <div className="flex items-center gap-4">
+              {/* Controls Row */}
+              <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 w-full sm:w-auto">
+                {/* Filter Button - Mobile */}
                 <EdumallButton
                   variant="secondary"
-                  size="md"
+                  size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="md:hidden bg-white border-[#64b3f4] text-white hover:text-white"
+                  className="flex items-center gap-1.5 h-10 px-4 md:hidden border border-[#64b3f4] text-gray-700 hover:bg-gray-50"
+                  aria-expanded={showFilters}
+                  aria-controls="filter-panel"
                 >
-                  <Filter size={20} />
-                  Filters
+                  <Filter size={18} />
+                  <span className="text-sm">Filters</span>
                 </EdumallButton>
                 
-                <div className="flex items-center border border-purple-300/30 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm">
+                {/* View Mode Toggle */}
+                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 transition-colors ${
-                      viewMode === 'grid' ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'text-purple-200 hover:bg-white/10'
+                    className={`p-2 sm:p-3 h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center transition-colors ${
+                      viewMode === 'grid' ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'text-gray-600 hover:bg-gray-50'
                     }`}
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === 'grid'}
                   >
-                    <Grid size={20} />
+                    <Grid size={18} className="sm:size-24" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 transition-colors ${
-                      viewMode === 'list' ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'text-purple-200 hover:bg-white/10'
+                    className={`p-2 sm:p-3 h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center transition-colors ${
+                      viewMode === 'list' ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'text-gray-600 hover:bg-gray-50'
                     }`}
+                    aria-label="List view"
+                    aria-pressed={viewMode === 'list'}
                   >
-                    <List size={20} />
+                    <List size={18} className="sm:size-24" />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Quick Filters */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  !selectedCategory 
-                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-purple-300/30'
-                }`}
-              >
-                All Categories
-              </button>
-              {categories.map(category => (
+            {/* Quick Filters - Horizontal scrollable on mobile */}
+            <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 sm:gap-3 pb-2 min-w-min">
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategory === category 
-                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-[#64b3f4]-300'
+                  onClick={() => setSelectedCategory('')}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-colors ${
+                    !selectedCategory 
+                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-md sm:shadow-lg shadow-purple-500/25' 
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
-                  {category}
+                  All Categories
                 </button>
-              ))}
+                {categories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-colors ${
+                      selectedCategory === category 
+                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-md sm:shadow-lg shadow-purple-500/25' 
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
           </motion.div>
+
+          {/* Mobile Filter Panel */}
+          <div 
+            className={`fixed inset-0 bg-black/40 z-50 transition-all duration-300 md:hidden ${
+              showFilters ? 'opacity-100 visible' : 'opacity-0 invisible'
+            }`} 
+            onClick={() => setShowFilters(false)}
+            aria-hidden={!showFilters}
+          >
+            <div 
+              className={`fixed bottom-0 left-0 right-0 bg-[#64b3f4] rounded-t-2xl p-3 transition-transform duration-300 ${
+                showFilters ? 'translate-y-0' : 'translate-y-full'
+              }`}
+              onClick={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="filter-heading"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold text-white">Filters</h3>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="w-8 h-8 flex items-center justify-center text-white"
+                  aria-label="Close filters"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                {/* Price Range Filter */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Price Range (UGX)
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="2000000"
+                      step="50000"
+                      value={priceRange[1]}
+                      onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                      className="w-full accent-cyan-400"
+                    />
+                    <div className="flex justify-between text-sm text-white">
+                      <span>0</span>
+                      <span>{priceRange[1].toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Purchase Type Filter */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Purchase Type
+                  </label>
+                  <div className="space-y-1.5">
+                    {[
+                      { value: '', label: 'All' },
+                      { value: 'purchase', label: 'Purchase' },
+                      { value: 'hire', label: 'For Hire' }
+                    ].map(option => (
+                      <label key={option.value} className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="purchaseType"
+                          value={option.value}
+                          checked={purchaseTypeFilter === option.value}
+                          onChange={(e) => setPurchaseTypeFilter(e.target.value)}
+                          className="text-cyan-500 focus:ring-cyan-500"
+                        />
+                        <span className="ml-2 text-sm text-white">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Stock Filter */}
+                <div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={inStockOnly}
+                      onChange={(e) => setInStockOnly(e.target.checked)}
+                      className="rounded border-purple-300 text-cyan-500 focus:ring-cyan-500 bg-white/20"
+                    />
+                    <span className="ml-2 text-sm text-white">In stock only</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Filter Actions */}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-white/20">
+                <button
+                  onClick={() => {
+                    setPriceRange([0, 2000000]);
+                    setPurchaseTypeFilter('');
+                    setInStockOnly(false);
+                    setShowFilters(false);
+                  }}
+                  className="flex-1 h-10 px-4 text-sm font-medium text-[#64b3f4] bg-white rounded-xl"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex-1 h-10 px-4 text-sm font-medium text-[#64b3f4] bg-white rounded-xl"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div className="flex gap-8">
             {/* Sidebar Filters - Desktop */}
@@ -262,11 +388,11 @@ useEffect(() => {
                 <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
                 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                  <div className="pb-4 border-b border-gray-100">
+                    <label className="block text-sm font-medium text-gray-900 mb-3">
                       Price Range (UGX)
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       <input
                         type="range"
                         min="0"
@@ -274,67 +400,62 @@ useEffect(() => {
                         step="50000"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                        className="w-full accent-cyan-400"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                       />
-                      <div className="flex justify-between text-sm text-white">
-                        <span>0</span>
-                        <span>{priceRange[1].toLocaleString()}</span>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>UGX 0</span>
+                        <span>UGX {priceRange[1].toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                  <div className="pb-4 border-b border-gray-100">
+                    <label className="block text-sm font-medium text-gray-900 mb-3">
                       Purchase Type
                     </label>
                     <div className="space-y-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="purchaseType"
-                          value=""
-                          checked={purchaseTypeFilter === ''}
-                          onChange={(e) => setPurchaseTypeFilter(e.target.value)}
-                          className="text-cyan-500 focus:ring-cyan-500"
-                        />
-                        <span className="text-sm text-white">All</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="purchaseType"
-                          value="purchase"
-                          checked={purchaseTypeFilter === 'purchase'}
-                          onChange={(e) => setPurchaseTypeFilter(e.target.value)}
-                          className="text-cyan-500 focus:ring-cyan-500"
-                        />
-                        <span className="text-sm text-white">Purchase</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="purchaseType"
-                          value="hire"
-                          checked={purchaseTypeFilter === 'hire'}
-                          onChange={(e) => setPurchaseTypeFilter(e.target.value)}
-                          className="text-cyan-500 focus:ring-cyan-500"
-                        />
-                        <span className="text-sm text-white">For Hire</span>
-                      </label>
+                      {[
+                        { value: '', label: 'All' },
+                        { value: 'purchase', label: 'Purchase' },
+                        { value: 'hire', label: 'For Hire' }
+                      ].map(option => (
+                        <label key={option.value} className="flex items-center py-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="purchaseType"
+                            value={option.value}
+                            checked={purchaseTypeFilter === option.value}
+                            onChange={(e) => setPurchaseTypeFilter(e.target.value)}
+                            className="w-4 h-4 text-cyan-500 border-gray-300 focus:ring-cyan-500"
+                          />
+                          <span className="ml-2.5 text-sm text-gray-700">{option.label}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center py-1.5 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={inStockOnly}
                         onChange={(e) => setInStockOnly(e.target.checked)}
-                        className="rounded border-purple-300 text-cyan-500 focus:ring-cyan-500 bg-white/20"
+                        className="w-4 h-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
                       />
-                      <span className="text-sm text-white">In stock only</span>
+                      <span className="ml-2.5 text-sm text-gray-700">In stock only</span>
                     </label>
                   </div>
+
+                  <button
+                    onClick={() => {
+                      setPriceRange([0, 2000000]);
+                      setPurchaseTypeFilter('');
+                      setInStockOnly(false);
+                    }}
+                    className="w-full py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Reset Filters
+                  </button>
                 </div>
               </motion.div>
             </div>
@@ -349,11 +470,13 @@ useEffect(() => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className={`grid gap-6 ${
+                className={`grid gap-4 sm:gap-6 ${
                   viewMode === 'grid' 
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
                     : 'grid-cols-1'
                 }`}
+                role="list"
+                aria-label="Product grid"
               >
                 {filteredProducts.map((product, index) => (
                   <motion.div

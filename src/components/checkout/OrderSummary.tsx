@@ -27,6 +27,29 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
     }).format(price);
   };
 
+  // Helper function to get correct image URL
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '/placeholder.svg';
+
+    // Extract actual URL if it's embedded in a storage path
+    if (imagePath.includes('/storage/https://')) {
+      const actualUrl = imagePath.split('/storage/')[1];
+      return actualUrl;
+    }
+    
+    // If it's an imghippo URL or any full URL
+    if (imagePath.includes('imghippo.com') || imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Handle storage paths
+    if (imagePath.startsWith('/storage/')) {
+      return `https://edumall-main-khkttx.laravel.cloud${imagePath}`;
+    }
+    
+    return `https://edumall-main-khkttx.laravel.cloud/storage/${imagePath}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -41,9 +64,15 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <div key={item.id} className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <img 
-                src={item.image} 
+                src={getImageUrl(item.image)}
                 alt={item.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const fallbackUrl = '/placeholder.svg';
+                  if (e.currentTarget.src !== fallbackUrl) {
+                    e.currentTarget.src = fallbackUrl;
+                  }
+                }}
               />
             </div>
             <div className="flex-1 min-w-0">

@@ -58,6 +58,47 @@ const Cart = () => {
   const { items, updateQuantity, removeFromCart, getCartTotal, pendingCheckoutDetails } = useCart();
   const [loadingItemId, setLoadingItemId] = useState(null);
   const navigate = useNavigate();
+  const [showMobileControls, setShowMobileControls] = useState(false);
+
+  // Helper function to get correct image URL
+  const getImageUrl = (imagePath: string) => {
+    console.log('Processing image path:', imagePath);
+    
+    if (!imagePath) return '/placeholder.svg';
+
+    // Extract actual URL if it's embedded in a storage path
+    if (imagePath.includes('/storage/https://')) {
+      const actualUrl = imagePath.split('/storage/')[1];
+      console.log('Extracted URL from storage path:', actualUrl);
+      return actualUrl;
+    }
+    
+    // If it's an imghippo URL or any full URL
+    if (imagePath.includes('imghippo.com') || imagePath.startsWith('http')) {
+      console.log('Using direct URL:', imagePath);
+      return imagePath;
+    }
+    
+    // Handle storage paths
+    if (imagePath.startsWith('/storage/')) {
+      return `https://edumall-main-khkttx.laravel.cloud${imagePath}`;
+    }
+    
+    return `https://edumall-main-khkttx.laravel.cloud/storage/${imagePath}`;
+  };
+
+  // Debug logged in state and image paths
+  useEffect(() => {
+    if (items.length > 0) {
+      console.log('Auth state:', { isAuthenticated, token: !!token });
+      items.forEach(item => {
+        console.log('Item image processing:', {
+          original: item.image,
+          processed: getImageUrl(item.image)
+        });
+      });
+    }
+  }, [items, isAuthenticated, token]);
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-UG', {
@@ -122,8 +163,8 @@ const Cart = () => {
             <p className="text-gray-600">Review your items and proceed to checkout.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="lg:col-span-2 space-y-4 mb-6 lg:mb-0">
               {items.map((item, index) => (
                 <motion.div
                   key={`${item.id}-${index}`}
@@ -132,68 +173,94 @@ const Cart = () => {
                   transition={{ delay: index * 0.1 }}
                   className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border border-gray-200/50 shadow-lg"
                 >
-                  <div className="flex items-center gap-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                     <img
-                      src={
-                        item.image?.startsWith('http')
-                          ? item.image
-                          : `edumall-main-khkttx.laravel.cloud/storage/${item.image}`
-                      }
+                      src={getImageUrl(item.image)}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-xl"
+                      className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-xl bg-gray-50"
+                      loading="lazy"
+                      onError={(e) => {
+                        const fallbackUrl = '/placeholder.svg';
+                        if (e.currentTarget.src !== fallbackUrl) {
+                          e.currentTarget.src = fallbackUrl;
+                        }
+                      }}
                     />
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{item.category}</p>
-                      <p className="text-xl font-bold text-teal-600">{formatPrice(item.price)}</p>
-                      {item.unit && <p className="text-xs text-gray-500">per {item.unit}</p>}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        disabled={loadingItemId === item.id}
-                        className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <QuantityInput
-                        itemId={item.id}
-                        quantity={item.quantity}
-                        updateQuantity={updateQuantity}
-                        isLoading={loadingItemId === item.id}
-                      />
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        disabled={loadingItemId === item.id}
-                        className="w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
-                      >
-                        <Plus size={16} />
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900 mb-2">{formatPrice(item.price * item.quantity)}</p>
-                      <button
-                        onClick={() => handleRemoveItem(item.id)}
-                        disabled={loadingItemId === item.id}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        {loadingItemId === item.id ? (
-                          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash2 size={18} />
-                        )}
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{item.name}</h3>
+                          <p className="text-sm text-gray-600">{item.category}</p>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={loadingItemId === item.id}
+                          className="text-red-500 hover:text-red-700 p-2 sm:hidden"
+                        >
+                          {loadingItemId === item.id ? (
+                            <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 size={20} />
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="mt-2">
+                        <p className="text-lg font-bold text-teal-600">{formatPrice(item.price)}</p>
+                        {item.unit && <p className="text-xs text-gray-500">per {item.unit}</p>}
+                      </div>
+                      
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={loadingItemId === item.id}
+                          className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <QuantityInput
+                          itemId={item.id}
+                          quantity={item.quantity}
+                          updateQuantity={updateQuantity}
+                          isLoading={loadingItemId === item.id}
+                        />
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          disabled={loadingItemId === item.id}
+                          className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-gray-100 border flex items-center justify-center hover:bg-gray-200"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+
+                      {/* Total Price and Remove Button */}
+                      <div className="flex items-center justify-between mt-3">
+                        <p className="text-lg font-bold text-gray-900">{formatPrice(item.price * item.quantity)}</p>
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={loadingItemId === item.id}
+                          className="text-red-500 hover:text-red-700 hidden sm:block"
+                        >
+                          {loadingItemId === item.id ? (
+                            <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 size={18} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
 
+            {/* Order Summary - Visible on all devices */}
             <div className="lg:col-span-1">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border shadow-lg sticky top-24"
+                className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 border shadow-lg lg:sticky lg:top-24 mb-24 lg:mb-0"
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
                 {hasPendingOrder && (
@@ -232,7 +299,7 @@ const Cart = () => {
                         <ArrowRight size={18} className="ml-2" />
                       </EdumallButton>
                       <EdumallButton
-                        variant="outline"
+                        variant="secondary"
                         size="lg"
                         className="w-full"
                         onClick={() => navigate('/login', { state: { from: '/cart' } })}

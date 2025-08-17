@@ -14,7 +14,14 @@ import {
   LogOut,
   X,
   Download,
-  Eye
+  Eye,
+  Camera,
+  Building2,
+  CheckCircle,
+  ChevronDown,
+  Lock,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { toast } from 'react-toastify';
@@ -87,6 +94,7 @@ const sidebarItems = [
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // All your existing state declarations
   const [stats, setStats] = useState<DashboardStat[]>([
@@ -367,13 +375,13 @@ const Dashboard: React.FC = () => {
 
   // Render Orders section
   const renderOrders = () => (
-    <div className="glass-strong rounded-2xl p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">All Orders</h2>
-      <div className="space-y-6">
+    <div className="glass-strong rounded-2xl p-4 sm:p-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-6">All Orders</h2>
+      <div className="space-y-4 sm:space-y-6">
         {/* Order filters */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
           <select 
-            className="px-4 py-2 border border-gray-300 rounded-xl text-sm"
+            className="px-4 py-2 glass-medium rounded-xl text-sm w-full lg:w-auto"
             onChange={(e) => {
               const filtered = allOrders.filter(order => 
                 e.target.value === 'all' ? true : order.payment_status === e.target.value
@@ -389,134 +397,269 @@ const Dashboard: React.FC = () => {
           <input
             type="text"
             placeholder="Search orders..."
-            className="px-4 py-2 border border-gray-300 rounded-xl text-sm flex-grow"
+            className="px-4 py-2 glass-medium rounded-xl text-sm w-full sm:flex-1"
             onChange={(e) => {
               const searchTerm = e.target.value.toLowerCase();
               const filtered = allOrders.filter(order => 
                 order.id.toString().includes(searchTerm) ||
-                order.payment_status.toLowerCase().includes(searchTerm)
+                order.payment_status.toLowerCase().includes(searchTerm) ||
+                order.items.some(item => item.product.name.toLowerCase().includes(searchTerm))
               );
               setRecentOrders(filtered);
             }}
           />
         </div>
 
-        {/* Orders table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Items</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders
-                .slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage)
-                .map((order) => (
-                  <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-gray-900">#{order.id.toString().padStart(3, '0')}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-600">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleTimeString()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">{order.items.length} items</div>
-                      <div className="text-xs text-gray-500 max-w-xs truncate">
-                        {order.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-gray-900">{formatPrice(order.total)}</div>
-                      <div className="text-xs text-gray-500">
-                        {order.items.reduce((acc, item) => acc + item.quantity, 0)} units
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        order.payment_status === 'paid' 
-                          ? 'bg-green-100 text-green-600' 
-                          : 'bg-yellow-100 text-yellow-600'
-                      }`}>
-                        {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex space-x-3">
-                        {order.payment_status === 'pending' ? (
-                          <button
-                            className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors"
-                            onClick={() => confirmDeliveryReceived(order.id)}
-                            disabled={confirmingPayOnDelivery}
-                          >
-                            {confirmingPayOnDelivery ? 'Confirming...' : 'Receive Order'}
-                          </button>
-                        ) : (
-                          <button
-                            className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium transition-colors"
-                            onClick={() => console.log('Mark as done:', order.id)}
-                          >
-                            Done
-                          </button>
-                        )}
+        {/* Mobile View (Hidden on large screens) */}
+        <div className="space-y-3 lg:hidden">
+          {isOrdersLoading ? (
+            // Loading skeletons
+            Array(3).fill(null).map((_, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="glass-medium rounded-xl p-4 animate-pulse"
+              >
+                <div className="flex justify-between mb-3">
+                  <div className="h-5 w-24 bg-gray-200 rounded"></div>
+                  <div className="h-5 w-20 bg-gray-200 rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-full bg-gray-200 rounded"></div>
+                </div>
+              </motion.div>
+            ))
+          ) : recentOrders.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-8 glass-medium rounded-xl"
+            >
+              <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">No orders found</p>
+              <p className="text-sm text-gray-500 mt-2">Try adjusting your filters</p>
+            </motion.div>
+          ) : (
+            recentOrders
+              .slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage)
+              .map((order, index) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="glass-medium rounded-xl p-4 space-y-3"
+                >
+                  {/* Order Header */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        Order #{order.id.toString().padStart(5, '0')}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {new Date(order.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      order.payment_status === 'paid'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                    </span>
+                  </div>
 
-                        <button
-                          className="px-3 py-1 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center gap-2"
-                          onClick={() => generateReceiptPDF(order, false)}
+                  {/* Order Items */}
+                  <div className="bg-white bg-opacity-50 rounded-lg p-3 space-y-2">
+                    {order.items.map((item, itemIndex) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 + itemIndex * 0.03 }}
+                        className="flex justify-between items-center text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-teal-600 font-medium">{item.quantity}x</span>
+                          <span className="text-gray-900">{item.product.name}</span>
+                        </div>
+                        <span className="text-gray-900 font-medium">
+                          {formatPrice(item.price * item.quantity)}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Order Footer */}
+                  <div className="flex flex-wrap gap-3 items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="text-sm">
+                      <span className="text-gray-500">Total: </span>
+                      <span className="font-medium text-gray-900">{formatPrice(order.total)}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {order.payment_status === 'pending' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-teal-600 transition-colors"
+                          onClick={() => confirmDeliveryReceived(order.id)}
+                          disabled={confirmingPayOnDelivery}
                         >
-                          <Eye size={16} />
-                          View Receipt
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+                          {confirmingPayOnDelivery ? 'Confirming...' : 'Receive'}
+                        </motion.button>
+                      )}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => generateReceiptPDF(order)}
+                        className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => generateReceiptPDF(order, true)}
+                        className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                      >
+                        <Download className="w-5 h-5" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+          )}
         </div>
 
-        {/* Pagination */}
+        {/* Desktop Table View (Hidden on mobile) */}
+        <div className="hidden lg:block">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Items</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isOrdersLoading ? (
+                  // Loading skeletons for table
+                  Array(3).fill(null).map((_, index) => (
+                    <tr key={index} className="animate-pulse">
+                      <td className="px-4 py-4"><div className="h-4 w-20 bg-gray-200 rounded"></div></td>
+                      <td className="px-4 py-4"><div className="h-4 w-24 bg-gray-200 rounded"></div></td>
+                      <td className="px-4 py-4"><div className="h-4 w-32 bg-gray-200 rounded"></div></td>
+                      <td className="px-4 py-4"><div className="h-4 w-20 bg-gray-200 rounded"></div></td>
+                      <td className="px-4 py-4"><div className="h-4 w-16 bg-gray-200 rounded"></div></td>
+                      <td className="px-4 py-4"><div className="h-4 w-24 bg-gray-200 rounded"></div></td>
+                    </tr>
+                  ))
+                ) : (
+                  recentOrders
+                    .slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage)
+                    .map((order) => (
+                      <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-gray-900">#{order.id.toString().padStart(5, '0')}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-gray-600">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(order.created_at).toLocaleTimeString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-gray-900">{order.items.length} items</div>
+                          <div className="text-xs text-gray-500 max-w-xs truncate">
+                            {order.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-gray-900">{formatPrice(order.total)}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            order.payment_status === 'paid' 
+                              ? 'bg-green-100 text-green-600' 
+                              : 'bg-yellow-100 text-yellow-600'
+                          }`}>
+                            {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            {order.payment_status === 'pending' && (
+                              <button
+                                className="px-3 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm font-medium transition-colors"
+                                onClick={() => confirmDeliveryReceived(order.id)}
+                                disabled={confirmingPayOnDelivery}
+                              >
+                                {confirmingPayOnDelivery ? 'Confirming...' : 'Receive'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => generateReceiptPDF(order)}
+                              className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => generateReceiptPDF(order, true)}
+                              className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pagination - Made more touch-friendly */}
         {recentOrders.length > ordersPerPage && (
-          <div className="flex justify-center mt-6">
-            <nav className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50"
-              >
-                Previous
-              </button>
-              {Array.from({ length: Math.ceil(recentOrders.length / ordersPerPage) }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`px-3 py-1 border rounded-lg text-sm ${
-                    currentPage === index + 1
-                      ? 'bg-teal-500 text-white border-teal-500'
-                      : 'border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentOrders.length / ordersPerPage)))}
-                disabled={currentPage === Math.ceil(recentOrders.length / ordersPerPage)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50"
-              >
-                Next
-              </button>
-            </nav>
+          <div className="flex justify-center gap-2 mt-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 glass-medium rounded-xl text-sm disabled:opacity-50"
+            >
+              Previous
+            </motion.button>
+            <span className="px-4 py-2 glass-strong rounded-xl text-sm">
+              Page {currentPage} of {Math.ceil(recentOrders.length / ordersPerPage)}
+            </span>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(prev => 
+                Math.min(prev + 1, Math.ceil(recentOrders.length / ordersPerPage))
+              )}
+              disabled={currentPage === Math.ceil(recentOrders.length / ordersPerPage)}
+              className="px-4 py-2 glass-medium rounded-xl text-sm disabled:opacity-50"
+            >
+              Next
+            </motion.button>
           </div>
         )}
       </div>
@@ -525,67 +668,198 @@ const Dashboard: React.FC = () => {
 
   // Let's also add the badges and other missing render functions
   const renderBadges = () => (
-    <div className="glass-strong rounded-2xl p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Your Achievements</h2>
-      <div className="text-center py-4">
-        <p className="text-gray-600">Badges feature coming soon!</p>
-      </div>
+    <div className="glass-strong rounded-2xl p-4 sm:p-6">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Your Achievements</h2>
+      
+      {/* Coming Soon Banner */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-medium rounded-xl p-6 text-center relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-blue-500/5" />
+        <motion.div
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Award className="w-16 h-16 text-teal-500 mx-auto mb-4" />
+        </motion.div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Badges Coming Soon!</h3>
+        <p className="text-gray-600 mb-6">Track your achievements and unlock special rewards</p>
+        
+        {/* Preview Badges */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-md mx-auto">
+          {[
+            { name: 'Quick Learner', icon: '🎯', color: 'from-green-500/10 to-emerald-500/10' },
+            { name: 'Top Buyer', icon: '🏆', color: 'from-yellow-500/10 to-orange-500/10' },
+            { name: 'Early Bird', icon: '🌟', color: 'from-blue-500/10 to-indigo-500/10' },
+            { name: 'Loyal Customer', icon: '💎', color: 'from-purple-500/10 to-pink-500/10' }
+          ].map((badge, index) => (
+            <motion.div
+              key={badge.name}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              className={`glass-medium rounded-lg p-4 text-center bg-gradient-to-br ${badge.color}`}
+            >
+              <div className="text-2xl mb-2">{badge.icon}</div>
+              <div className="text-xs font-medium text-gray-700">{badge.name}</div>
+              <div className="text-xs text-gray-500 mt-1">Coming soon</div>
+            </motion.div>
+          ))}
+        </div>
+        
+        {/* Notification Sign Up */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-8 glass-medium rounded-lg p-4 max-w-sm mx-auto"
+        >
+          <p className="text-sm text-gray-600 mb-3">Get notified when badges are available!</p>
+          <button className="w-full py-2 px-4 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors">
+            Enable Notifications
+          </button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 
   const renderProfile = () => (
-    <div className="glass-strong rounded-2xl p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
-      <div className="space-y-6">
-        <div className="flex items-center space-x-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">{user?.name || 'User'}</h3>
-            <p className="text-gray-600">{user?.email || 'user@example.com'}</p>
-            <span className="inline-block mt-1 text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-              {user?.type || 'institution'}
-            </span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-            <input 
-              type="text" 
-              defaultValue={user?.name || ''}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-            <input 
-              type="email" 
-              defaultValue={user?.email || ''}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
-          <select 
-            defaultValue={user?.type || 'institution'}
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
+    <div className="glass-strong rounded-2xl p-4 sm:p-6">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Profile Information</h2>
+      <div className="space-y-4 sm:space-y-6">
+        {/* Profile Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 glass-medium rounded-xl p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            className="relative group"
           >
-            <option value="institution">Institution</option>
-            <option value="individual">Individual</option>
-            <option value="guest">Guest</option>
-          </select>
-        </div>
+            <div className="w-24 h-24 sm:w-20 sm:h-20 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-3xl sm:text-2xl font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
+            </div>
+            <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+              <motion.div whileHover={{ rotate: 180 }}>
+                <Camera size={16} className="text-teal-600" />
+              </motion.div>
+            </button>
+          </motion.div>
+          
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">{user?.name || 'User'}</h3>
+            <p className="text-gray-600 text-sm">{user?.email || 'user@example.com'}</p>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+              <span className="inline-flex items-center text-xs font-medium text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full">
+                <Building2 size={12} className="mr-1" />
+                {user?.type || 'institution'}
+              </span>
+              <span className="inline-flex items-center text-xs font-medium text-green-600 bg-green-100 px-2.5 py-1 rounded-full">
+                <CheckCircle size={12} className="mr-1" />
+                Verified
+              </span>
+            </div>
+          </div>
+        </motion.div>
         
-        <div className="flex justify-end">
-          <EdumallButton variant="primary" size="md">
-            Update Profile
+        {/* Profile Form */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-medium rounded-xl p-4"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+              <input 
+                type="text" 
+                defaultValue={user?.name || ''}
+                className="w-full px-4 py-2.5 glass-medium rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-shadow"
+                placeholder="Enter your full name"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+              <input 
+                type="email" 
+                defaultValue={user?.email || ''}
+                className="w-full px-4 py-2.5 glass-medium rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-shadow"
+                placeholder="Enter your email"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Account Type</label>
+              <select 
+                defaultValue={user?.type || 'institution'}
+                className="w-full px-4 py-2.5 glass-medium rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-shadow"
+              >
+                <option value="institution">Institution</option>
+                <option value="individual">Individual</option>
+                <option value="guest">Guest</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+              <input 
+                type="tel" 
+                className="w-full px-4 py-2.5 glass-medium rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-shadow"
+                placeholder="Enter your phone number"
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Additional Information */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass-medium rounded-xl p-4"
+        >
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Account Security</h4>
+          <div className="space-y-3">
+            <button className="w-full flex items-center justify-between p-3 glass-medium rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-teal-600" />
+                <span className="text-sm">Change Password</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+            <button className="w-full flex items-center justify-between p-3 glass-medium rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-teal-600" />
+                <span className="text-sm">Two-Factor Authentication</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+          </div>
+        </motion.div>
+        
+        {/* Save Button */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="flex justify-end"
+        >
+          <EdumallButton 
+            variant="primary" 
+            size="lg"
+            className="w-full sm:w-auto"
+          >
+            Save Changes
           </EdumallButton>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -698,54 +972,76 @@ const Dashboard: React.FC = () => {
     if (!showReceiptModal || !receiptUrl || !selectedOrder) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Receipt Preview - Order #{selectedOrder.id.toString().padStart(5, '0')}
-            </h3>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4"
+      >
+        <motion.div 
+          initial={{ scale: 0.9, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 20 }}
+          className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[95vh] flex flex-col"
+        >
+          {/* Modal Header */}
+          <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                Order #{selectedOrder.id.toString().padStart(5, '0')}
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {new Date(selectedOrder.created_at).toLocaleDateString()}
+              </p>
+            </div>
             <button
               onClick={() => setShowReceiptModal(false)}
-              className="text-gray-500 hover:text-gray-700"
+              className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
             >
               <X size={20} />
             </button>
           </div>
           
-          <div className="flex-1 overflow-auto p-4">
-            <iframe
-              src={receiptUrl}
-              className="w-full h-full min-h-[60vh] border-0"
-              title="Receipt Preview"
-            />
+          {/* Modal Content */}
+          <div className="flex-1 overflow-auto p-2 sm:p-4 bg-gray-50">
+            <div className="bg-white rounded-lg shadow-sm">
+              <iframe
+                src={receiptUrl}
+                className="w-full h-full min-h-[60vh] border-0 rounded-lg"
+                title="Receipt Preview"
+              />
+            </div>
           </div>
           
-          <div className="p-4 border-t border-gray-200 flex justify-end space-x-4">
-            <button
+          {/* Modal Footer */}
+          <div className="p-2 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowReceiptModal(false)}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="w-full sm:w-auto px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium"
             >
               Close
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 generateReceiptPDF(selectedOrder, true);
                 setShowReceiptModal(false);
               }}
-              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center justify-center gap-2 text-sm font-medium"
             >
               <Download size={16} />
-              Download PDF
-            </button>
+              <span>Download PDF</span>
+            </motion.button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   };
 
   // Render sections
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Stats Cards */}
       {error || ordersError || statsError ? (
         <div className="glass-strong rounded-2xl p-6 space-y-2">
@@ -754,15 +1050,21 @@ const Dashboard: React.FC = () => {
           {statsError && <p className="text-orange-600">{statsError}</p>}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {isLoading ? (
             // Loading skeletons for stats
             Array(4).fill(null).map((_, index) => (
-              <div key={index} className="glass-medium rounded-2xl p-6 animate-pulse">
+              <motion.div 
+                key={index} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="glass-medium rounded-2xl p-4 sm:p-6 animate-pulse"
+              >
                 <div className="h-8 w-8 bg-gray-200 rounded-full mb-4"></div>
                 <div className="h-6 w-24 bg-gray-200 rounded mb-2"></div>
                 <div className="h-4 w-16 bg-gray-200 rounded"></div>
-              </div>
+              </motion.div>
             ))
           ) : (
             stats.map((stat, index) => (
@@ -771,18 +1073,22 @@ const Dashboard: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-medium rounded-2xl p-6"
+                className="glass-medium rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-shadow"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <stat.icon className="w-8 h-8 text-teal-600" />
-                  <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="p-2 bg-teal-50 rounded-xl">
+                    <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" />
+                  </div>
+                  <span className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-full ${
                     stat.positive ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
                   }`}>
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
               </motion.div>
             ))
           )}
@@ -877,43 +1183,173 @@ const Dashboard: React.FC = () => {
       <ReceiptPreviewModal />
       <main className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8 text-center max-w-2xl mx-auto"
+          >
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               Welcome back, {user?.firstName || user?.lastName || 'User'}
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 mx-auto max-w-xl leading-relaxed">
               Manage your orders, track deliveries, and discover new products
             </p>
+          </motion.div>
+          {/* Mobile Menu Toggle */}
+          <div className="lg:hidden mb-4 px-4">
+            <motion.button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="w-full flex items-center justify-between px-5 py-3.5 glass-strong rounded-xl text-gray-900 hover:shadow-lg transition-all relative overflow-hidden group bg-white/80 backdrop-blur-lg border border-gray-100/50"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                  <motion.div
+                    className="absolute w-6 h-0.5 bg-gray-900 rounded-full"
+                    animate={{
+                      rotate: isMobileMenuOpen ? 45 : 0,
+                      y: isMobileMenuOpen ? 0 : -4
+                    }}
+                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  />
+                  <motion.div
+                    className="absolute w-6 h-0.5 bg-gray-900 rounded-full"
+                    animate={{
+                      opacity: isMobileMenuOpen ? 0 : 1,
+                      x: isMobileMenuOpen ? 20 : 0
+                    }}
+                    transition={{ duration: 0.2 }}
+                  />
+                  <motion.div
+                    className="absolute w-6 h-0.5 bg-gray-900 rounded-full"
+                    animate={{
+                      rotate: isMobileMenuOpen ? -45 : 0,
+                      y: isMobileMenuOpen ? 0 : 4
+                    }}
+                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  />
+                </div>
+                <span className="font-medium text-base">Menu</span>
+              </div>
+              <motion.div
+                className="flex items-center gap-2"
+                animate={{ 
+                  rotate: isMobileMenuOpen ? 180 : 0,
+                }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+              >
+                <span className="text-sm text-gray-500">
+                  {isMobileMenuOpen ? 'Close' : 'Open'}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </motion.div>
+              {/* Hover effect background */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-teal-50 to-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ zIndex: -1 }}
+                initial={false}
+                animate={{
+                  opacity: isMobileMenuOpen ? 1 : 0
+                }}
+              />
+            </motion.button>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="glass-strong rounded-2xl p-6 sticky top-24">
-                <nav className="space-y-2">
-                  {sidebarItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
-                        activeTab === item.id
-                          ? 'bg-teal-500 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <item.icon size={20} />
-                      {item.label}
-                    </button>
-                  ))}
-                  <button 
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-red-600 hover:bg-red-50 transition-colors mt-6"
-                  >
-                    <LogOut size={20} />
-                    Sign Out
-                  </button>
-                </nav>
-              </div>
-            </div>
+           {/* Sidebar */}
+<div className="lg:col-span-1">
+  {/* Desktop Menu - Always visible on large screens */}
+  <div className="hidden lg:block">
+    <div className="glass-strong rounded-2xl p-6 sticky top-24 backdrop-blur-lg">
+      <nav className="space-y-3">
+        {sidebarItems.map((item, index) => (
+          <motion.button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-left transition-all ${
+              activeTab === item.id
+                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                : 'text-gray-600 hover:bg-gray-50 hover:shadow-md'
+            }`}
+            whileHover={{ 
+              scale: 1.02,
+              transition: { type: "spring", stiffness: 400 }
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <item.icon size={22} />
+            <span className="font-medium">{item.label}</span>
+            {activeTab === item.id && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-teal-600 to-teal-400 rounded-xl -z-10"
+                layoutId="activeTab"
+                transition={{ type: "spring", bounce: 0.2 }}
+              />
+            )}
+          </motion.button>
+        ))}
+        <motion.button 
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-left text-red-600 hover:bg-red-50 hover:shadow-md transition-all mt-6"
+          whileHover={{ 
+            scale: 1.02,
+            transition: { type: "spring", stiffness: 400 }
+          }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <LogOut size={22} />
+          <span className="font-medium">Sign Out</span>
+        </motion.button>
+      </nav>
+    </div>
+  </div>
+
+  {/* Mobile Menu */}
+  <div className="lg:hidden">
+    {isMobileMenuOpen && (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="glass-strong rounded-2xl p-4 mb-6 backdrop-blur-lg"
+      >
+        <nav className="flex flex-col items-center space-y-2">
+          {/* Same navigation content as desktop */}
+          {sidebarItems.map((item, index) => (
+            <motion.button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-left transition-all ${
+                activeTab === item.id
+                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                  : 'text-gray-600 hover:bg-gray-50 hover:shadow-md'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <item.icon size={22} />
+              <span className="font-medium">{item.label}</span>
+            </motion.button>
+          ))}
+          <motion.button 
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-5 py-4 rounded-xl text-left text-red-600 hover:bg-red-50 hover:shadow-md transition-all mt-6"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <LogOut size={22} />
+            <span className="font-medium">Sign Out</span>
+          </motion.button>
+        </nav>
+      </motion.div>
+    )}
+  </div>
+</div>
             {/* Main Content */}
             <div className="lg:col-span-3">
               {activeTab === 'overview' && renderOverview()}

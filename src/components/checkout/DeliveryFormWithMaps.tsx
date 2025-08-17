@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
+import { EdumallCombobox } from '../ui/EdumallCombobox';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
+import { ugandaDistricts, ugandaCities } from '@/data/ugandaLocations';
 
 interface Coordinates {
   lat: number;
@@ -37,7 +39,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   openCageApiKey,
 }) => {
   const [formData, setFormData] = useState<DeliveryFormData>({
-    fullName: defaultValues?.fullName || user?.name || '',
+    fullName: defaultValues?.fullName || (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') || user?.name || '',
     email: defaultValues?.email || user?.email || '',
     phone: defaultValues?.phone || '',
     address: defaultValues?.address || '',
@@ -136,12 +138,20 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <EdumallInput
-              label="Full Name"
-              value={formData.fullName}
-              onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              required
-            />
+            <div className="space-y-1">
+              <EdumallInput
+                label="Full Name"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                required
+              />
+              {user?.firstName && user?.lastName && (
+                <p className="text-xs text-teal-600 flex items-center gap-1 mt-1">
+                  <Check size={12} className="inline" />
+                  Auto-filled from your profile
+                </p>
+              )}
+            </div>
             <EdumallInput
               label="Email"
               type="email"
@@ -159,16 +169,56 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             required
           />
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <EdumallCombobox
+              label="District"
+              value={formData.district}
+              onChange={(value) => {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  district: value,
+                  // Clear city if it's not in the selected district (case-insensitive)
+                  city: ugandaCities.some(c => 
+                    (c.district.toLowerCase().includes(value.toLowerCase()) || 
+                     value.toLowerCase().includes(c.district.toLowerCase())) && 
+                    c.name === formData.city
+                  ) ? formData.city : ''
+                }));
+              }}
+              options={ugandaDistricts.map(d => ({
+                value: d.name,
+                label: `${d.name} (${d.region})`
+              }))}
+              placeholder="Select a district..."
+            />
+
+            <EdumallCombobox
+              label="City/Town"
+              value={formData.city}
+              onChange={(value) => setFormData(prev => ({ ...prev, city: value }))}
+              options={useMemo(() => 
+                ugandaCities
+                  .filter(c => c.district === formData.district)
+                  .map(c => ({
+                    value: c.name,
+                    label: c.name
+                  })),
+                [formData.district]
+              )}
+              placeholder="Select a city..."
+            />
+          </div>
+
+          
+
           <div className="relative">
             <label className="text-sm font-medium text-gray-900 mb-2 block">Delivery Address</label>
             <OpenCageAutocomplete
-            onAddressSelect={handleAddressSelect}
-            value={formData.address} // <-- controlled input
-            onChange={(newAddress) => setFormData(prev => ({ ...prev, address: newAddress }))}
-            className="w-full"
-            apiKey={openCageApiKey}
-          />
-
+              onAddressSelect={handleAddressSelect}
+              defaultValue={formData.address}
+              className="w-full"
+              apiKey={openCageApiKey}
+            />
           </div>
 
           <div className="flex items-center space-x-4">
@@ -189,37 +239,20 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <EdumallInput
-              label="City"
-              value={formData.city}
-              onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-              required
-            />
-            <EdumallInput
-              label="District"
-              value={formData.district}
-              onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
-              required
-            />
-            <EdumallInput
-              label="Postal Code (Optional)"
-              value={formData.postalCode}
-              onChange={(e) => setFormData(prev => ({ ...prev, postalCode: e.target.value }))}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Delivery Instructions (Optional)
-            </label>
-            <textarea
-              value={formData.instructions}
-              onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
-              placeholder="Any special delivery instructions..."
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all duration-300"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+           
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Delivery Instructions (Optional)
+              </label>
+              <textarea
+                value={formData.instructions}
+                onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
+                placeholder="Any special delivery instructions..."
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all duration-300"
+              />
+            </div>
           </div>
 
           <EdumallButton type="submit" variant="primary" size="lg" className="w-full">

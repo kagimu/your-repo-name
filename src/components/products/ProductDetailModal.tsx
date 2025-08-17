@@ -106,24 +106,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
               {/* Image Gallery */}
-              <div className="space-y-4">
-                <div className="aspect-square rounded-2xl overflow-hidden">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-gray-50">
                   <img
                     src={product.images_url?.[selectedImage]}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-300"
                   />
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {product.images_url?.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                      className={`aspect-square rounded-md sm:rounded-lg overflow-hidden border-2 transition-colors ${
                         selectedImage === index ? 'border-teal-500' : 'border-transparent'
-                      }`}
+                      } bg-gray-50`}
                     >
                       <img
                         src={image}
@@ -136,45 +136,47 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Product Info */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          size={16}
-                          className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+                          size={14}
+                          className={`sm:size-16 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-gray-600">({product.rating})</span>
+                    <span className="text-xs sm:text-sm text-gray-600">({product.rating})</span>
                   </div>
-                  <span className="text-sm text-teal-600 font-medium bg-teal-50 px-3 py-1 rounded-full">
+                  <span className="text-xs sm:text-sm text-teal-600 font-medium bg-teal-50 px-2.5 sm:px-3 py-1 rounded-full">
                     {product.category}
                   </span>
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-teal-600">{formatPrice(product.price)}</span>
-                    <span className="text-gray-900">per {product.unit}</span>
+                  <div className="mb-1">
+                    <span className="text-2xl sm:text-3xl font-bold text-teal-600">{formatPrice(product.price)}</span>
                   </div>
-                  <p className={`text-sm font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
-                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className="text-sm text-gray-600">per {product.unit}</span>
+                    <p className={`text-xs sm:text-sm font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.inStock ? 'In Stock' : 'Out of Stock'}
+                    </p>
+                  </div>
                 </div>
 
-                <p className="text-gray-900">{product.description}</p>
+                <p className="text-sm sm:text-base text-gray-900">{product.description}</p>
 
                 {/* Specifications */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Specifications</h4>
-                  <div className="space-y-2">
+                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Specifications</h4>
+                  <div className="space-y-1 sm:space-y-1.5">
                     {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-1 border-b border-gray-100">
-                        <span className="text-gray-900">{key}:</span>
-                        <span className="font-medium text-gray-900">{value}</span>
+                      <div key={key} className="flex items-center gap-2 py-0.5 sm:py-1 border-b border-gray-100">
+                        <span className="text-sm sm:text-base text-gray-600 min-w-[80px] sm:min-w-[100px]">{key}:</span>
+                        <span className="text-sm sm:text-base text-gray-900">{value}</span>
                       </div>
                     ))}
                   </div>

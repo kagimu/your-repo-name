@@ -14,6 +14,7 @@ export const Navbar = () => {
   const [notificationCount, setNotificationCount] = useState(3);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   const { isAuthenticated, user, logout } = useAuth();
   const { getCartCount, clearCart } = useCart();
@@ -142,7 +143,7 @@ export const Navbar = () => {
               <motion.img
                 src="/img/Edumall.png"
                 alt="Edumall"
-                className="h-24 w-24 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
+                className="h-16 w-16 sm:h-24 sm:w-24 object-contain transition-transform duration-300 group-hover:scale-110 cursor-pointer"
                 whileHover={{ rotate: 5, scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               />
