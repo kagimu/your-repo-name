@@ -72,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     images: product.images_url || [product.avatar_url || '/placeholder.svg'],
     inStock: product.in_stock,
     description: product.desc || `High-quality ${product.name} perfect for educational use.`
-  };
+  };  
 
   if (viewMode === 'list') {
     return (
@@ -165,7 +165,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           <img 
             src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain"
           />
         </div>
 
