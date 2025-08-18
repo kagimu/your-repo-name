@@ -451,7 +451,12 @@ const Dashboard: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="glass-medium rounded-xl p-4 space-y-3"
+                  className={`rounded-xl p-4 space-y-3 border border-gray-100/50 shadow-sm hover:shadow-md transition-all relative overflow-hidden
+                    ${index % 4 === 0 ? 'from-gray-50/80 to-white/90' : 
+                      index % 4 === 1 ? 'from-blue-50/80 to-white/90' : 
+                      index % 4 === 2 ? 'from-teal-50/80 to-white/90' : 
+                      'from-indigo-50/80 to-white/90'} 
+                    bg-gradient-to-br backdrop-blur-sm`}
                 >
                   {/* Order Header */}
                   <div className="flex justify-between items-start">
@@ -469,30 +474,34 @@ const Dashboard: React.FC = () => {
                         })}
                       </p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      order.payment_status === 'paid'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span className={`text-xs px-3 py-1.5 rounded-full font-medium shadow-sm
+                      ${order.payment_status === 'paid'
+                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700'
+                        : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700'
+                      } backdrop-blur-sm`}>
                       {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                     </span>
                   </div>
 
                   {/* Order Items */}
-                  <div className="bg-white bg-opacity-50 rounded-lg p-3 space-y-2">
+                  <div className={`bg-white/40 backdrop-blur-sm rounded-lg p-4 space-y-2 shadow-sm
+                    ${index % 4 === 0 ? 'bg-gradient-to-br from-gray-50/30 to-white/50' : 
+                      index % 4 === 1 ? 'bg-gradient-to-br from-blue-50/30 to-white/50' : 
+                      index % 4 === 2 ? 'bg-gradient-to-br from-teal-50/30 to-white/50' : 
+                      'bg-gradient-to-br from-indigo-50/30 to-white/50'}`}>
                     {order.items.map((item, itemIndex) => (
                       <motion.div
                         key={item.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.05 + itemIndex * 0.03 }}
-                        className="flex justify-between items-center text-sm"
+                        className="flex justify-between items-center text-sm py-2 border-b border-gray-100/70 last:border-0"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-teal-600 font-medium">{item.quantity}x</span>
-                          <span className="text-gray-900">{item.product.name}</span>
+                          <span className="px-2 py-1 bg-teal-50 text-teal-600 rounded-md font-medium">{item.quantity}x</span>
+                          <span className="text-gray-900 font-medium">{item.product.name}</span>
                         </div>
-                        <span className="text-gray-900 font-medium">
+                        <span className="text-gray-900 font-semibold">
                           {formatPrice(item.price * item.quantity)}
                         </span>
                       </motion.div>
@@ -500,39 +509,59 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Order Footer */}
-                  <div className="flex flex-wrap gap-3 items-center justify-between pt-2 border-t border-gray-100">
-                    <div className="text-sm">
-                      <span className="text-gray-500">Total: </span>
-                      <span className="font-medium text-gray-900">{formatPrice(order.total)}</span>
+                  <div className="flex flex-wrap gap-3 items-center justify-between pt-3 mt-2 border-t border-gray-100/70">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Total:</span>
+                      <span className={`text-base font-semibold ${
+                        index % 4 === 0 ? 'text-gray-900' :
+                        index % 4 === 1 ? 'text-blue-900' :
+                        index % 4 === 2 ? 'text-teal-900' :
+                        'text-indigo-900'
+                      }`}>{formatPrice(order.total)}</span>
                     </div>
                     <div className="flex gap-2">
-                      {order.payment_status === 'pending' && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-teal-600 transition-colors"
-                          onClick={() => confirmDeliveryReceived(order.id)}
-                          disabled={confirmingPayOnDelivery}
-                        >
-                          {confirmingPayOnDelivery ? 'Confirming...' : 'Receive'}
-                        </motion.button>
-                      )}
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => generateReceiptPDF(order)}
-                        className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm backdrop-blur-sm
+                          ${index % 4 === 0 ? 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80' :
+                            index % 4 === 1 ? 'bg-blue-100/80 text-blue-700 hover:bg-blue-200/80' :
+                            index % 4 === 2 ? 'bg-teal-100/80 text-teal-700 hover:bg-teal-200/80' :
+                            'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80'}`}
                       >
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-3.5 h-3.5" />
+                        View
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => generateReceiptPDF(order, true)}
-                        className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm backdrop-blur-sm
+                          ${index % 4 === 0 ? 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80' :
+                            index % 4 === 1 ? 'bg-blue-100/80 text-blue-700 hover:bg-blue-200/80' :
+                            index % 4 === 2 ? 'bg-teal-100/80 text-teal-700 hover:bg-teal-200/80' :
+                            'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80'}`}
                       >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-3.5 h-3.5" />
+                        Download
                       </motion.button>
+                      {order.payment_status === 'pending' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => confirmDeliveryReceived(order.id)}
+                          disabled={confirmingPayOnDelivery}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm backdrop-blur-sm disabled:opacity-50
+                            ${index % 4 === 0 ? 'bg-green-100/80 text-green-700 hover:bg-green-200/80' :
+                              index % 4 === 1 ? 'bg-emerald-100/80 text-emerald-700 hover:bg-emerald-200/80' :
+                              index % 4 === 2 ? 'bg-teal-100/80 text-teal-700 hover:bg-teal-200/80' :
+                              'bg-cyan-100/80 text-cyan-700 hover:bg-cyan-200/80'}`}
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          {confirmingPayOnDelivery ? 'Confirming...' : 'Confirm'}
+                        </motion.button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
