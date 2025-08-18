@@ -571,12 +571,12 @@ const Dashboard: React.FC = () => {
 
         {/* Desktop Table View (Hidden on mobile) */}
         <div className="hidden lg:block">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-gray-100/50 shadow-sm">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
+                <tr className="bg-gradient-to-r from-gray-50/90 to-white/90 backdrop-blur-sm border-b border-gray-200">
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Order ID</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Items</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
@@ -600,9 +600,22 @@ const Dashboard: React.FC = () => {
                   recentOrders
                     .slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage)
                     .map((order) => (
-                      <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr 
+                        key={order.id} 
+                        className={`border-b border-gray-100/70 transition-colors
+                          ${order.id % 4 === 0 ? 'hover:bg-gray-50/80 from-gray-50/40 to-white/60' :
+                            order.id % 4 === 1 ? 'hover:bg-blue-50/80 from-blue-50/40 to-white/60' :
+                            order.id % 4 === 2 ? 'hover:bg-teal-50/80 from-teal-50/40 to-white/60' :
+                            'hover:bg-indigo-50/80 from-indigo-50/40 to-white/60'}
+                          bg-gradient-to-r backdrop-blur-sm`}
+                      >
                         <td className="px-4 py-4">
-                          <div className="font-medium text-gray-900">#{order.id.toString().padStart(5, '0')}</div>
+                          <div className={`font-medium ${
+                            order.id % 4 === 0 ? 'text-gray-900' :
+                            order.id % 4 === 1 ? 'text-blue-900' :
+                            order.id % 4 === 2 ? 'text-teal-900' :
+                            'text-indigo-900'
+                          }`}>#{order.id.toString().padStart(5, '0')}</div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm text-gray-600">
@@ -613,19 +626,29 @@ const Dashboard: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm text-gray-900">{order.items.length} items</div>
+                          <div className={`text-sm font-medium ${
+                            order.id % 4 === 0 ? 'text-gray-800' :
+                            order.id % 4 === 1 ? 'text-blue-800' :
+                            order.id % 4 === 2 ? 'text-teal-800' :
+                            'text-indigo-800'
+                          }`}>{order.items.length} items</div>
                           <div className="text-xs text-gray-500 max-w-xs truncate">
                             {order.items.map(item => `${item.product.name} (${item.quantity})`).join(', ')}
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="font-medium text-gray-900">{formatPrice(order.total)}</div>
+                          <div className={`font-medium ${
+                            order.id % 4 === 0 ? 'text-gray-900' :
+                            order.id % 4 === 1 ? 'text-blue-900' :
+                            order.id % 4 === 2 ? 'text-teal-900' :
+                            'text-indigo-900'
+                          }`}>{formatPrice(order.total)}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
+                          <span className={`text-xs px-3 py-1.5 rounded-full font-medium shadow-sm ${
                             order.payment_status === 'paid' 
-                              ? 'bg-green-100 text-green-600' 
-                              : 'bg-yellow-100 text-yellow-600'
+                              ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700' 
+                              : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700'
                           }`}>
                             {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                           </span>
@@ -634,7 +657,12 @@ const Dashboard: React.FC = () => {
                           <div className="flex items-center gap-2">
                             {order.payment_status === 'pending' && (
                               <button
-                                className="px-3 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm font-medium transition-colors"
+                                className={`px-3 py-1.5 text-white rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                                  order.id % 4 === 0 ? 'bg-gray-500 hover:bg-gray-600' :
+                                  order.id % 4 === 1 ? 'bg-blue-500 hover:bg-blue-600' :
+                                  order.id % 4 === 2 ? 'bg-teal-500 hover:bg-teal-600' :
+                                  'bg-indigo-500 hover:bg-indigo-600'
+                                }`}
                                 onClick={() => confirmDeliveryReceived(order.id)}
                                 disabled={confirmingPayOnDelivery}
                               >
@@ -643,13 +671,23 @@ const Dashboard: React.FC = () => {
                             )}
                             <button
                               onClick={() => generateReceiptPDF(order)}
-                              className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                              className={`p-2 rounded-lg transition-colors ${
+                                order.id % 4 === 0 ? 'text-gray-600 hover:bg-gray-50' :
+                                order.id % 4 === 1 ? 'text-blue-600 hover:bg-blue-50' :
+                                order.id % 4 === 2 ? 'text-teal-600 hover:bg-teal-50' :
+                                'text-indigo-600 hover:bg-indigo-50'
+                              }`}
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => generateReceiptPDF(order, true)}
-                              className="p-2 text-teal-600 hover:text-teal-700 rounded-lg hover:bg-teal-50"
+                              className={`p-2 rounded-lg transition-colors ${
+                                order.id % 4 === 0 ? 'text-gray-600 hover:bg-gray-50' :
+                                order.id % 4 === 1 ? 'text-blue-600 hover:bg-blue-50' :
+                                order.id % 4 === 2 ? 'text-teal-600 hover:bg-teal-50' :
+                                'text-indigo-600 hover:bg-indigo-50'
+                              }`}
                             >
                               <Download className="w-4 h-4" />
                             </button>
@@ -1178,25 +1216,64 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 glass-medium rounded-xl">
-                <div>
-                  <p className="font-medium text-gray-900">#{order.id.toString().padStart(3, '0')}</p>
-                  <p className="text-sm text-gray-600">
-                    {new Date(order.created_at).toLocaleDateString()} • {order.items.length} items
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {order.items.map(item => item.product.name).join(', ')}
-                  </p>
+              <motion.div 
+                key={order.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`p-4 rounded-xl border border-gray-100/50 shadow-sm hover:shadow-md transition-all relative overflow-hidden
+                  ${order.id % 4 === 0 ? 'from-gray-50/80 to-white/90' : 
+                    order.id % 4 === 1 ? 'from-blue-50/80 to-white/90' : 
+                    order.id % 4 === 2 ? 'from-teal-50/80 to-white/90' : 
+                    'from-indigo-50/80 to-white/90'} 
+                  bg-gradient-to-br backdrop-blur-sm`}
+              >
+                <div className="flex flex-col space-y-3">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <h3 className={`font-medium ${
+                      order.id % 4 === 0 ? 'text-gray-900' :
+                      order.id % 4 === 1 ? 'text-blue-900' :
+                      order.id % 4 === 2 ? 'text-teal-900' :
+                      'text-indigo-900'
+                    }`}>
+                      #{order.id.toString().padStart(3, '0')}
+                    </h3>
+                    <span className={`text-xs px-3 py-1.5 rounded-full font-medium shadow-sm ${
+                      order.payment_status === 'paid' 
+                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700' 
+                        : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700'
+                    }`}>
+                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                    </span>
+                  </div>
+
+                  {/* Order Details */}
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">
+                      {new Date(order.created_at).toLocaleDateString()} • {order.items.length} items
+                    </p>
+                    <p className="text-sm text-gray-500 line-clamp-1">
+                      {order.items.map(item => item.product.name).join(', ')}
+                    </p>
+                  </div>
+
+                  {/* Price Section */}
+                  <div className="mt-2 pt-2 border-t border-gray-100/70">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600">Total Amount</span>
+                      <span className={`text-lg font-bold ${
+                        order.id % 4 === 0 ? 'text-gray-900' :
+                        order.id % 4 === 1 ? 'text-blue-900' :
+                        order.id % 4 === 2 ? 'text-teal-900' :
+                        'text-indigo-900'
+                      }`}>
+                        {formatPrice(order.total)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">{formatPrice(order.total)}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    order.payment_status === 'paid' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                  }`}>
-                    {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
-                  </span>
-                </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>
