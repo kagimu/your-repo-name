@@ -79,10 +79,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
       <>
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
+          className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex gap-3 sm:gap-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
@@ -94,20 +94,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-1">{product.name}</h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2">{product.category}</p>
               
-              <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={12}
-                      className={`sm:size-14 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'}`}
+                      size={10}
+                      className={`${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'}`}
                     />
                   ))}
                 </div>
-                <span className="text-xs sm:text-sm text-gray-600">({product.rating})</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                <span className="text-[10px] sm:text-xs text-gray-600">({product.rating})</span>
+              </div>              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div>
                   <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-lg sm:text-2xl font-bold text-gray-900">{formatPrice(product.price)}</span>
@@ -134,11 +132,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                     size="sm"
                     disabled={!product.in_stock}
                     onClick={handleAddToCart}
-                    className="h-8 sm:h-9 min-w-[80px] sm:min-w-[100px] bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
+                    className="h-8 sm:h-9 px-3 sm:px-4 text-white bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 flex items-center gap-1.5"
                   >
-                    <ShoppingCart size={14} className="sm:size-16" />
-                    <span className="text-xs sm:text-sm ml-1">
-                      {product.purchaseType === 'hire' ? 'Book' : 'Add'}
+                    <ShoppingCart size={14} className="flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                      {product.purchaseType === 'hire' ? 'Book Now' : 'Add to Cart'}
                     </span>
                   </EdumallButton>
                 </div>
