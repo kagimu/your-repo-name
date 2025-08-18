@@ -110,7 +110,7 @@ const Checkout = () => {
     };
 
     setDeliveryDetails(sanitized);
-    setDeliveryFee(90000); // placeholder fee
+    setDeliveryFee(0); // placeholder fee
 
     if (!isAuthenticated) {
       savePendingCheckout({ items, deliveryDetails: sanitized });
@@ -288,7 +288,7 @@ const Checkout = () => {
                       onDetailsSubmit={handleDetailsSubmit}
                       user={user}
                       defaultValues={deliveryDetails}
-                      openCageApiKey="be6ffe3a1191428ba1127565d1b9f62c"
+                      openCageApiKey="d4e8d976350b449abd4e4988c364748d"
                     />
                   </motion.div>
                 )}

@@ -169,45 +169,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             required
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <EdumallCombobox
-              label="District"
-              value={formData.district}
-              onChange={(value) => {
-                setFormData(prev => ({ 
-                  ...prev, 
-                  district: value,
-                  // Clear city if it's not in the selected district (case-insensitive)
-                  city: ugandaCities.some(c => 
-                    (c.district.toLowerCase().includes(value.toLowerCase()) || 
-                     value.toLowerCase().includes(c.district.toLowerCase())) && 
-                    c.name === formData.city
-                  ) ? formData.city : ''
-                }));
-              }}
-              options={ugandaDistricts.map(d => ({
-                value: d.name,
-                label: `${d.name} (${d.region})`
-              }))}
-              placeholder="Select a district..."
-            />
-
-            <EdumallCombobox
-              label="City/Town"
-              value={formData.city}
-              onChange={(value) => setFormData(prev => ({ ...prev, city: value }))}
-              options={useMemo(() => 
-                ugandaCities
-                  .filter(c => c.district === formData.district)
-                  .map(c => ({
-                    value: c.name,
-                    label: c.name
-                  })),
-                [formData.district]
-              )}
-              placeholder="Select a city..."
-            />
-          </div>
+          
 
           
 

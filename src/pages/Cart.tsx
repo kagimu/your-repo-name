@@ -162,7 +162,7 @@ const Cart = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Shopping Cart</h1>
             <p className="text-gray-600">Review your items and proceed to checkout.</p>
           </motion.div>
-
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             <div className="lg:col-span-2 space-y-4 mb-6 lg:mb-0">
               {items.map((item, index) => (
