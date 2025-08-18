@@ -86,7 +86,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
             
