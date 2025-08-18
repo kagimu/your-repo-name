@@ -157,95 +157,89 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
   return (
     <>
       <motion.div
-        whileHover={{ y: -6, scale: 1.01 }}
-        className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
+        whileHover={{ y: -2, scale: 1.005 }}
+        className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col h-full"
       >
         {/* Product Image */}
-        <div className="w-full pt-[90%] md:pt-[100%] relative">
+        <div className="w-full pt-[65%] relative bg-gray-50">
           <img 
             src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 w-full h-full object-contain p-1.5"
           />
         </div>
 
-                {/* Product Details */}
-                <div className="p-3 md:p-4 flex flex-col flex-1">
-                  {/* Content Container */}
-                  <div className="flex-1">
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 md:gap-1.5 mb-2">
-                      <span className="text-[10px] md:text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full border border-blue-200">
-                        {product.category}
-                      </span>
-                      {product.purchaseType === 'hire' && (
-                        <span className="text-[10px] md:text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full border border-green-200">
-                          For Hire
-                        </span>
-                      )}
-                    </div>
+        {/* Product Details */}
+        <div className="p-2 flex flex-col flex-1">
+          <div className="flex-1 space-y-1">
+            {/* Category & Status */}
+            <div className="flex items-center justify-between gap-1">
+              <span className="inline-block text-[9px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                {product.category}
+              </span>
+              <p className={`text-[9px] font-medium ${product.in_stock ? 'text-green-600' : 'text-red-500'}`}>
+                {product.in_stock ? 'In Stock' : 'Out'}
+              </p>
+            </div>
 
-                    {/* Title */}
-                    <h3 className="font-semibold text-gray-900 mb-1.5 md:mb-2 line-clamp-2 text-sm md:text-base">{product.name}</h3>
+            {/* Title */}
+            <h3 className="font-medium text-gray-900 line-clamp-1 text-xs leading-tight">
+              {product.name}
+            </h3>
 
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 md:gap-1.5 mb-2 md:mb-3">
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={12}
-                            className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300 md:size-14'}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-[10px] md:text-xs text-gray-600">({product.rating})</span>
-                    </div>
-
-                    {/* Price and Stock */}
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <p className="text-base md:text-lg font-bold text-gray-900">
-                          {formatPrice(product.price)}
-                        </p>
-                        {product.unit && (
-                          <p className="text-[10px] md:text-xs text-gray-600">
-                            per {product.unit}
-                          </p>
-                        )}
-                      </div>
-                      <p className={`text-[10px] md:text-xs font-medium ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
-                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons - Fixed at bottom */}
-                  <div className="pt-2 md:pt-4 mt-2 md:mt-4 border-t border-gray-100">
-                    <div className="grid grid-cols-2 gap-1.5 md:gap-2">
-                      <EdumallButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleViewDetails}
-                        className="h-9 md:h-11 flex items-center justify-center gap-1 md:gap-1.5"
-                      >
-                        <Eye size={16} className="md:size-18" />
-                        <span className="text-sm md:text-base">View</span>
-                      </EdumallButton>
-                      <EdumallButton
-                        variant="primary"
-                        size="sm"
-                        onClick={handleAddToCart}
-                        disabled={!product.in_stock}
-                        className="h-9 md:h-11 flex items-center justify-center gap-1 md:gap-1.5 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
-                      >
-                        <ShoppingCart size={16} className="md:size-18" />
-                        <span className="text-sm md:text-base">{product.purchaseType === 'hire' ? 'Book' : 'Add'}</span>
-                      </EdumallButton>
-                    </div>
-                  </div>
+            {/* Rating & Price Row */}
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-0.5">
+                <div className="flex gap-px">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={8}
+                      className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-200'}
+                    />
+                  ))}
                 </div>
-            </motion.div>
+                <span className="text-[8px] text-gray-400">({product.rating})</span>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-gray-900 leading-none mb-0.5">
+                  {formatPrice(product.price)}
+                </p>
+                {product.unit && (
+                  <p className="text-[8px] text-gray-500 leading-none">
+                    per {product.unit}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="pt-1.5 mt-1.5 border-t border-gray-50">
+            <div className="grid grid-cols-2 gap-1">
+              <EdumallButton
+                variant="secondary"
+                size="sm"
+                onClick={handleViewDetails}
+                className="h-7 flex items-center justify-center gap-0.5 text-[10px]"
+              >
+                <Eye size={12} />
+                <span>View</span>
+              </EdumallButton>
+              <EdumallButton
+                variant="primary"
+                size="sm"
+                onClick={handleAddToCart}
+                disabled={!product.in_stock}
+                className="h-7 flex items-center justify-center gap-0.5 text-[10px] bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
+              >
+                <ShoppingCart size={12} />
+                <span>{product.purchaseType === 'hire' ? 'Book' : 'Add'}</span>
+              </EdumallButton>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
 
 
