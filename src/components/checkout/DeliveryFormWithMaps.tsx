@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
-import { EdumallCombobox } from '../ui/EdumallCombobox';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
-import { ugandaDistricts, ugandaCities } from '@/data/ugandaLocations';
+
 
 interface Coordinates {
   lat: number;
@@ -168,10 +167,6 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
             required
           />
-
-          
-
-          
 
           <div className="relative">
             <label className="text-sm font-medium text-gray-900 mb-2 block">Delivery Address</label>
