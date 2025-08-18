@@ -231,7 +231,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setPendingCheckoutDetails(null);
   };
 
-  const getCartCount = () => items.reduce((sum, item) => sum + item.quantity, 0);
+  const getCartCount = () => items.length; // Count unique items instead of total quantity
   const getCartTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   /** -----------------
