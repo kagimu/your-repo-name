@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, LogIn } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, LogIn, FileText, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import jsPDF from 'jspdf';
 
 const QuantityInput = ({ itemId, quantity, updateQuantity, isLoading }) => {
   const [inputValue, setInputValue] = useState(quantity.toString());
@@ -57,8 +58,136 @@ const Cart = () => {
   const { token, user, isAuthenticated } = useAuth();
   const { items, updateQuantity, removeFromCart, getCartTotal, pendingCheckoutDetails } = useCart();
   const [loadingItemId, setLoadingItemId] = useState(null);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [invoicePdfUrl, setInvoicePdfUrl] = useState('');
   const navigate = useNavigate();
   const [showMobileControls, setShowMobileControls] = useState(false);
+
+  // Invoice generation function using jsPDF
+  const generateInvoice = async (shouldDownload: boolean = false) => {
+    setGeneratingInvoice(true);
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = margin;
+
+      // Helper function to center text
+      const centerText = (text: string, y: number) => {
+        const textWidth = pdf.getStringUnitWidth(text) * pdf.getFontSize() / pdf.internal.scaleFactor;
+        return (pageWidth - textWidth) / 2;
+      };
+
+      // Add Logo
+      const logoWidth = 40;
+      const logoHeight = 10;
+      const logoX = (pageWidth - logoWidth) / 2;
+      pdf.addImage('/edumall-logo.png', 'PNG', logoX, yPos, logoWidth, logoHeight);
+      yPos += logoHeight + 10;
+
+      // Add Title
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      const title = 'PROFORMA INVOICE';
+      pdf.text(title, centerText(title, yPos), yPos);
+      yPos += 10;
+
+      // Add Date
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      const date = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      pdf.text(`Date: ${date}`, margin, yPos);
+      yPos += 10;
+
+      // Table Header
+      pdf.setFont(undefined, 'bold');
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, yPos, pageWidth - (margin * 2), 8, 'F');
+      pdf.text('Item', margin + 2, yPos + 6);
+      pdf.text('Qty', pageWidth - 70, yPos + 6);
+      pdf.text('Price', pageWidth - 50, yPos + 6);
+      pdf.text('Total', pageWidth - 30, yPos + 6);
+      yPos += 12;
+
+      // Table Content
+      pdf.setFont(undefined, 'normal');
+      items.forEach((item) => {
+        if (yPos > pdf.internal.pageSize.getHeight() - 40) {
+          pdf.addPage();
+          yPos = margin;
+        }
+
+        pdf.text(item.name.substring(0, 40) + (item.name.length > 40 ? '...' : ''), margin + 2, yPos);
+        pdf.text(item.quantity.toString(), pageWidth - 70, yPos);
+        pdf.text(formatPrice(item.price).replace('UGX', '').trim(), pageWidth - 50, yPos);
+        pdf.text(formatPrice(item.price * item.quantity).replace('UGX', '').trim(), pageWidth - 30, yPos);
+        yPos += 8;
+      });
+
+      // Total
+      yPos += 5;
+      pdf.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 5;
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Subtotal:', pageWidth - 70, yPos);
+      pdf.text(formatPrice(getCartTotal()).replace('UGX', '').trim(), pageWidth - 30, yPos);
+      yPos += 8;
+      pdf.text('* Delivery fee will be calculated at checkout', margin, yPos);
+
+      // Add Total
+      yPos += 5;
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Total (Delivery fee excluded):', pageWidth - 90, yPos);
+      pdf.text(formatPrice(getCartTotal()).replace('UGX', '').trim(), pageWidth - 30, yPos);
+      
+      // Note about delivery
+      yPos += 15;
+      pdf.setFont(undefined, 'italic');
+      pdf.setFontSize(10);
+      const note = '* Delivery fee will be calculated at checkout based on your location';
+      pdf.text(note, margin, yPos);
+
+      // Footer
+      yPos += 30; // Reduced gap before footer
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(9);
+      const footer = [
+        'Contact Us:',
+        'Edumall Uganda',
+        'Phone: +256 701 234 567',
+        'Email: info@edumall.ug',
+        'Website: www.edumall.ug'
+      ];
+      footer.forEach((line) => {
+        pdf.text(line, centerText(line, yPos), yPos);
+        yPos += 5;
+      });
+
+      if (shouldDownload) {
+        pdf.save('edumall-invoice.pdf');
+      } else {
+        const pdfUrl = pdf.output('bloburl');
+        setInvoicePdfUrl(pdfUrl);
+        setShowInvoicePreview(true);
+      }
+    } catch (error) {
+      console.error('Invoice generation failed:', error);
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
+
+  // Close invoice preview
+  const closeInvoicePreview = () => {
+    setShowInvoicePreview(false);
+    setInvoicePdfUrl('');
+  };
 
   // Helper function to get correct image URL
   const getImageUrl = (imagePath: string) => {
@@ -123,6 +252,7 @@ const Cart = () => {
   const total = subtotal; // delivery fee calculated in checkout
 
   // Check if user has a pending order
+  // @ts-expect-error - Assuming the API returns a status field
   const hasPendingOrder = pendingCheckoutDetails?.status === 'pending';
 
   if (items.length === 0) {
@@ -286,42 +416,145 @@ const Cart = () => {
                   </div>
                 </div>
 
+                {/* Invoice Actions */}
+                <div className="flex gap-2 mb-6">
+                  <motion.button
+                    whileHover={{ 
+                      scale: 1.02, 
+                      boxShadow: '0 4px 12px rgba(45, 212, 191, 0.15)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => generateInvoice(false)}
+                    disabled={generatingInvoice}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium text-teal-700 bg-teal-50/80 hover:bg-teal-100/80 active:bg-teal-100 border border-teal-200 rounded-xl transition-all shadow-sm disabled:opacity-50 group touch-manipulation"
+                  >
+                    <FileText className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 sm:group-active:scale-90" />
+                    <span className="transition-all duration-300 group-hover:translate-x-0.5">
+                      {generatingInvoice ? 'Generating...' : 'View Invoice'}
+                    </span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => generateInvoice(true)}
+                    disabled={generatingInvoice}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 active:bg-blue-100 border border-blue-200 rounded-xl transition-all shadow-sm disabled:opacity-50 group touch-manipulation"
+                  >
+                    <Download className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 sm:group-active:scale-90" />
+                    <span className="transition-all duration-300 group-hover:translate-x-0.5">
+                      {generatingInvoice ? 'Generating...' : 'Download Invoice'}
+                    </span>
+                  </motion.button>
+                </div>
+
                 <div className="space-y-4">
+
+                {/* Invoice Preview Modal */}
+                {showInvoicePreview && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 md:p-6"
+                    onClick={closeInvoicePreview}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.95, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      exit={{ scale: 0.95, y: 20 }}
+                      transition={{ type: "spring", duration: 0.5 }}
+                      className="bg-white rounded-2xl overflow-hidden w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-5xl max-h-[95vh] shadow-2xl"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {/* Header */}
+                      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80 backdrop-blur-sm sticky top-0 z-10">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-gray-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Invoice Preview</h3>
+                        </div>
+                        <button
+                          onClick={closeInvoicePreview}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                        >
+                          <span className="sr-only">Close</span>
+                          <span className="text-2xl leading-none">&times;</span>
+                        </button>
+                      </div>
+
+                      {/* Content with responsive height */}
+                      <div className="relative h-[calc(95vh-4rem)] sm:h-[calc(95vh-4.5rem)] md:h-[85vh] lg:h-[80vh] w-full bg-gray-50">
+                        <iframe
+                          src={invoicePdfUrl as string}
+                          className="absolute inset-0 w-full h-full p-1 sm:p-2 md:p-3"
+                          title="Invoice Preview"
+                          style={{ 
+                            minHeight: '400px',
+                            backgroundColor: '#fff',
+                            borderRadius: '0.5rem'
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
                   {!isAuthenticated ? (
                     <>
-                      <EdumallButton
-                        variant="primary"
-                        size="lg"
-                        className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white"
-                        onClick={() => navigate('/checkout', { state: { items, subtotal, mode: 'guest' } })}
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full touch-manipulation"
                       >
-                        Continue as Guest
-                        <ArrowRight size={18} className="ml-2" />
-                      </EdumallButton>
-                      <EdumallButton
-                        variant="secondary"
-                        size="lg"
-                        className="w-full"
-                        onClick={() => navigate('/login', { state: { from: '/cart' } })}
+                        <EdumallButton
+                          variant="primary"
+                          size="lg"
+                          className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 active:from-teal-700 active:to-blue-800 text-white transition-all duration-300 shadow-md hover:shadow-xl py-3 sm:py-2.5 group"
+                          onClick={() => navigate('/checkout', { state: { items, subtotal, mode: 'guest' } })}
+                        >
+                          Continue as Guest
+                          <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1 group-active:translate-x-1.5" />
+                        </EdumallButton>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full touch-manipulation"
                       >
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Login to Checkout
-                      </EdumallButton>
+                        <EdumallButton
+                          variant="secondary"
+                          size="lg"
+                          className="w-full border border-gray-200 hover:border-gray-300 active:bg-gray-100 hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md py-3 sm:py-2.5 group"
+                          onClick={() => navigate('/login', { state: { from: '/cart' } })}
+                        >
+                          <LogIn className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110 group-active:scale-105" />
+                          Login to Checkout
+                        </EdumallButton>
+                      </motion.div>
                       <p className="text-sm text-gray-600 text-center">
                         Login to save your cart and access more features
                       </p>
                     </>
                   ) : (
-                    <EdumallButton
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white"
-                      disabled={hasPendingOrder}
-                      onClick={() => navigate('/checkout', { state: { items, subtotal } })}
+                    <motion.div
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full touch-manipulation"
                     >
-                      Proceed to Checkout
-                      <ArrowRight size={18} className="ml-2" />
-                    </EdumallButton>
+                      <EdumallButton
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 active:from-teal-700 active:to-blue-800 text-white transition-all duration-300 shadow-md hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md py-3 sm:py-2.5 group"
+                        disabled={hasPendingOrder}
+                        onClick={() => navigate('/checkout', { state: { items, subtotal } })}
+                      >
+                        <span className="flex items-center justify-center">
+                          Proceed to Checkout
+                          <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1 group-active:translate-x-1.5" />
+                        </span>
+                      </EdumallButton>
+                    </motion.div>
                   )}
                 </div>
 
