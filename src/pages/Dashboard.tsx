@@ -221,7 +221,7 @@ const Dashboard: React.FC = () => {
       return (pageWidth - textWidth) / 2;
     };
 
-    // Add Logo
+    // Add Logo (unchanged)
     const logoWidth = 40;
     const logoHeight = 10;
     const logoX = (pageWidth - logoWidth) / 2;
@@ -239,20 +239,27 @@ const Dashboard: React.FC = () => {
 
     // Customer and Order Details section
     pdf.setFillColor(247, 247, 247);
-    pdf.rect(margin, yPos, pageWidth - (margin * 2), 50, 'F');
+    pdf.rect(margin, yPos, pageWidth - (margin * 2), 55, 'F');
     yPos += 10;
 
     pdf.setFontSize(11);
     const orderNumber = `Order #ED${order.id.toString().padStart(5, '0')}`;
     pdf.text(orderNumber, margin + 5, yPos);
-    
+
+    // Add user name (if available)
+    let userName = '';
+    if (user && user.name) {
+      userName = user.name;
+      pdf.text(`Customer: ${userName}`, margin + 5, yPos + 10);
+    }
+
     const dateStr = new Date(order.created_at).toLocaleDateString('en-UG', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
     pdf.text(dateStr, pageWidth - margin - 5 - pdf.getStringUnitWidth(dateStr) * pdf.getFontSize() / pdf.internal.scaleFactor, yPos);
-    yPos += 10;
+    yPos += 20;
 
     // Payment Status with colored background
     const status = order.payment_status.toUpperCase();
@@ -281,43 +288,78 @@ const Dashboard: React.FC = () => {
       theme: 'grid',
       headStyles: { 
         fillColor: [0, 128, 128],
-        fontSize: 10,
-        fontStyle: 'bold'
+        fontSize: 11,
+        fontStyle: 'bold',
+        textColor: [255, 255, 255],
+        halign: 'center',
+        cellPadding: 8
       },
       styles: { 
-        fontSize: 9,
-        cellPadding: 5
+        fontSize: 10,
+        cellPadding: 6,
+        font: 'helvetica',
+        lineWidth: 0.5,
+        lineColor: [220, 220, 220]
       },
       columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 40, halign: 'right' },
-        3: { cellWidth: 40, halign: 'right' }
-      }
+        0: { cellWidth: 'auto', fontStyle: 'normal' },
+        1: { cellWidth: 30, halign: 'center', fontStyle: 'normal' },
+        2: { cellWidth: 40, halign: 'right', fontStyle: 'normal' },
+        3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+      },
+      alternateRowStyles: {
+        fillColor: [249, 249, 249]
+      },
+      margin: { top: 10, bottom: 10 }
     });
 
     const finalY = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
     yPos = finalY + 20;
 
-    // Totals section
+    // Totals section with improved styling
     const subTotal = order.total;
+    
+    // Add a subtle line above totals
+    pdf.setDrawColor(220, 220, 220);
+    pdf.line(pageWidth - margin - 150, yPos - 5, pageWidth - margin, yPos - 5);
+    
+    // Subtotal
     pdf.setFontSize(10);
-    pdf.text('Subtotal:', pageWidth - margin - 80, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Subtotal:', pageWidth - margin - 100, yPos);
+    pdf.setFont('helvetica', 'bold');
     pdf.text(formatPrice(subTotal), pageWidth - margin - 5, yPos, { align: 'right' });
-    yPos += 10;
+    yPos += 12;
 
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Total:', pageWidth - margin - 80, yPos);
+    // Delivery fee line (to be confirmed)
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Delivery Fee:', pageWidth - margin - 100, yPos);
+    pdf.setTextColor(128, 128, 128); // Gray color for 'to be confirmed'
+    pdf.text('To be confirmed by courier', pageWidth - margin - 5, yPos, { align: 'right' });
+    pdf.setTextColor(0, 0, 0); // Reset to black
+    yPos += 12;
+
+    // Total amount with enhanced styling
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Total (excl. delivery):', pageWidth - margin - 100, yPos);
+    pdf.setTextColor(0, 128, 128); // Teal color for total amount
     pdf.text(formatPrice(order.total), pageWidth - margin - 5, yPos, { align: 'right' });
-    yPos += 30;
+    pdf.setTextColor(0, 0, 0); // Reset to black
+    yPos += 20;
 
-    // Footer
+    // Professional Footer - Moved up by reducing yPos increment and margins
     pdf.setFont(undefined, 'normal');
     pdf.setFontSize(10);
     pdf.setTextColor(128, 128, 128);
     const thankYouMsg = 'Thank you for shopping with Edumall!';
-    pdf.text(thankYouMsg, centerText(thankYouMsg, pageHeight - margin), pageHeight - margin);
+    pdf.text(thankYouMsg, centerText(thankYouMsg, pageHeight - margin - 40), pageHeight - margin - 40);
+
+    // Add policy and contact details - Moved up with the rest of the footer
+    const policyMsg = 'All sales are subject to our return & refund policy. For support, contact us:';
+    pdf.text(policyMsg, centerText(policyMsg, pageHeight - margin - 30), pageHeight - margin - 30);
+    const contactMsg = 'Email: support@edumall.co.ug | Tel: +256 781 978 910';
+    pdf.text(contactMsg, centerText(contactMsg, pageHeight - margin - 20), pageHeight - margin - 20);
 
     if (shouldDownload) {
       pdf.save(`receipt-order-${order.id}.pdf`);
@@ -1038,68 +1080,55 @@ const Dashboard: React.FC = () => {
   const ReceiptPreviewModal = () => {
     if (!showReceiptModal || !receiptUrl || !selectedOrder) return null;
 
+    // Responsive modal for mobile view
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4"
+        style={{ overflowY: 'auto' }}
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
-          className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[95vh] flex flex-col"
+          className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[95vh] flex flex-col"
+          style={{ minWidth: '0', width: '100%', maxWidth: '480px', margin: '0 auto' }}
         >
-          {/* Modal Header */}
+          {/* Header */}
           <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                Order #{selectedOrder.id.toString().padStart(5, '0')}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {new Date(selectedOrder.created_at).toLocaleDateString()}
-              </p>
-            </div>
+            <span className="font-semibold text-lg">Receipt Preview</span>
             <button
+              className="text-gray-500 hover:text-gray-700"
               onClick={() => setShowReceiptModal(false)}
-              className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+              aria-label="Close"
             >
-              <X size={20} />
+              &times;
             </button>
           </div>
-          
-          {/* Modal Content */}
-          <div className="flex-1 overflow-auto p-2 sm:p-4 bg-gray-50">
-            <div className="bg-white rounded-lg shadow-sm">
-              <iframe
-                src={receiptUrl}
-                className="w-full h-full min-h-[60vh] border-0 rounded-lg"
-                title="Receipt Preview"
-              />
-            </div>
+          {/* PDF Preview */}
+          <div className="flex-1 overflow-auto p-2 sm:p-4 bg-gray-50 flex items-center justify-center">
+            <iframe
+              src={receiptUrl}
+              title="Receipt Preview"
+              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '8px', background: '#fff' }}
+            />
           </div>
-          
-          {/* Modal Footer */}
+          {/* Actions */}
           <div className="p-2 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
+              className="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition-colors"
+              onClick={() => generateReceiptPDF(selectedOrder!, true)}
+            >
+              Download PDF
+            </button>
+            <button
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               onClick={() => setShowReceiptModal(false)}
-              className="w-full sm:w-auto px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium"
             >
               Close
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                generateReceiptPDF(selectedOrder, true);
-                setShowReceiptModal(false);
-              }}
-              className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center justify-center gap-2 text-sm font-medium"
-            >
-              <Download size={16} />
-              <span>Download PDF</span>
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       </motion.div>
