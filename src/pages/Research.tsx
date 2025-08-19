@@ -1,21 +1,43 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, FileText, Lightbulb, BookOpen, Download, Share, Star, Zap } from 'lucide-react';
+import { 
+  Search, 
+  FileText, 
+  Lightbulb, 
+  BookOpen, 
+  Download, 
+  Share, 
+  Star, 
+  Zap,
+  Target,
+  TrendingUp,
+  GraduationCap,
+  Award 
+} from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ResearchResults } from '@/components/research/ResearchResults';
 import { TopicExplorer } from '@/components/research/TopicExplorer';
 import { AIToolsModal } from '@/components/research/AIToolsModal';
-import { Brain } from 'lucide-react';
+import { LearningLevels } from '@/components/research/LearningLevels';
+import { Brain, Trophy, Flame, Target } from 'lucide-react';
 
 const Research = () => {
-  const [activeTab, setActiveTab] = useState('search');
+  const [activeTab, setActiveTab] = useState('learn');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showAITools, setShowAITools] = useState(false);
   const [selectedContent, setSelectedContent] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [learningProgress, setLearningProgress] = useState({
+    completedTopics: 0,
+    totalTopics: 10,
+    streak: 5,
+    points: 450
+  });
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -126,21 +148,57 @@ const Research = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                🔬 AI Research Hub
+              <div className="inline-block">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  className="bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 p-1 rounded-2xl shadow-xl mb-6"
+                >
+                  <div className="bg-white rounded-xl px-6 py-3">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 text-lg font-medium">
+                      AI-Powered Learning Assistant
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500">
+                  Your Personal Study Companion
+                </span>
               </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                AI-powered research tools for academic excellence and discovery
+              
+              <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
+                Discover a smarter way to learn with personalized AI assistance, 
+                interactive study tools, and comprehensive resources for every academic level
               </p>
+
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                {['Primary', 'O-Level', 'A-Level', 'Cambridge', 'University'].map((level) => (
+                  <motion.button
+                    key={level}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 
+                             hover:border-blue-500 hover:text-blue-500 transition-all duration-200
+                             shadow-sm hover:shadow-md"
+                  >
+                    {level}
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
           </div>
 
           {/* Tab Navigation */}
           <div className="flex space-x-1 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-gray-200/50 mb-8">
             {[
-              { id: 'search', label: 'AI Search', icon: Search },
-              { id: 'tools', label: 'Research Tools', icon: Lightbulb },
-              { id: 'topics', label: 'Topic Explorer', icon: FileText }
+              { id: 'learn', label: 'Smart Learning', icon: BookOpen },
+              { id: 'research', label: 'Research Hub', icon: Search },
+              { id: 'tools', label: 'Study Tools', icon: Lightbulb },
+              { id: 'practice', label: 'Practice Zone', icon: Target },
+              { id: 'progress', label: 'My Progress', icon: TrendingUp }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -161,7 +219,75 @@ const Research = () => {
           </div>
 
           {/* Content based on active tab */}
-          {activeTab === 'search' && (
+          {activeTab === 'learn' && (
+            <div className="space-y-8">
+              {/* Learning Progress Overview */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {[
+                  { 
+                    title: 'Topics Completed', 
+                    value: `${learningProgress.completedTopics}/${learningProgress.totalTopics}`,
+                    icon: <Target className="w-5 h-5 text-blue-500" />,
+                    color: 'blue'
+                  },
+                  { 
+                    title: 'Learning Streak', 
+                    value: `${learningProgress.streak} days`,
+                    icon: <Flame className="w-5 h-5 text-orange-500" />,
+                    color: 'orange'
+                  },
+                  { 
+                    title: 'Knowledge Points', 
+                    value: learningProgress.points,
+                    icon: <Trophy className="w-5 h-5 text-yellow-500" />,
+                    color: 'yellow'
+                  },
+                  { 
+                    title: 'Brain Power', 
+                    value: 'Level 5',
+                    icon: <Brain className="w-5 h-5 text-purple-500" />,
+                    color: 'purple'
+                  }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={stat.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-2 rounded-xl bg-${stat.color}-50`}>
+                        {stat.icon}
+                      </div>
+                      <div className={`text-${stat.color}-500 text-sm font-medium`}>
+                        View Details
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-gray-600 text-sm">{stat.title}</h3>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Level Selection */}
+              <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Learning Path</h2>
+                <LearningLevels
+                  onLevelSelect={setSelectedLevel}
+                  onSubjectSelect={(level, subject) => {
+                    setSelectedLevel(level);
+                    setSelectedSubject(subject);
+                  }}
+                  selectedLevel={selectedLevel}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'research' && (
             <div className="space-y-8">
               {/* Search Section */}
               <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
