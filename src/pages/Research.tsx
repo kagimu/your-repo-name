@@ -12,7 +12,10 @@ import {
   Target,
   TrendingUp,
   GraduationCap,
-  Award 
+  Award,
+  Brain,
+  Trophy,
+  Flame
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
@@ -21,7 +24,10 @@ import { ResearchResults } from '@/components/research/ResearchResults';
 import { TopicExplorer } from '@/components/research/TopicExplorer';
 import { AIToolsModal } from '@/components/research/AIToolsModal';
 import { LearningLevels } from '@/components/research/LearningLevels';
-import { Brain, Trophy, Flame, Target } from 'lucide-react';
+import { StudyTools } from '@/components/research/StudyTools';
+import { PracticeZone } from '@/components/research/PracticeZone';
+import { ProgressTracking } from '@/components/research/ProgressTracking';
+import { NavigationTabs } from '@/components/research/NavigationTabs';
 
 const Research = () => {
   const [activeTab, setActiveTab] = useState('learn');
@@ -38,6 +44,15 @@ const Research = () => {
     streak: 5,
     points: 450
   });
+
+  const handleLevelSelect = (levelId: string) => {
+    setSelectedLevel(levelId);
+  };
+
+  const handleSubjectSelect = (levelId: string, subjectId: string) => {
+    setSelectedLevel(levelId);
+    setSelectedSubject(subjectId);
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -148,75 +163,56 @@ const Research = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
-              <div className="inline-block">
+              <div className="inline-block px-4 sm:px-0">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  className="bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 p-1 rounded-2xl shadow-xl mb-6"
+                  className="bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 p-1 rounded-xl sm:rounded-2xl shadow-xl mb-4 sm:mb-6"
                 >
-                  <div className="bg-white rounded-xl px-6 py-3">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 text-lg font-medium">
+                  <div className="bg-white rounded-lg sm:rounded-xl px-3 sm:px-6 py-2 sm:py-3">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 text-sm sm:text-lg font-medium">
                       AI-Powered Learning Assistant
                     </span>
                   </div>
                 </motion.div>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500">
                   Your Personal Study Companion
                 </span>
               </h1>
               
-              <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto px-4 sm:px-0">
                 Discover a smarter way to learn with personalized AI assistance, 
                 interactive study tools, and comprehensive resources for every academic level
               </p>
 
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                {['Primary', 'O-Level', 'A-Level', 'Cambridge', 'University'].map((level) => (
-                  <motion.button
-                    key={level}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 
-                             hover:border-blue-500 hover:text-blue-500 transition-all duration-200
-                             shadow-sm hover:shadow-md"
-                  >
-                    {level}
-                  </motion.button>
-                ))}
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 sm:mb-8">
+                <div className="flex sm:flex-wrap sm:justify-center gap-2 sm:gap-3 min-w-min">
+                  {['Primary', 'O-Level', 'A-Level', 'Cambridge', 'University'].map((level) => (
+                    <motion.button
+                      key={level}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex-none sm:flex-initial px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 
+                               hover:border-blue-500 hover:text-blue-500 transition-all duration-200
+                               shadow-sm hover:shadow-md whitespace-nowrap"
+                    >
+                      {level}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-gray-200/50 mb-8">
-            {[
-              { id: 'learn', label: 'Smart Learning', icon: BookOpen },
-              { id: 'research', label: 'Research Hub', icon: Search },
-              { id: 'tools', label: 'Study Tools', icon: Lightbulb },
-              { id: 'practice', label: 'Practice Zone', icon: Target },
-              { id: 'progress', label: 'My Progress', icon: TrendingUp }
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-medium flex items-center justify-center space-x-2 ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <NavigationTabs 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
           {/* Content based on active tab */}
           {activeTab === 'learn' && (
@@ -404,6 +400,45 @@ const Research = () => {
 
           {activeTab === 'topics' && (
             <TopicExplorer onTopicSelect={handleTopicSelect} />
+          )}
+          
+          {activeTab === 'practice' && (
+            <div className="space-y-8">
+              <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Interactive Practice Zone</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {['Quizzes', 'Exercises', 'Practice Tests', 'Flash Cards', 'Problem Sets', 'Mock Exams'].map((item, index) => (
+                    <motion.div
+                      key={item}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    >
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{item}</h3>
+                      <p className="text-sm text-gray-600">Practice and test your knowledge</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'progress' && (
+            <div className="space-y-8">
+              <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Learning Journey</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="bg-gradient-to-r from-blue-500 to-teal-500 rounded-2xl p-6 text-white">
+                      <h3 className="text-lg font-semibold mb-2">Current Progress</h3>
+                      <div className="text-4xl font-bold mb-4">{learningProgress.points}</div>
+                      <p>Knowledge Points Earned</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>
