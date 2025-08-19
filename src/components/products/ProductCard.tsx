@@ -82,7 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex gap-3 sm:gap-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0 bg-white">
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col h-full"
       >
         {/* Product Image */}
-        <div className="w-full pt-[65%] relative bg-gray-50">
+        <div className="w-full pt-[65%] relative bg-white">
           <img 
             src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
             alt={product.name}

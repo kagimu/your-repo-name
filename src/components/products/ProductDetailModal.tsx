@@ -109,7 +109,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
               {/* Image Gallery */}
               <div className="space-y-3 sm:space-y-4">
-                <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-gray-50">
+                <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-white">
                   <img
                     src={product.images_url?.[selectedImage]}
                     alt={product.name}
@@ -123,7 +123,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       onClick={() => setSelectedImage(index)}
                       className={`aspect-square rounded-md sm:rounded-lg overflow-hidden border-2 transition-colors ${
                         selectedImage === index ? 'border-teal-500' : 'border-transparent'
-                      } bg-gray-50`}
+                      } bg-white`}
                     >
                       <img
                         src={image}
