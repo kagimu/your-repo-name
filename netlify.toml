@@ -1,0 +1,17 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[secrets]
+  # Allow these environment variables in the build output
+  omit_keys = [
+    "VITE_GEMINI_API_KEY",
+    "VITE_OPENAI_API_KEY",
+    "VITE_HUGGINGFACE_API_KEY",
+    "VITE_GOOGLE_MAPS_API_KEY"
+  ]
