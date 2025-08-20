@@ -1,5 +1,5 @@
 [build]
-  command = "NODE_ENV=development npm install && npm run typecheck && npm run build"
+  command = "NODE_ENV=production npm ci && npm run build"
   publish = "dist"
 
 [[redirects]]
@@ -10,26 +10,11 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Opt out of asset optimization since we're handling it in Vite
 [build.processing]
   skip_processing = true
 
-[build.processing.css]
-  bundle = false
-  minify = false
-
-[build.processing.js]
-  bundle = false
-  minify = false
-
-[build.processing.html]
-  pretty_urls = true
-
-[build.processing.images]
-  compress = false
-
-[functions]
-  external_node_modules = ["@netlify/functions"]
-
-# Disable secrets scanning completely
-[security]
-  SECRETS_SCAN_ENABLED = false
+# Configure secrets scanning
+[build.secrets]
+  SECRETS_SCAN_ENABLED = true
+  SECRETS_SCAN_PATHS = ["!dist/**"]

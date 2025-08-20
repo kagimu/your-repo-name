@@ -1,16 +1,26 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    react({
-      devTools: true,
-      // This adds react refresh
-      refresh: true,
-    })
-  ],
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    define: {
+      // Prevent environment variables from being included in the bundle
+      'process.env.NODE_ENV': `"${mode}"`,
+      // Only include public env vars (VITE_ prefixed)
+      ...Object.keys(env).reduce((acc: Record<string, string>, key) => {
+        if (key.startsWith('VITE_')) {
+          acc[`process.env.${key}`] = JSON.stringify(env[key]);
+        }
+        return acc;
+      }, {}),
+    },
+  plugins: [react()],
   build: {
     rollupOptions: {
       output: {
@@ -38,8 +48,24 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1500,
     minify: 'terser',
+    terserOptions: {
+      format: {
+        comments: false
+      },
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log']
+      },
+      mangle: {
+        safari10: true,
+      }
+    },
     target: 'esnext',
-    sourcemap: false
+    sourcemap: false,
+    // Ensure environment variables are correctly handled in production
+    assetsInlineLimit: 4096,
+    emptyOutDir: true
   },
   server: {
     proxy: {
@@ -67,4 +93,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', '@radix-ui/react-tooltip'],
   }
+  };
 });
