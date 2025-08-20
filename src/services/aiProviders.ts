@@ -42,9 +42,9 @@ class OpenAIProvider implements AIProvider {
   name = 'OpenAI';
   private apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   private baseUrl = 'https://api.openai.com/v1';
-  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
-
-  isAvailable = () => {
+      return Array.isArray(response.data)
+        ? response.data[0].generated_text
+        : response.data.generated_text;
     if (this.apiMode === 'proxy') return true;
     return Boolean(this.apiKey);
   };
@@ -56,8 +56,20 @@ class OpenAIProvider implements AIProvider {
       return response.data.content;
     }
     // Direct mode (dev only)
+  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
     try {
+  isAvailable = () => {
+    if (this.apiMode === 'proxy') return true;
+    return Boolean(this.apiKey);
+  };
       const response = await axios.post<OpenAIResponse>(
+  async generateText(prompt: string): Promise<string> {
+    if (this.apiMode === 'proxy') {
+      // Call backend proxy endpoint
+      const response = await axios.post('/api/huggingface', { prompt });
+      return response.data.content;
+    }
+    // Direct mode (dev only)
         `${this.baseUrl}/chat/completions`,
         {
           model: 'gpt-4',
@@ -84,8 +96,20 @@ class OpenAIProvider implements AIProvider {
   }
 }
 
+        private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
 class HuggingFaceProvider implements AIProvider {
+        isAvailable = () => {
+          if (this.apiMode === 'proxy') return true;
+          return Boolean(this.apiKey);
+        };
   id = 'huggingface';
+        async generateText(prompt: string): Promise<string> {
+          if (this.apiMode === 'proxy') {
+            // Call backend proxy endpoint
+            const response = await axios.post('/api/gemini', { prompt });
+            return response.data.content;
+          }
+          // Direct mode (dev only)
   name = 'Hugging Face';
   private apiKey = import.meta.env.VITE_HUGGINGFACE_API_KEY;
   private baseUrl = 'https://api-inference.huggingface.co/models';
