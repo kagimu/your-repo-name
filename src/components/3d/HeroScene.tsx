@@ -1,20 +1,22 @@
-
-import React, { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-const HeroScene: React.FC = () => {
+const HeroScene = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
   const rendererRef = useRef<THREE.WebGLRenderer>();
   const animationRef = useRef<number>();
 
-  const icons = useMemo(() => [
-    // Education-themed 3D objects
+  const objects = useMemo(() => [
+    // Basic geometric shapes
     { type: 'box', color: 0x00bcd4, position: [-3, 1, 0] },
     { type: 'sphere', color: 0xff9800, position: [2, -1, 1] },
-    { type: 'torus', color: 0x4caf50, position: [0, 2, -1] },
     { type: 'cylinder', color: 0x9c27b0, position: [-1, -2, 0] },
     { type: 'cone', color: 0xf44336, position: [3, 0, -2] },
+    // Adding torus knots
+    { type: 'torusKnot', color: 0xff6b6b, position: [-4, 0, 0], scale: 0.7 },
+    { type: 'torusKnot', color: 0x4ecdc4, position: [0, 0, -2], scale: 0.8 },
+    { type: 'torusKnot', color: 0x45b7d1, position: [4, 0, 0], scale: 0.6 }
   ], []);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const HeroScene: React.FC = () => {
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.z = 8; // Increased camera distance to see all objects
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ 
@@ -54,21 +56,18 @@ const HeroScene: React.FC = () => {
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Create floating education icons
+    // Create objects
     const meshes: THREE.Mesh[] = [];
     
-    icons.forEach((icon, index) => {
+    objects.forEach((obj, index) => {
       let geometry;
       
-      switch (icon.type) {
+      switch (obj.type) {
         case 'box':
           geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
           break;
         case 'sphere':
           geometry = new THREE.SphereGeometry(0.5, 32, 32);
-          break;
-        case 'torus':
-          geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
           break;
         case 'cylinder':
           geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 32);
@@ -76,23 +75,30 @@ const HeroScene: React.FC = () => {
         case 'cone':
           geometry = new THREE.ConeGeometry(0.4, 0.8, 32);
           break;
+        case 'torusKnot':
+          geometry = new THREE.TorusKnotGeometry(0.5, 0.2, 128, 16);
+          break;
         default:
           geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
       }
 
       const material = new THREE.MeshPhongMaterial({ 
-        color: icon.color,
-        shininess: 100,
+        color: obj.color,
+        shininess: 150,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.7,
+        side: THREE.DoubleSide
       });
       
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...icon.position);
+      mesh.position.set(...obj.position);
+      if (obj.scale) mesh.scale.setScalar(obj.scale);
+      
       mesh.userData = { 
-        originalPosition: [...icon.position],
+        originalPosition: [...obj.position],
         phase: index * 0.5,
-        rotationSpeed: 0.01 + Math.random() * 0.01
+        rotationSpeed: 0.01 + Math.random() * 0.01,
+        type: obj.type
       };
       
       scene.add(mesh);
@@ -119,18 +125,29 @@ const HeroScene: React.FC = () => {
       meshes.forEach((mesh) => {
         const userData = mesh.userData;
         
-        // Floating animation
-        mesh.position.y = userData.originalPosition[1] + Math.sin(time + userData.phase) * 0.3;
-        mesh.position.x = userData.originalPosition[0] + Math.cos(time * 0.7 + userData.phase) * 0.1;
+        // Enhanced floating animation
+        mesh.position.y = userData.originalPosition[1] + Math.sin(time + userData.phase) * 0.5;
+        mesh.position.x = userData.originalPosition[0] + Math.cos(time * 0.7 + userData.phase) * 0.3;
+        mesh.position.z = userData.originalPosition[2] + Math.sin(time * 0.5 + userData.phase) * 0.2;
         
-        // Rotation
-        mesh.rotation.x += userData.rotationSpeed;
-        mesh.rotation.y += userData.rotationSpeed * 1.5;
+        // Enhanced rotation for all objects
+        if (userData.type === 'torusKnot') {
+          mesh.rotation.x += userData.rotationSpeed * 2;
+          mesh.rotation.y += userData.rotationSpeed * 2.5;
+          mesh.rotation.z += userData.rotationSpeed * 0.5;
+        } else {
+          mesh.rotation.x += userData.rotationSpeed * 1.5;
+          mesh.rotation.y += userData.rotationSpeed * 2;
+          mesh.rotation.z += userData.rotationSpeed * 0.3;
+        }
         
-        // Mouse interaction - subtle attraction
-        const mouseInfluence = 0.1;
-        mesh.position.x += mouse.x * mouseInfluence * 0.1;
-        mesh.position.y += mouse.y * mouseInfluence * 0.1;
+        // Enhanced mouse interaction
+        const mouseInfluence = userData.type === 'torusKnot' ? 0.2 : 0.15;
+        mesh.position.x += mouse.x * mouseInfluence * 0.15;
+        mesh.position.y += mouse.y * mouseInfluence * 0.15;
+        
+        // Add slight z-axis movement based on mouse position
+        mesh.position.z += (mouse.x * mouse.y) * mouseInfluence * 0.1;
       });
 
       // Camera slight movement based on mouse
@@ -155,6 +172,7 @@ const HeroScene: React.FC = () => {
     window.addEventListener('resize', handleResize);
 
     // Cleanup
+    const mountElement = mountRef.current;
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -162,8 +180,8 @@ const HeroScene: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (mountElement && renderer.domElement) {
+        mountElement.removeChild(renderer.domElement);
       }
       
       // Dispose of Three.js objects
@@ -178,8 +196,15 @@ const HeroScene: React.FC = () => {
       
       renderer.dispose();
     };
-  }, [icons]);
+  }, [objects]);
 
+  return (
+    <div 
+      ref={mountRef} 
+      className="w-full h-full min-h-[600px]"
+      style={{ background: 'transparent' }}
+    />
+  );
   return (
     <div 
       ref={mountRef} 
@@ -190,3 +215,5 @@ const HeroScene: React.FC = () => {
 };
 
 export default HeroScene;
+
+

@@ -1,10 +1,10 @@
-import React, { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-const HeroScene = React.lazy(() => import('../3d/HeroScene'));
 import { EdumallButton } from '../ui/EdumallButton';
 import { useMobile } from '@/hooks/use-mobile';
 import { MobileHeroBackground } from './MobileHeroBackground';
+import HeroScene from '../3d/HeroScene';
 
 export const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -33,9 +33,10 @@ export const HeroSection: React.FC = () => {
     <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
       {/* 3D Background - Visible on all screen sizes */}
       <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-teal-50/30" />
         <Suspense fallback={
-          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-teal-50">
-            <MobileHeroBackground />
+          <div className="w-full h-screen flex items-center justify-center">
+            Loading 3D Scene...
           </div>
         }>
           <HeroScene />
