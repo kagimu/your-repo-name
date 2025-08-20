@@ -9,12 +9,31 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  VITE_DUMMY_KEY = "placeholder"
 
+[build.processing]
+  skip_processing = true
+
+[build.processing.css]
+  bundle = false
+  minify = false
+
+[build.processing.js]
+  bundle = false
+  minify = false
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = false
+
+# Explicitly allow these environment variables in build output
 [secrets]
   SECRETS_SCAN_ENABLED = true
-  SECRETS_SCAN_OMIT_PATHS = [
-    "**/dist/**",
-    "**/dist/assets/**",
-    "**/dist/assets/*.js",
-    "**/dist/assets/index-*.js"
+  SECRETS_SCAN_OMIT_KEYS = [
+    "VITE_GEMINI_API_KEY",
+    "VITE_OPENAI_API_KEY",
+    "VITE_HUGGINGFACE_API_KEY",
+    "VITE_GOOGLE_MAPS_API_KEY"
   ]

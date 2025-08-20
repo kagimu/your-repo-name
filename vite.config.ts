@@ -11,13 +11,6 @@ export default defineConfig({
       refresh: true,
     })
   ],
-  define: {
-    // Safely handle environment variables
-    'process.env.VITE_GEMINI_API_KEY': JSON.stringify('[GEMINI_API_KEY]'),
-    'process.env.VITE_HUGGINGFACE_API_KEY': JSON.stringify('[HUGGINGFACE_API_KEY]'),
-    'process.env.VITE_OPENAI_API_KEY': JSON.stringify('[OPENAI_API_KEY]'),
-    'process.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify('[GOOGLE_MAPS_API_KEY]')
-  },
   build: {
     rollupOptions: {
       output: {
