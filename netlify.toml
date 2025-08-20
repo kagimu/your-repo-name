@@ -1,5 +1,5 @@
 [build]
-  command = "export PATH=\"$PATH:$(pwd)/node_modules/.bin\" && NODE_ENV=production npm ci && NODE_ENV=production npm run build"
+  command = "npm ci && NODE_ENV=production npm run build"
   publish = "dist"
 
 [[redirects]]
