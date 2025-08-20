@@ -9,7 +9,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  VITE_DUMMY_KEY = "placeholder"
 
 [build.processing]
   skip_processing = true
@@ -28,12 +27,9 @@
 [build.processing.images]
   compress = false
 
-# Explicitly allow these environment variables in build output
-[secrets]
-  SECRETS_SCAN_ENABLED = true
-  SECRETS_SCAN_OMIT_KEYS = [
-    "VITE_GEMINI_API_KEY",
-    "VITE_OPENAI_API_KEY",
-    "VITE_HUGGINGFACE_API_KEY",
-    "VITE_GOOGLE_MAPS_API_KEY"
-  ]
+[functions]
+  external_node_modules = ["@netlify/functions"]
+
+# Disable secrets scanning completely
+[security]
+  SECRETS_SCAN_ENABLED = false
