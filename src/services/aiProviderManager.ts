@@ -2,10 +2,25 @@ import { AIProvider } from '../../types/aiProvider';
 import { OpenAIProvider } from './providers/openaiProvider';
 import { GeminiProvider } from './providers/geminiProvider';
 import { HuggingFaceProvider } from './providers/huggingfaceProvider';
+import { getEnvVar, validateEnvVars } from '../utils/env';
+  VITE_GEMINI_API_KEY?: string;
+  VITE_OPENAI_API_KEY?: string;
+  VITE_HUGGINGFACE_API_KEY?: string;
+  [key: string]: string | undefined;
+}
+
+class DummyProvider implements AIProvider {
+  async generateText(prompt: string): Promise<string> {
+    return "AI features are currently disabled. Please try again later.";
+  }
+  isAvailable(): boolean {
+    return false;
+  }
+}
 
 export class AIProviderManager {
   private static instance: AIProviderManager | null = null;
-  private providers: AIProvider[] = [];
+  private providers: AIProvider[] = [new DummyProvider()]; // Default to dummy provider
   private isInitialized = false;
 
   private constructor() {}
@@ -17,11 +32,30 @@ export class AIProviderManager {
     return this.instance;
   }
 
+  private getEnvVars() {
+    try {
+      // @ts-ignore
+      return typeof import.meta !== 'undefined' ? import.meta.env : {};
+    } catch {
+      console.warn('Unable to access import.meta.env');
+      return {};
+    }
+  }
+
   public initialize(): boolean {
-    if (this.isInitialized) return this.providers.length > 0;
+    if (this.isInitialized) return this.providers.some(p => !(p instanceof DummyProvider));
 
     try {
-      const env = import.meta.env;
+      console.log('Initializing AI providers...');
+      // Safely check for environment variables
+      const env = (typeof import !== 'undefined' && import.meta && import.meta.env) 
+        ? import.meta.env 
+        : {
+            VITE_GEMINI_API_KEY: process.env.VITE_GEMINI_API_KEY,
+            VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY,
+            VITE_HUGGINGFACE_API_KEY: process.env.VITE_HUGGINGFACE_API_KEY
+          };
+      
       const keys = {
         gemini: env.VITE_GEMINI_API_KEY,
         openai: env.VITE_OPENAI_API_KEY,
