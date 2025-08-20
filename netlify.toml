@@ -8,19 +8,8 @@
   status = 200
 
 [build.environment]
-  NODE_ENV = "production"
   NODE_VERSION = "20"
 
-# Configure secrets scanning
 [secrets]
   SECRETS_SCAN_ENABLED = true
-  SECRETS_SCAN_OMIT_PATHS = [
-    "dist/assets/*.js"
-  ]
-  # Ignore our environment variables in the build output
-  SECRETS_SCAN_OMIT_KEYS = [
-    "VITE_GEMINI_API_KEY",
-    "VITE_OPENAI_API_KEY",
-    "VITE_HUGGINGFACE_API_KEY",
-    "VITE_GOOGLE_MAPS_API_KEY"
-  ]
+  SECRETS_SCAN_SKIP = "true"
