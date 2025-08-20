@@ -42,10 +42,20 @@ class OpenAIProvider implements AIProvider {
   name = 'OpenAI';
   private apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   private baseUrl = 'https://api.openai.com/v1';
+  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
 
-  isAvailable = () => Boolean(this.apiKey);
+  isAvailable = () => {
+    if (this.apiMode === 'proxy') return true;
+    return Boolean(this.apiKey);
+  };
 
   async generateText(prompt: string): Promise<string> {
+    if (this.apiMode === 'proxy') {
+      // Call backend proxy endpoint
+      const response = await axios.post('/api/openai', { prompt });
+      return response.data.content;
+    }
+    // Direct mode (dev only)
     try {
       const response = await axios.post<OpenAIResponse>(
         `${this.baseUrl}/chat/completions`,
@@ -61,7 +71,6 @@ class OpenAIProvider implements AIProvider {
           },
         }
       );
-
       return response.data.choices[0].message.content;
     } catch (error) {
       console.error('OpenAI Error:', error);
