@@ -12,4 +12,9 @@
 
 [secrets]
   SECRETS_SCAN_ENABLED = true
-  SECRETS_SCAN_SKIP = "true"
+  SECRETS_SCAN_OMIT_PATHS = [
+    "**/dist/**",
+    "**/dist/assets/**",
+    "**/dist/assets/*.js",
+    "**/dist/assets/index-*.js"
+  ]
