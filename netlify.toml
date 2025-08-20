@@ -1,5 +1,5 @@
 [build]
-  command = "npm install -g typescript && npm install && npm run build"
+  command = "npm install && npx tsc --noEmit && npx vite build"
   publish = "dist"
 
 [[redirects]]
@@ -9,7 +9,7 @@
 
 [build.environment]
   NODE_ENV = "production"
-  NODE_VERSION = "20.19.0"
+  NODE_VERSION = "20"
 
 # Configure secrets scanning
 [secrets]
