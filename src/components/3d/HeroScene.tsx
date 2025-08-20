@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-export const HeroScene: React.FC = () => {
+const HeroScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
   const rendererRef = useRef<THREE.WebGLRenderer>();
@@ -188,3 +188,5 @@ export const HeroScene: React.FC = () => {
     />
   );
 };
+
+export default HeroScene;

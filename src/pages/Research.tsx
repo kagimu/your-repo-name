@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -17,6 +17,8 @@ import {
   Trophy,
   Flame
 } from 'lucide-react';
+import { aiEducationService } from '@/services/aiEducationService';
+import { LearningPath } from '@/types/aiProvider';
 import { Navbar } from '@/components/layout/Navbar';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
@@ -38,12 +40,39 @@ const Research = () => {
   const [selectedContent, setSelectedContent] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedCurriculum, setSelectedCurriculum] = useState<'ugandan' | 'cambridge'>('ugandan');
   const [learningProgress, setLearningProgress] = useState({
     completedTopics: 0,
     totalTopics: 10,
     streak: 5,
-    points: 450
+    points: 450,
+    currentPath: null as LearningPath | null,
+    lastActivity: new Date()
   });
+
+  useEffect(() => {
+    const initializeLearningPath = async () => {
+      if (!selectedLevel || !selectedSubject) return;
+
+      try {
+        const path = await aiEducationService.generatePersonalizedPath(
+          selectedLevel,
+          selectedSubject,
+          [], // Add user's strengths from assessment or history
+          []  // Add user's areas for improvement
+        );
+        
+        setLearningProgress(prev => ({
+          ...prev,
+          currentPath: path
+        }));
+      } catch (error) {
+        console.error('Error initializing learning path:', error);
+      }
+    };
+
+    initializeLearningPath();
+  }, [selectedLevel, selectedSubject]);
 
   const handleLevelSelect = (levelId: string) => {
     setSelectedLevel(levelId);

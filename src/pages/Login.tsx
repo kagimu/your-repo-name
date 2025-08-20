@@ -69,7 +69,10 @@ const Login = () => {
             type: data.user.type as 'individual' | 'institution' | 'guest' | 'courier' | 'supplier',
             firstName: data.user.firstName || '',
             lastName: data.user.lastName || '',
-            phone: data.user.phone || ''
+            phone: data.user.phone || '',
+            featureFlags: {
+              labManagementEnabled: data.user.type === 'institution' ? true : false
+            }
           },
           data.token
         );

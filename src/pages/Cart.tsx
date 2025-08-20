@@ -458,44 +458,53 @@ const Cart = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 md:p-6"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-0 sm:p-4 md:p-8"
                     onClick={closeInvoicePreview}
                   >
                     <motion.div
-                      initial={{ scale: 0.95, y: 20 }}
+                      initial={{ scale: 0.98, y: 10 }}
                       animate={{ scale: 1, y: 0 }}
-                      exit={{ scale: 0.95, y: 20 }}
-                      transition={{ type: "spring", duration: 0.5 }}
-                      className="bg-white rounded-2xl overflow-hidden w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-5xl max-h-[95vh] shadow-2xl"
+                      exit={{ scale: 0.98, y: 10 }}
+                      transition={{ type: 'spring', duration: 0.4 }}
+                      className="relative bg-white rounded-2xl overflow-hidden w-full max-w-[98vw] md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-[98vh] shadow-2xl border border-gray-200"
                       onClick={e => e.stopPropagation()}
                     >
                       {/* Header */}
-                      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80 backdrop-blur-sm sticky top-0 z-10">
+                      <div className="px-4 sm:px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50/90 backdrop-blur sticky top-0 z-10">
                         <div className="flex items-center gap-2">
                           <FileText className="w-5 h-5 text-gray-600" />
                           <h3 className="text-lg font-semibold text-gray-900">Invoice Preview</h3>
                         </div>
                         <button
                           onClick={closeInvoicePreview}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                          className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                          tabIndex={0}
+                          aria-label="Close invoice preview"
                         >
                           <span className="sr-only">Close</span>
-                          <span className="text-2xl leading-none">&times;</span>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                         </button>
                       </div>
 
-                      {/* Content with responsive height */}
-                      <div className="relative h-[calc(95vh-4rem)] sm:h-[calc(95vh-4.5rem)] md:h-[85vh] lg:h-[80vh] w-full bg-gray-50">
+                      {/* Content with improved responsive height and scroll */}
+                      <div className="relative w-full h-[80vh] sm:h-[70vh] md:h-[65vh] lg:h-[60vh] overflow-auto bg-gray-50">
                         <iframe
                           src={invoicePdfUrl as string}
-                          className="absolute inset-0 w-full h-full p-1 sm:p-2 md:p-3"
+                          className="w-full h-full min-h-[400px] bg-white rounded-b-2xl border-none"
                           title="Invoice Preview"
-                          style={{ 
-                            minHeight: '400px',
-                            backgroundColor: '#fff',
-                            borderRadius: '0.5rem'
-                          }}
+                          style={{ minHeight: '400px', borderRadius: '0 0 1rem 1rem', backgroundColor: '#fff' }}
                         />
+                      </div>
+
+                      {/* Close button for mobile at bottom */}
+                      <div className="block sm:hidden w-full py-3 px-4 bg-gray-50 border-t border-gray-200 text-center">
+                        <button
+                          onClick={closeInvoicePreview}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold shadow hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                          tabIndex={0}
+                        >
+                          Close Invoice
+                        </button>
                       </div>
                     </motion.div>
                   </motion.div>

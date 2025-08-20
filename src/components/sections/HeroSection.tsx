@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { HeroScene } from '../3d/HeroScene';
+const HeroScene = React.lazy(() => import('../3d/HeroScene'));
 import { EdumallButton } from '../ui/EdumallButton';
 import { useMobile } from '@/hooks/use-mobile';
 import { MobileHeroBackground } from './MobileHeroBackground';
@@ -31,13 +31,16 @@ export const HeroSection: React.FC = () => {
 
   return (
     <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
-      {/* 3D Background - Hidden on small mobile for performance */}
-      <div className="absolute inset-0 z-0 hidden sm:block">
-        <HeroScene />
+      {/* 3D Background - Visible on all screen sizes */}
+      <div className="absolute inset-0 z-0">
+        <Suspense fallback={
+          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-teal-50">
+            <MobileHeroBackground />
+          </div>
+        }>
+          <HeroScene />
+        </Suspense>
       </div>
-      
-      {/* Animated Mobile Background */}
-      <MobileHeroBackground />
       
       {/* Hero Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
@@ -56,7 +59,7 @@ export const HeroSection: React.FC = () => {
               type: "spring",
               stiffness: 100
             }}
-            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-3 sm:mb-6"
+            className="text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-3 sm:mb-6"
           >
             <motion.span
               initial={{ opacity: 0, x: -20 }}
@@ -85,7 +88,7 @@ export const HeroSection: React.FC = () => {
               type: "spring",
               damping: 12
             }}
-            className="relative text-sm sm:text-md md:text-lg text-gray-600 mb-10 sm:mb-8 max-w-2xl mx-auto leading-relaxed"
+            className="relative text-base sm:text-md md:text-lg text-gray-600 mb-10 sm:mb-8 max-w-2xl mx-auto leading-relaxed"
           >
             {isMobile ? (
               <>

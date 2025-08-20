@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { aiEducationService } from '@/services/aiEducationService';
 import { Check, X, Trophy, Brain, Timer, Flag } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 
@@ -26,24 +27,39 @@ export const PracticeZone: React.FC<PracticeZoneProps> = ({ academicLevel, subje
   const [quizComplete, setQuizComplete] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30); // seconds per question
 
-  // Sample questions based on academic level
-  const questions: Question[] = [
-    {
-      id: '1',
-      question: 'What is the primary function of mitochondria in a cell?',
-      options: [
-        'Energy production',
-        'Protein synthesis',
-        'Cell division',
-        'Waste removal'
-      ],
-      correctAnswer: 'Energy production',
-      explanation: 'Mitochondria are often called the powerhouse of the cell because they generate most of the cell\'s supply of ATP (energy).',
-      difficulty: 'medium',
-      points: 10
-    },
-    // Add more questions based on academicLevel and subject
-  ];
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      if (!subject || !academicLevel) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const questions = await aiEducationService.generateQuestions(
+          subject,
+          academicLevel,
+          'Current Topic' // Optional topic parameter
+        );
+        
+        setQuestions(questions.map((q, index) => ({
+          ...q,
+          id: String(index + 1),
+          points: q.difficulty === 'easy' ? 5 : q.difficulty === 'medium' ? 10 : 15
+        })));
+      } catch (err) {
+        setError('Failed to load questions. Please try again.');
+        console.error('Error loading questions:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadQuestions();
+  }, [subject, academicLevel]);
 
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer);

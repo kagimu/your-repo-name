@@ -11,6 +11,9 @@ interface User {
   type?: 'institution' | 'individual' | 'guest' | 'courier' | 'supplier';
   designation?: string;
   userType?: string;
+  featureFlags?: {
+    labManagementEnabled: boolean;
+  };
 }
 
 interface AuthContextType {

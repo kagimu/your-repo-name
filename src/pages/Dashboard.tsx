@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { jsPDF } from "jspdf";
-import { autoTable } from 'jspdf-autotable';
+import { lazy, Suspense } from 'react';
+
+const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
+const JsPDF = lazy(() => import('jspdf').then(module => ({ default: module.jsPDF })));
+import autoTable from 'jspdf-autotable';
 import {
   ShoppingBag,
   TrendingUp,
@@ -15,6 +18,7 @@ import {
   X,
   Download,
   Eye,
+  Beaker,
   Camera,
   Building2,
   CheckCircle,
@@ -26,11 +30,13 @@ import {
   Trash2
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
+import LabMenuItem from '@/components/layout/LabMenuItem';
 import { toast } from 'react-toastify';
 import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { DashboardLoading } from '@/components/ui/DashboardLoading';
 
 // Types and Interfaces
 interface OrderItem {
@@ -87,6 +93,13 @@ const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
   
   // All your existing state declarations
   const [stats, setStats] = useState<DashboardStat[]>([
@@ -132,20 +145,29 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('orders');
+  const [activeTab, setActiveTab] = useState('overview');
   const [lastStatsUpdate, setLastStatsUpdate] = useState<number>(0);
-  const [cachedStats, setCachedStats] = useState<ApiResponse<DashboardStats> | null>(null);
+  const [cachedStats, setCachedStats] = useState<ApiResponse | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [confirmingPayOnDelivery, setConfirmingPayOnDelivery] = useState(false);
 
   // Function to get sidebar items
-  const getSidebarItems = (hasHistory: boolean) => {
+  const getSidebarItems = useCallback((hasHistory: boolean) => {
+    // Debug logs
+    console.log('User Account Type:', user?.accountType);
+    console.log('Feature Flags:', user?.featureFlags);
+    console.log('Is Institution?:', user?.accountType === 'institution');
+    console.log('Lab Management Enabled?:', user?.featureFlags?.labManagementEnabled);
+
     const items = [
       { id: 'overview', label: 'Overview', icon: TrendingUp },
       { id: 'orders', label: 'Orders', icon: ShoppingBag },
       { id: 'badges', label: 'Badges', icon: Award },
+      ...(user?.accountType === 'institution'  // Temporarily remove feature flag check
+        ? [{ id: 'labs', label: 'Lab Management', icon: Beaker }] 
+        : []),
       { id: 'profile', label: 'Profile', icon: User },
       { id: 'settings', label: 'Settings', icon: Settings },
       { id: 'billing', label: 'Billing', icon: CreditCard }
@@ -157,10 +179,10 @@ const Dashboard: React.FC = () => {
     }
 
     return items;
-  };
+  }, [user]);
 
   // Memoized sidebar items that update when shopping history changes
-  const sidebarItems = useMemo(() => getSidebarItems(shoppingHistory.length > 0), [shoppingHistory.length]);
+  const sidebarItems = useMemo(() => getSidebarItems(shoppingHistory.length > 0), [shoppingHistory.length, getSidebarItems]);
 
   // Fetch orders
   useEffect(() => {
@@ -1545,7 +1567,11 @@ const Dashboard: React.FC = () => {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleMoveToHistory(order.id)}
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this order? It will be moved to Shopping History.')) {
+                                deleteOrder(order.id)
+                              }
+                            }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium transition-all flex-1 sm:flex-auto justify-center sm:justify-start"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1579,7 +1605,7 @@ const Dashboard: React.FC = () => {
             className="mb-8 text-center max-w-2xl mx-auto"
           >
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Welcome back, {user?.firstName || user?.lastName || 'User'}
+              Welcome back, {user?.name || 'User'}
             </h1>
             <p className="text-lg text-gray-600 mx-auto max-w-xl leading-relaxed">
               Manage your orders, track deliveries, and discover new products
@@ -1700,9 +1726,9 @@ const Dashboard: React.FC = () => {
               <div className="lg:hidden">
                 {isMobileMenuOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
                     className="glass-strong rounded-2xl p-4 mb-6 backdrop-blur-lg"
                   >
                     <nav className="flex flex-col items-center space-y-2">
@@ -1750,6 +1776,15 @@ const Dashboard: React.FC = () => {
               {activeTab === 'orders' && renderOrders()}
               {activeTab === 'history' && renderHistory()}
               {activeTab === 'billing' && renderBilling()}
+              {activeTab === 'labs' && (
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                  </div>
+                }>
+                  <LabInventory />
+                </Suspense>
+              )}
             </div>
           </div>
         </div>

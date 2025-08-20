@@ -94,8 +94,10 @@ const Register = () => {
       body: JSON.stringify({
         accountType,
         ...formData,
-         paymentMethods: formData.paymentMethods.join(','), // 👈 convert array to string
-
+        paymentMethods: formData.paymentMethods.join(','),
+        featureFlags: accountType === 'institution' ? {
+          labManagementEnabled: true
+        } : undefined
       }),
     });
 
@@ -324,6 +326,42 @@ const Register = () => {
               onChange={(e) => handleInputChange('phone', e.target.value)}
               placeholder="Enter phone number"
               required
+            />
+
+            <EdumallInput
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              placeholder="Enter password"
+              required
+              rightElement={
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              }
+            />
+
+            <EdumallInput
+              label="Confirm Password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password_confirmation}
+              onChange={(e) => handleInputChange('password_confirmation', e.target.value)}
+              placeholder="Confirm password"
+              required
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              }
             />
           </div>
         );
@@ -575,17 +613,20 @@ const Register = () => {
                 >
                   {isRegistering ? 'Creating Account...' : 'Create Account'}
                 </EdumallButton>
-              ) : currentStep > 1 ? (
+              ) : (
                 <EdumallButton
                   type="button"
                   variant="primary"
                   size="md"
-                  onClick={nextStep}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    nextStep();
+                  }}
                 >
                   Next
                   <ChevronRight size={20} />
                 </EdumallButton>
-              ) : null}
+              )}
             </div>
           </form>
 

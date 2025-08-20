@@ -34,28 +34,42 @@ export const AIToolsModal: React.FC<AIToolsModalProps> = ({
     
     setIsProcessing(true);
     
-    // Simulate AI processing
-    setTimeout(() => {
-      let result = '';
+    try {
+      let result;
       switch (selectedTool) {
-        case 'summarize':
-          result = `Summary: ${input.substring(0, 200)}... This content discusses key educational concepts and methodologies relevant to modern learning environments.`;
+        case 'summarize': {
+          result = await aiEducationService.summarizeContent(input, 'student');
           break;
-        case 'research':
-          result = `Research findings: Based on the content provided, here are related academic sources and research papers that expand on these topics...`;
+        }
+        case 'research': {
+          result = await aiEducationService.generateResearchGuide(input, 'student');
           break;
-        case 'analyze':
-          result = `Analysis: The content can be broken down into three main components: 1) Core concepts, 2) Practical applications, 3) Educational implications...`;
+        }
+        case 'analyze': {
+          result = await aiEducationService.explainConcept(input, 'student', 'detailed');
           break;
-        case 'ideas':
-          result = `Generated ideas: 1) Create interactive learning modules, 2) Develop assessment frameworks, 3) Design collaborative projects...`;
+        }
+        case 'ideas': {
+          const studyPlan = await aiEducationService.generateStudyPlan(
+            'General',
+            'student',
+            [input],
+            '1 week'
+          );
+          result = JSON.stringify(studyPlan, null, 2);
           break;
-        default:
-          result = 'Processing complete. Results will appear here.';
+        }
+        default: {
+          result = 'Please select a tool to process the content.';
+        }
       }
       setOutput(result);
+    } catch (error) {
+      console.error('Processing error:', error);
+      setOutput('An error occurred while processing your request. Please try again.');
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   if (!isOpen) return null;

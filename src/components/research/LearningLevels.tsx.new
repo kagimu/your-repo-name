@@ -1,0 +1,217 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Book, GraduationCap, Award, Brain } from 'lucide-react';
+import { UgandanCurriculum, CambridgeCurriculum } from '../../data/curriculumData';
+
+interface Subject {
+  id: string;
+  name: string;
+  icon: JSX.Element;
+  color: string;
+}
+
+interface Level {
+  id: string;
+  name: string;
+  subjects: Subject[];
+  icon: JSX.Element;
+  description: string;
+}
+
+interface LearningLevelsProps {
+  onLevelSelect: (levelId: string) => void;
+  onSubjectSelect: (levelId: string, subjectId: string) => void;
+  selectedLevel?: string;
+}
+
+const getSubjectIcon = (subject: string): string => {
+  const icons: Record<string, string> = {
+    'Mathematics': '📐',
+    'Physics': '⚡',
+    'Chemistry': '⚗️',
+    'Biology': '🧬',
+    'English': '📚',
+    'Literature': '📖',
+    'Geography': '🌍',
+    'History': '📜',
+    'Economics': '📊',
+    'Computer Science': '💻'
+  };
+  return icons[subject] || '📚';
+};
+
+const getSubjectColor = (index: number): string => {
+  const colors = [
+    'from-blue-500 to-cyan-500',
+    'from-green-500 to-teal-500',
+    'from-purple-500 to-pink-500',
+    'from-orange-500 to-red-500',
+    'from-indigo-500 to-blue-500',
+    'from-teal-500 to-emerald-500'
+  ];
+  return colors[index % colors.length];
+};
+
+export const LearningLevels: React.FC<LearningLevelsProps> = ({
+  onLevelSelect,
+  onSubjectSelect,
+  selectedLevel
+}) => {
+  const [selectedCurriculum, setSelectedCurriculum] = useState<'ugandan' | 'cambridge'>('ugandan');
+
+  const getSubjectsForLevel = (level: string): Subject[] => {
+    const currData = selectedCurriculum === 'ugandan' ? UgandanCurriculum : CambridgeCurriculum;
+    
+    if (level.startsWith('primary')) {
+      return currData.primary.subjects.map((name, index) => ({
+        id: `${name.toLowerCase()}-${level}`,
+        name,
+        icon: <span>{getSubjectIcon(name)}</span>,
+        color: getSubjectColor(index)
+      }));
+    } else if (level.startsWith('o-level') || level.startsWith('igcse')) {
+      return currData.oLevel.subjects.map((name, index) => ({
+        id: `${name.toLowerCase()}-${level}`,
+        name,
+        icon: <span>{getSubjectIcon(name)}</span>,
+        color: getSubjectColor(index)
+      }));
+    } else {
+      return currData.aLevel.subjects.map((name, index) => ({
+        id: `${name.toLowerCase()}-${level}`,
+        name,
+        icon: <span>{getSubjectIcon(name)}</span>,
+        color: getSubjectColor(index)
+      }));
+    }
+  };
+
+  const levels = selectedCurriculum === 'ugandan' ? [
+    {
+      id: 'primary',
+      name: 'Primary School',
+      icon: <Book className="w-6 h-6" />,
+      description: 'UNEB Primary Level Education',
+      subjects: getSubjectsForLevel('primary')
+    },
+    {
+      id: 'o-level',
+      name: 'O-Level',
+      icon: <GraduationCap className="w-6 h-6" />,
+      description: 'UNEB O-Level Education',
+      subjects: getSubjectsForLevel('o-level')
+    },
+    {
+      id: 'a-level',
+      name: 'A-Level',
+      icon: <Brain className="w-6 h-6" />,
+      description: 'UNEB A-Level Education',
+      subjects: getSubjectsForLevel('a-level')
+    }
+  ] : [
+    {
+      id: 'cambridge-primary',
+      name: 'Cambridge Primary',
+      icon: <Book className="w-6 h-6" />,
+      description: 'Cambridge Primary Education',
+      subjects: getSubjectsForLevel('primary')
+    },
+    {
+      id: 'igcse',
+      name: 'IGCSE',
+      icon: <GraduationCap className="w-6 h-6" />,
+      description: 'International General Certificate of Secondary Education',
+      subjects: getSubjectsForLevel('igcse')
+    },
+    {
+      id: 'cambridge-a-level',
+      name: 'Cambridge A-Level',
+      icon: <Brain className="w-6 h-6" />,
+      description: 'Cambridge International A-Level',
+      subjects: getSubjectsForLevel('a-level')
+    }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Curriculum Selector */}
+      <div className="flex justify-center mb-8">
+        <div className="bg-white rounded-xl p-1 shadow-md inline-flex">
+          <button
+            onClick={() => setSelectedCurriculum('ugandan')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              selectedCurriculum === 'ugandan'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Ugandan Curriculum
+          </button>
+          <button
+            onClick={() => setSelectedCurriculum('cambridge')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              selectedCurriculum === 'cambridge'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Cambridge International
+          </button>
+        </div>
+      </div>
+
+      {/* Level Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {levels.map((level) => (
+          <motion.button
+            key={level.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onLevelSelect(level.id)}
+            className={`p-6 rounded-2xl border transition-all ${
+              selectedLevel === level.id
+                ? 'border-blue-500 bg-blue-50 shadow-lg'
+                : 'border-gray-200 bg-white hover:border-blue-200 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`p-2 rounded-xl ${
+                selectedLevel === level.id ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {level.icon}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{level.name}</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">{level.description}</p>
+            
+            {selectedLevel === level.id && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-2 gap-2"
+              >
+                {level.subjects.map((subject) => (
+                  <motion.button
+                    key={subject.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSubjectSelect(level.id, subject.id);
+                    }}
+                    className={`p-2 rounded-lg bg-gradient-to-r ${subject.color} 
+                      text-white text-sm font-medium flex items-center gap-2
+                      hover:shadow-md transition-all`}
+                  >
+                    {subject.icon}
+                    <span>{subject.name}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+};
