@@ -1,30 +1,29 @@
-export function getEnvVar(key: keyof ImportMetaEnv): string | undefined {
+const safeGetEnvVar = (key: string): string | undefined => {
   try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      // @ts-ignore
+    if (import.meta.env?.[key]) {
       return import.meta.env[key];
     }
     return undefined;
-  } catch (error) {
-    console.warn(`Error accessing environment variable ${key}:`, error);
+  } catch {
     return undefined;
   }
-}
+};
 
-export function validateEnvVars() {
-  const requiredVars = [
-    'VITE_GEMINI_API_KEY',
-    'VITE_OPENAI_API_KEY',
-    'VITE_HUGGINGFACE_API_KEY'
-  ] as const;
+// Only use this for non-sensitive environment variables
+export const getPublicEnvVar = (key: string): string | undefined => {
+  return safeGetEnvVar(key);
+};
 
-  const missingVars = requiredVars.filter(key => !getEnvVar(key));
+// Use this for sensitive API keys - it only returns existence
+export const hasEnvVar = (key: string): boolean => {
+  return !!safeGetEnvVar(key);
+};
 
-  if (missingVars.length > 0) {
-    console.warn('Missing environment variables:', missingVars.join(', '));
-    return false;
+// Get the API key only when actually making the API call
+export const getApiKey = (key: string): string | undefined => {
+  const value = safeGetEnvVar(key);
+  if (!value) {
+    console.warn(`API key not found: ${key}`);
   }
-
-  return true;
-}
+  return value;
+};

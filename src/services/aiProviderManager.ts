@@ -2,7 +2,7 @@ import { AIProvider } from '../../types/aiProvider';
 import { OpenAIProvider } from './providers/openaiProvider';
 import { GeminiProvider } from './providers/geminiProvider';
 import { HuggingFaceProvider } from './providers/huggingfaceProvider';
-import { getEnvVar, validateEnvVars } from '../utils/env';
+import { getApiKey, hasEnvVar } from '../utils/env';
   VITE_GEMINI_API_KEY?: string;
   VITE_OPENAI_API_KEY?: string;
   VITE_HUGGINGFACE_API_KEY?: string;
@@ -32,26 +32,29 @@ export class AIProviderManager {
     return this.instance;
   }
 
-  private initializeProvider<T extends AIProvider>(
-    key: string | undefined,
+  private async initializeProvider<T extends AIProvider>(
+    envKey: string,
     Provider: new (key: string) => T,
     name: string
-  ): boolean {
-    if (!key?.trim()) {
+  ): Promise<boolean> {
+    if (!hasEnvVar(envKey)) {
       console.info(`${name} provider not configured`);
       return false;
     }
 
     try {
-      this.providers.push(new Provider(key));
+      const apiKey = getApiKey(envKey);
+      if (!apiKey) return false;
+      
+      this.providers.push(new Provider(apiKey));
       return true;
-    } catch (e) {
-      console.warn(`${name} provider initialization failed`);
+    } catch {
+      console.info(`${name} provider initialization failed`);
       return false;
     }
   }
 
-  public initialize(): boolean {
+  public async initialize(): Promise<boolean> {
     if (this.isInitialized) {
       return this.providers.some(p => !(p instanceof DummyProvider));
     }
@@ -61,19 +64,16 @@ export class AIProviderManager {
       this.providers = [new DummyProvider()];
       let hasInitializedProvider = false;
 
-      // @ts-ignore
-      const env = import.meta.env;
-
       // Initialize each provider without logging sensitive data
-      if (this.initializeProvider(env.VITE_GEMINI_API_KEY, GeminiProvider, 'Gemini')) {
+      if (await this.initializeProvider('VITE_GEMINI_API_KEY', GeminiProvider, 'Gemini')) {
         hasInitializedProvider = true;
       }
 
-      if (this.initializeProvider(env.VITE_OPENAI_API_KEY, OpenAIProvider, 'OpenAI')) {
+      if (await this.initializeProvider('VITE_OPENAI_API_KEY', OpenAIProvider, 'OpenAI')) {
         hasInitializedProvider = true;
       }
 
-      if (this.initializeProvider(env.VITE_HUGGINGFACE_API_KEY, HuggingFaceProvider, 'HuggingFace')) {
+      if (await this.initializeProvider('VITE_HUGGINGFACE_API_KEY', HuggingFaceProvider, 'HuggingFace')) {
         hasInitializedProvider = true;
       }
 
