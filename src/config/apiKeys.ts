@@ -1,13 +1,9 @@
-// Load environment variables from .env file
-import { config } from 'dotenv';
-config();
-
 // API keys configuration
 export const API_KEYS = {
-  OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY,
-  GEMINI_API_KEY: process.env.VITE_GEMINI_API_KEY,
-  HUGGINGFACE_API_KEY: process.env.VITE_HUGGINGFACE_API_KEY,
-  WOLFRAM_ALPHA_APPID: process.env.VITE_WOLFRAM_ALPHA_APPID,
+  OPENAI_API_KEY: import.meta.env.VITE_OPENAI_API_KEY || '',
+  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
+  HUGGINGFACE_API_KEY: import.meta.env.VITE_HUGGINGFACE_API_KEY || '',
+  WOLFRAM_ALPHA_APPID: import.meta.env.VITE_WOLFRAM_ALPHA_APPID || '',
 } as const;
 
 // Validate required API keys

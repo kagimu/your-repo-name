@@ -7,7 +7,7 @@ interface AIChatMessage {
 }
 
 export const AIChat: React.FC = () => {
-  const { generateText, isLoading, error } = useAI();
+  const { generateText, isLoading, error, isAvailable } = useAI();
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
 
@@ -34,6 +34,14 @@ export const AIChat: React.FC = () => {
       console.error('Failed to generate AI response:', err);
     }
   }, [inputValue, isLoading, generateText]);
+
+  if (!isAvailable) {
+    return (
+      <div className="p-4 rounded-lg bg-yellow-50 text-yellow-800">
+        <p>AI chat is currently unavailable. Please try again later when API keys are configured.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">

@@ -4,19 +4,35 @@ import { GeminiProvider } from './providers/geminiProvider';
 import { HuggingFaceProvider } from './providers/huggingfaceProvider';
 
 export class AIProviderManager {
+  private static instance: AIProviderManager;
   private providers: AIProvider[] = [];
 
   constructor() {
-    // Initialize providers with API keys from environment variables
-    if (process.env.OPENAI_API_KEY) {
-      this.providers.push(new OpenAIProvider(process.env.OPENAI_API_KEY));
+    try {
+      // Initialize providers with API keys from environment variables
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      const huggingfaceKey = import.meta.env.VITE_HUGGINGFACE_API_KEY;
+
+      if (geminiKey) {
+        this.providers.push(new GeminiProvider(geminiKey));
+      }
+      if (openaiKey) {
+        this.providers.push(new OpenAIProvider(openaiKey));
+      }
+      if (huggingfaceKey) {
+        this.providers.push(new HuggingFaceProvider(huggingfaceKey));
+      }
+    } catch (error) {
+      console.warn('AI providers initialization failed:', error);
     }
-    if (process.env.GEMINI_API_KEY) {
-      this.providers.push(new GeminiProvider(process.env.GEMINI_API_KEY));
+  }
+
+  public static getInstance(): AIProviderManager {
+    if (!AIProviderManager.instance) {
+      AIProviderManager.instance = new AIProviderManager();
     }
-    if (process.env.HUGGINGFACE_API_KEY) {
-      this.providers.push(new HuggingFaceProvider(process.env.HUGGINGFACE_API_KEY));
-    }
+    return AIProviderManager.instance;
   }
 
   private getAvailableProviders(): AIProvider[] {
