@@ -20,7 +20,11 @@ export default defineConfig(({ mode }) => {
         return acc;
       }, {}),
     },
-  plugins: [react()],
+  plugins: [
+    react({
+      tsDecorators: true,
+    })
+  ],
   build: {
     rollupOptions: {
       output: {
