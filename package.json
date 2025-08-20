@@ -5,12 +5,15 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "npx tsc --noEmit && vite build",
-        "typecheck": "npx tsc --noEmit",
+        "build": "npx --no-install typescript --noEmit && vite build",
+        "typecheck": "npx --no-install typescript --noEmit",
         "lint": "eslint .",
         "preview": "vite preview"
     },
     "dependencies": {
+        "typescript": "^5.9.2",
+        "vite": "^5.0.0",
+        "@vitejs/plugin-react-swc": "^4.0.1",
         "@google/generative-ai": "^0.24.1",
         "@headlessui/react": "^2.2.7",
         "@hookform/resolvers": "^3.9.0",
@@ -87,15 +90,12 @@
         "@typescript-eslint/eslint-plugin": "^7.0.1",
         "@typescript-eslint/parser": "^7.0.1",
         "@vitejs/plugin-react": "^4.2.1",
-        "@vitejs/plugin-react-swc": "^4.0.1",
         "autoprefixer": "^10.4.17",
         "eslint": "^8.56.0",
         "eslint-plugin-react-hooks": "^4.6.0",
         "eslint-plugin-react-refresh": "^0.4.5",
         "postcss": "^8.4.35",
         "tailwindcss": "^3.4.1",
-        "terser": "^5.43.1",
-        "typescript": "^5.9.2",
-        "vite": "^5.0.0"
+        "terser": "^5.43.1"
     }
 }
