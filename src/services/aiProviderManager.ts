@@ -4,35 +4,77 @@ import { GeminiProvider } from './providers/geminiProvider';
 import { HuggingFaceProvider } from './providers/huggingfaceProvider';
 
 export class AIProviderManager {
-  private static instance: AIProviderManager;
+  private static instance: AIProviderManager | null = null;
   private providers: AIProvider[] = [];
+  private isInitialized = false;
 
-  constructor() {
+  private constructor() {}
+
+  public static getInstance(): AIProviderManager {
+    if (!this.instance) {
+      this.instance = new AIProviderManager();
+    }
+    return this.instance;
+  }
+
+  public initialize(): boolean {
+    if (this.isInitialized) return this.providers.length > 0;
+
     try {
-      // Initialize providers with API keys from environment variables
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      const huggingfaceKey = import.meta.env.VITE_HUGGINGFACE_API_KEY;
+      const env = import.meta.env;
+      const keys = {
+        gemini: env.VITE_GEMINI_API_KEY,
+        openai: env.VITE_OPENAI_API_KEY,
+        huggingface: env.VITE_HUGGINGFACE_API_KEY
+      };
 
-      if (geminiKey) {
-        this.providers.push(new GeminiProvider(geminiKey));
+      let hasInitializedProvider = false;
+
+      if (typeof keys.gemini === 'string' && keys.gemini.length > 0) {
+        try {
+          this.providers.push(new GeminiProvider(keys.gemini));
+          hasInitializedProvider = true;
+        } catch (e) {
+          console.warn('Failed to initialize Gemini provider:', e);
+        }
       }
-      if (openaiKey) {
-        this.providers.push(new OpenAIProvider(openaiKey));
+
+      if (typeof keys.openai === 'string' && keys.openai.length > 0) {
+        try {
+          this.providers.push(new OpenAIProvider(keys.openai));
+          hasInitializedProvider = true;
+        } catch (e) {
+          console.warn('Failed to initialize OpenAI provider:', e);
+        }
       }
-      if (huggingfaceKey) {
-        this.providers.push(new HuggingFaceProvider(huggingfaceKey));
+
+      if (typeof keys.huggingface === 'string' && keys.huggingface.length > 0) {
+        try {
+          this.providers.push(new HuggingFaceProvider(keys.huggingface));
+          hasInitializedProvider = true;
+        } catch (e) {
+          console.warn('Failed to initialize HuggingFace provider:', e);
+        }
       }
+
+      if (!hasInitializedProvider) {
+        console.warn('No AI providers could be initialized. AI features will be disabled.');
+      }
+
+      this.isInitialized = true;
+      return hasInitializedProvider;
     } catch (error) {
       console.warn('AI providers initialization failed:', error);
+      this.isInitialized = true;
+      return false;
     }
   }
 
   public static getInstance(): AIProviderManager {
-    if (!AIProviderManager.instance) {
-      AIProviderManager.instance = new AIProviderManager();
+    if (!this.instance) {
+      this.instance = new AIProviderManager();
     }
-    return AIProviderManager.instance;
+    return this.instance;
   }
 
   private getAvailableProviders(): AIProvider[] {
