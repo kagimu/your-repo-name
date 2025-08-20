@@ -5,6 +5,7 @@ import { EdumallButton } from '../ui/EdumallButton';
 import { useMobile } from '@/hooks/use-mobile';
 import { MobileHeroBackground } from './MobileHeroBackground';
 import HeroScene from '../3d/HeroScene';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 export const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -34,13 +35,25 @@ export const HeroSection: React.FC = () => {
       {/* 3D Background - Visible on all screen sizes */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-teal-50/30" />
-        <Suspense fallback={
-          <div className="w-full h-screen flex items-center justify-center">
-            Loading 3D Scene...
+        <ErrorBoundary fallback={
+          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gray-600">An error occurred while loading the scene.</p>
+              <p className="text-gray-500 text-sm">Please refresh the page to try again.</p>
+            </div>
           </div>
         }>
-          <HeroScene />
-        </Suspense>
+          <Suspense fallback={
+            <div className="w-full h-screen flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+                <p>Loading 3D Scene...</p>
+              </div>
+            </div>
+          }>
+            <HeroScene />
+          </Suspense>
+        </ErrorBoundary>
       </div>
       
       {/* Hero Content */}
