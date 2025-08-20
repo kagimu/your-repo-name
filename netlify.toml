@@ -1,5 +1,5 @@
 [build]
-  command = "NODE_ENV=production npm ci && npm run typecheck && NODE_ENV=production npm run build"
+  command = "NODE_ENV=production npm ci && NODE_ENV=production npm run build"
   publish = "dist"
 
 [[redirects]]
