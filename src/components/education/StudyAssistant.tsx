@@ -20,14 +20,17 @@ interface StudyPlan {
   }>;
 }
 
+
 export const StudyAssistant: React.FC = () => {
   const {
     generateQuestions,
     generateStudyPlan,
     solveMathProblem,
     isLoading,
-    error
+    error,
+    aiAvailable
   } = useAIEducation();
+
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
@@ -36,6 +39,15 @@ export const StudyAssistant: React.FC = () => {
     steps: string[];
     explanation: string;
   } | null>(null);
+
+  if (!aiAvailable) {
+    return (
+      <div style={{ padding: 32, textAlign: 'center', color: '#888' }}>
+        <h2>AI features are currently unavailable.</h2>
+        <p>Please try again later or contact support if you believe this is an error.</p>
+      </div>
+    );
+  }
 
   const handleGenerateQuestions = async () => {
     try {

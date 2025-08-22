@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { aiProviderManager } from '../services/aiProviders';
 import { Question, Flashcard, StudyPlan } from '../types/ai';
@@ -84,9 +85,11 @@ export const useAIEducation = () => {
     }
   }, []);
 
+  const aiAvailable = aiProviderManager.isAnyProviderAvailable();
   return {
     isLoading,
     error,
+    aiAvailable,
     generateQuestions,
     generateFlashcards,
     solveMathProblem,

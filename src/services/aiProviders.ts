@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { 
   Question, 
@@ -38,13 +39,14 @@ export interface AIProvider {
 }
 
 class OpenAIProvider implements AIProvider {
+
   id = 'openai';
   name = 'OpenAI';
   private apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   private baseUrl = 'https://api.openai.com/v1';
-      return Array.isArray(response.data)
-        ? response.data[0].generated_text
-        : response.data.generated_text;
+  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
+
+  isAvailable = () => {
     if (this.apiMode === 'proxy') return true;
     return Boolean(this.apiKey);
   };
@@ -56,20 +58,8 @@ class OpenAIProvider implements AIProvider {
       return response.data.content;
     }
     // Direct mode (dev only)
-  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
     try {
-  isAvailable = () => {
-    if (this.apiMode === 'proxy') return true;
-    return Boolean(this.apiKey);
-  };
       const response = await axios.post<OpenAIResponse>(
-  async generateText(prompt: string): Promise<string> {
-    if (this.apiMode === 'proxy') {
-      // Call backend proxy endpoint
-      const response = await axios.post('/api/huggingface', { prompt });
-      return response.data.content;
-    }
-    // Direct mode (dev only)
         `${this.baseUrl}/chat/completions`,
         {
           model: 'gpt-4',
@@ -95,29 +85,27 @@ class OpenAIProvider implements AIProvider {
     return JSON.parse(response);
   }
 }
-
-        private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
 class HuggingFaceProvider implements AIProvider {
-        isAvailable = () => {
-          if (this.apiMode === 'proxy') return true;
-          return Boolean(this.apiKey);
-        };
+
   id = 'huggingface';
-        async generateText(prompt: string): Promise<string> {
-          if (this.apiMode === 'proxy') {
-            // Call backend proxy endpoint
-            const response = await axios.post('/api/gemini', { prompt });
-            return response.data.content;
-          }
-          // Direct mode (dev only)
   name = 'Hugging Face';
   private apiKey = import.meta.env.VITE_HUGGINGFACE_API_KEY;
   private baseUrl = 'https://api-inference.huggingface.co/models';
   private defaultModel = 'google/flan-t5-xxl'; // A good general-purpose model
+  private apiMode = import.meta.env.VITE_API_MODE || 'proxy';
 
-  isAvailable = () => Boolean(this.apiKey);
+  isAvailable = () => {
+    if (this.apiMode === 'proxy') return true;
+    return Boolean(this.apiKey);
+  };
 
   async generateText(prompt: string): Promise<string> {
+    if (this.apiMode === 'proxy') {
+      // Call backend proxy endpoint
+      const response = await axios.post('/api/huggingface', { prompt });
+      return response.data.content;
+    }
+    // Direct mode (dev only)
     try {
       const response = await axios.post<HuggingFaceResponse | HuggingFaceResponse[]>(
         `${this.baseUrl}/${this.defaultModel}`,
@@ -146,6 +134,7 @@ class HuggingFaceProvider implements AIProvider {
 }
 
 class WolframProvider {
+  // No changes needed, this class is only used for math tasks and implements isAvailable
   private appId = import.meta.env.VITE_WOLFRAM_APPID;
   private baseUrl = 'https://api.wolframalpha.com/v2';
 
@@ -213,7 +202,7 @@ class WolframProvider {
 
 export class AIProviderManager {
   private providers: AIProvider[];
-  private wolframProvider: WolframProvider;
+  private wolframProvider: WolframAIProvider;
   private geminiProvider: GeminiProvider;
 
   constructor() {
@@ -222,7 +211,7 @@ export class AIProviderManager {
       new GeminiProvider(),
       new HuggingFaceProvider(),
     ];
-    this.wolframProvider = new WolframProvider();
+    this.wolframProvider = new WolframAIProvider();
     this.geminiProvider = new GeminiProvider();
   }
 

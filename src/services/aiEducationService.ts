@@ -20,9 +20,11 @@ class AIEducationService {
     if (import.meta.env.VITE_HUGGINGFACE_API_KEY) {
       this.huggingfaceProvider = new HuggingFaceProvider(import.meta.env.VITE_HUGGINGFACE_API_KEY);
     }
-    if (!this.openaiProvider && !this.geminiProvider && !this.huggingfaceProvider) {
-      throw new Error('No API key found for AI providers');
-    }
+    // Do not throw error if no providers; allow UI to handle unavailable state
+  }
+
+  public isAnyProviderAvailable(): boolean {
+    return Boolean(this.openaiProvider || this.geminiProvider || this.huggingfaceProvider);
   }
 
   public static getInstance(): AIEducationService {
