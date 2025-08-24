@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { lazy, Suspense } from 'react';
 
 const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
-const JsPDF = lazy(() => import('jspdf').then(module => ({ default: module.jsPDF })));
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
   ShoppingBag,
