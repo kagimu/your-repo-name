@@ -76,7 +76,7 @@ const Categories = () => {
   const navigate = useNavigate();
 
   const categoryMap: Record<string, string[]> = {
-    laboratory: ['apparatus', 'specimen', 'chemical'],
+    laboratory: ['apparatus', 'specimen', 'chemical', 'animals'],
     textbooks: ['textbook', 'revision guide', 'novel'],
     stationery: ['scholastic', 'paper'],
     school_accessories: ['accessories', 'schoolwear'],
@@ -133,7 +133,17 @@ useEffect(() => {
 
 
  // Filter products based on all criteria
-  const filteredProducts = useMemo(() => {
+  // Function to format price with specimen unit
+const formatSpecimenPrice = (product: Product) => {
+  if (product.category?.toLowerCase() === 'laboratory' && 
+      (product.subcategory?.toLowerCase() === 'specimen' || 
+       product.subcategory?.toLowerCase() === 'animals')) {
+    return `USh ${product.price.toLocaleString()} per specimen`;
+  }
+  return `USh ${product.price.toLocaleString()}`;
+};
+
+const filteredProducts = useMemo(() => {
     return products.filter((product: Product) => {
       const name = product.name || '';
       const category = product.category || '';
@@ -246,38 +256,94 @@ useEffect(() => {
             </div>
 
             {/* Category & Subcategory Filters */}
-            <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0 overflow-x-auto scrollbar-hide flex gap-2 sm:gap-3 pb-2">
-              <button
-                onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                className={`px-4 py-2 rounded-full ${!selectedCategory ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
-              >
-                All
-              </button>
-
-              {Object.keys(categoryMap).map(cat => (
-                <div key={cat} className="flex flex-col gap-1">
+            <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0">
+              {/* Mobile Category Grid */}
+              <div className="sm:hidden grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                  className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                    !selectedCategory 
+                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                      : 'bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  All Categories
+                </button>
+                {Object.keys(categoryMap).map(cat => (
                   <button
-                    onClick={() => { setSelectedCategory(cat); setSelectedSubcategory(''); }}
-                    className={`px-4 py-2 rounded-full ${selectedCategory === cat ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                    key={cat}
+                    onClick={() => { 
+                      setSelectedCategory(cat === selectedCategory ? '' : cat);
+                      setSelectedSubcategory('');
+                    }}
+                    className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                      selectedCategory === cat 
+                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                        : 'bg-gray-50 text-gray-700 border border-gray-200'
+                    }`}
                   >
-                    {cat.replace(/_/g, ' ')}
+                    {cat.replace(/_/g, ' ').split(' ').map(word => 
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')}
                   </button>
+                ))}
+              </div>
 
-                  {selectedCategory === cat && (
-                    <div className="flex gap-2 overflow-x-auto mt-1">
-                      {categoryMap[cat].map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => setSelectedSubcategory(sub)}
-                          className={`px-3 py-1 rounded-full text-sm ${selectedSubcategory === sub ? 'bg-cyan-500 text-white' : 'bg-gray-100 text-gray-700'}`}
-                        >
-                          {sub}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              {/* Mobile Subcategories Horizontal Scroll */}
+              {selectedCategory && (
+                <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
+                  <div className="flex gap-2 pb-3">
+                    {categoryMap[selectedCategory].map(sub => (
+                      <button
+                        key={sub}
+                        onClick={() => setSelectedSubcategory(sub)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
+                          selectedSubcategory === sub 
+                            ? 'bg-cyan-500 text-white shadow-md' 
+                            : 'bg-gray-100 text-gray-700 border border-gray-200'
+                        }`}
+                      >
+                        {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {/* Desktop View (unchanged) */}
+              <div className="hidden sm:flex overflow-x-auto scrollbar-hide gap-2 sm:gap-3 pb-2">
+                <button
+                  onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                  className={`px-4 py-2 rounded-full ${!selectedCategory ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                >
+                  All
+                </button>
+
+                {Object.keys(categoryMap).map(cat => (
+                  <div key={cat} className="flex flex-col gap-1">
+                    <button
+                      onClick={() => { setSelectedCategory(cat); setSelectedSubcategory(''); }}
+                      className={`px-4 py-2 rounded-full ${selectedCategory === cat ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                    >
+                      {cat.replace(/_/g, ' ')}
+                    </button>
+
+                    {selectedCategory === cat && (
+                      <div className="flex gap-2 overflow-x-auto mt-1">
+                        {categoryMap[cat].map(sub => (
+                          <button
+                            key={sub}
+                            onClick={() => setSelectedSubcategory(sub)}
+                            className={`px-3 py-1 rounded-full text-sm ${selectedSubcategory === sub ? 'bg-cyan-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
 
