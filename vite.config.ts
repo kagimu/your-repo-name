@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import legacy from '@vitejs/plugin-legacy';
 import path from "path";
 
 // https://vitejs.dev/config/
@@ -10,9 +11,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      // Prevent environment variables from being included in the bundle
       'process.env.NODE_ENV': `"${mode}"`,
-      // Only include public env vars (VITE_ prefixed)
       ...Object.keys(env).reduce((acc: Record<string, string>, key) => {
         if (key.startsWith('VITE_')) {
           acc[`process.env.${key}`] = JSON.stringify(env[key]);
@@ -23,9 +22,16 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react({
       tsDecorators: true,
+    }),
+    legacy({
+      targets: ['defaults', 'not IE 11', 'safari 11'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime', 'core-js'],
+      renderLegacyChunks: true,
+      polyfills: true
     })
   ],
   build: {
+    target: ['es2015', 'safari11'],
     rollupOptions: {
       output: {
         manualChunks: {
@@ -65,7 +71,7 @@ export default defineConfig(({ mode }) => {
         safari10: true,
       }
     },
-    target: 'esnext',
+    // Target is set above in build config
     sourcemap: false,
     // Ensure environment variables are correctly handled in production
     assetsInlineLimit: 4096,
