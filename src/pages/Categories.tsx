@@ -257,92 +257,133 @@ const filteredProducts = useMemo(() => {
 
             {/* Category & Subcategory Filters */}
             <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0">
-              {/* Mobile Category Grid */}
-              <div className="sm:hidden grid grid-cols-2 gap-2 mb-3">
-                <button
-                  onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                  className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
-                    !selectedCategory 
-                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                      : 'bg-gray-50 text-gray-700 border border-gray-200'
-                  }`}
-                >
-                  All Categories
-                </button>
-                {Object.keys(categoryMap).map(cat => (
+              {/* Mobile Categories Section */}
+              <div className="sm:hidden">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   <button
-                    key={cat}
-                    onClick={() => { 
-                      setSelectedCategory(cat === selectedCategory ? '' : cat);
-                      setSelectedSubcategory('');
-                    }}
+                    onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
                     className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
-                      selectedCategory === cat 
+                      !selectedCategory 
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
                         : 'bg-gray-50 text-gray-700 border border-gray-200'
                     }`}
                   >
-                    {cat.replace(/_/g, ' ').split(' ').map(word => 
-                      word.charAt(0).toUpperCase() + word.slice(1)
-                    ).join(' ')}
+                    All Categories
                   </button>
-                ))}
+                  {Object.keys(categoryMap).map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => { 
+                        setSelectedCategory(cat === selectedCategory ? '' : cat);
+                        setSelectedSubcategory('');
+                      }}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                        selectedCategory === cat 
+                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                          : 'bg-gray-50 text-gray-700 border border-gray-200'
+                      }`}
+                    >
+                      {cat.replace(/_/g, ' ').split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')}
+                    </button>
+                  ))}
               </div>
 
-              {/* Mobile Subcategories Horizontal Scroll */}
+              </div>
+              
+              {/* Mobile Subcategories Section */}
               {selectedCategory && (
-                <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
-                  <div className="flex gap-2 pb-3">
-                    {categoryMap[selectedCategory].map(sub => (
-                      <button
-                        key={sub}
-                        onClick={() => setSelectedSubcategory(sub)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
-                          selectedSubcategory === sub 
-                            ? 'bg-cyan-500 text-white shadow-md' 
-                            : 'bg-gray-100 text-gray-700 border border-gray-200'
-                        }`}
-                      >
-                        {sub.charAt(0).toUpperCase() + sub.slice(1)}
-                      </button>
-                    ))}
+                <div className="sm:hidden mt-6 bg-gray-50/80 rounded-xl p-4">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">
+                    {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')} Subcategories
+                  </h3>
+                  <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+                    <div className="flex gap-2 pb-1">
+                      {categoryMap[selectedCategory].map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(sub)}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                            selectedSubcategory === sub 
+                              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
+                              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Desktop View (unchanged) */}
-              <div className="hidden sm:flex overflow-x-auto scrollbar-hide gap-2 sm:gap-3 pb-2">
-                <button
-                  onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                  className={`px-4 py-2 rounded-full ${!selectedCategory ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
-                >
-                  All
-                </button>
-
-                {Object.keys(categoryMap).map(cat => (
-                  <div key={cat} className="flex flex-col gap-1">
+              {/* Desktop View */}
+              <div className="hidden sm:block">
+                {/* Categories Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
+                  <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2">
                     <button
-                      onClick={() => { setSelectedCategory(cat); setSelectedSubcategory(''); }}
-                      className={`px-4 py-2 rounded-full ${selectedCategory === cat ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}
+                      onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                        !selectedCategory 
+                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                          : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                      }`}
                     >
-                      {cat.replace(/_/g, ' ')}
+                      All Categories
                     </button>
 
-                    {selectedCategory === cat && (
-                      <div className="flex gap-2 overflow-x-auto mt-1">
-                        {categoryMap[cat].map(sub => (
-                          <button
-                            key={sub}
-                            onClick={() => setSelectedSubcategory(sub)}
-                            className={`px-3 py-1 rounded-full text-sm ${selectedSubcategory === sub ? 'bg-cyan-500 text-white' : 'bg-gray-100 text-gray-700'}`}
-                          >
-                            {sub}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    {Object.keys(categoryMap).map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => { 
+                          setSelectedCategory(cat === selectedCategory ? '' : cat);
+                          setSelectedSubcategory('');
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                          selectedCategory === cat 
+                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                            : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {cat.replace(/_/g, ' ').split(' ').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ')}
+                      </button>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Subcategories Section */}
+                {selectedCategory && (
+                  <div className="bg-gray-50/80 rounded-xl p-4 mb-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-3">
+                      {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')} Subcategories
+                    </h3>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                      {categoryMap[selectedCategory].map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(sub)}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                            selectedSubcategory === sub 
+                              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
+                              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
