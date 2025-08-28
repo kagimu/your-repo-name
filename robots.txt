@@ -1,0 +1,12 @@
+# Allow all search engines to crawl your site
+User-agent: *
+Disallow: /categories/
+Disallow: /login/
+Disallow: /register/
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /checkout/
+Disallow: /cart/
+
+# Sitemap location
+Sitemap: https://www.edumallug.com/sitemap.xml
