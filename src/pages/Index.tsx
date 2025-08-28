@@ -3,10 +3,34 @@ import React from 'react';
 import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout/Navbar';
 import { HeroSection } from '@/components/sections/HeroSection';
+import { Helmet } from 'react-helmet-async';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <>
+    <Helmet>
+        <title>Edumall Uganda | Buy Educational Materials, Books & School Supplies Online</title>
+        <meta name="description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
+        <meta name="keywords" content="education, textbooks, school supplies, laboratory equipment, Uganda, online marketplace" />
+        <link rel="canonical" href="https://www.edumallug.com/" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Edumall Uganda | Buy Educational Materials Online" />
+        <meta property="og:description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.edumallug.com/" />
+        <meta property="og:image" content="https://i.imghippo.com/files/R3552HkQ.png" />
+        <meta property="og:site_name" content="Edumall Uganda" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@edumall" />
+        <meta name="twitter:title" content="Edumall Uganda | Buy Educational Materials Online" />
+        <meta name="twitter:description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
+        <meta name="twitter:image" content="https://i.imghippo.com/files/R3552HkQ.png" />
+      </Helmet>
+
+     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <CustomCursor />
       <Navbar />
       <main>
@@ -14,6 +38,8 @@ const Index = () => {
         {/* More sections will be added in subsequent phases */}
       </main>
     </div>
+    </>
+   
   );
 };
 

@@ -5,6 +5,7 @@ import { Star, ShoppingCart, Eye } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductDetailModal } from './ProductDetailModal';
 import { useCart } from '../../hooks/useCart';
+import { Helmet } from 'react-helmet-async';
 
 interface Product {
   id: number;
@@ -77,6 +78,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
   if (viewMode === 'list') {
     return (
       <>
+      <Helmet>
+        <title>{product.name} | Edumall Uganda</title>
+        <meta name="description" content={product.desc} />
+        <meta property="og:title" content={`${product.name} | Edumall Uganda`} />
+        <meta property="og:description" content={product.desc} />
+      </Helmet>
+
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"

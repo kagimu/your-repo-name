@@ -4,6 +4,7 @@ import { X, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { useCart } from '../../hooks/useCart';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 interface Product {
   id: number;
@@ -80,6 +81,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   return (
+    <>
+    <Helmet>
+      <title>{product.name} | Edumall Uganda</title>
+      <meta name="description" content={product.description} />
+      <meta property="og:title" content={`${product.name} | Edumall Uganda`} />
+      <meta property="og:description" content={product.description} />
+    </Helmet>
+
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -219,5 +228,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 }; 
