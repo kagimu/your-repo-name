@@ -76,7 +76,7 @@ const Categories = () => {
   const navigate = useNavigate();
 
   const categoryMap: Record<string, string[]> = {
-    laboratory: ['apparatus', 'specimen', 'chemical', 'animals'],
+    laboratory: ['apparatus', 'specimen', 'chemical'],
     textbooks: ['textbook', 'revision guide', 'novel'],
     stationery: ['scholastic', 'paper'],
     school_accessories: ['accessories', 'schoolwear'],
