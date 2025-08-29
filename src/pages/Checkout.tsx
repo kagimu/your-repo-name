@@ -191,7 +191,7 @@ const Checkout = () => {
             },
             replace: true
           });
-        }, 500);
+        }, 200);
       } catch (err) {
         console.error('Error during cart clearing:', err);
         // Even if cart clearing fails, still navigate but show warning

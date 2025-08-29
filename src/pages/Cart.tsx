@@ -542,6 +542,7 @@ const Cart = () => {
                 )}
                   {!isAuthenticated ? (
                     <>
+                
                       <motion.div
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.95 }}
@@ -551,21 +552,6 @@ const Cart = () => {
                           variant="primary"
                           size="lg"
                           className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 active:from-teal-700 active:to-blue-800 text-white transition-all duration-300 shadow-md hover:shadow-xl py-3 sm:py-2.5 group"
-                          onClick={() => navigate('/checkout', { state: { items, subtotal, mode: 'guest' } })}
-                        >
-                          Continue as Guest
-                          <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1 group-active:translate-x-1.5" />
-                        </EdumallButton>
-                      </motion.div>
-                      <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full touch-manipulation"
-                      >
-                        <EdumallButton
-                          variant="secondary"
-                          size="lg"
-                          className="w-full border border-gray-200 hover:border-gray-300 active:bg-gray-100 hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md py-3 sm:py-2.5 group"
                           onClick={() => navigate('/login', { state: { from: '/cart' } })}
                         >
                           <LogIn className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110 group-active:scale-105" />
