@@ -179,43 +179,31 @@ const Checkout = () => {
         setItems([]);
         clearPendingCheckout();
 
-        // Show success message and navigate
+        // Show success message
         toast.success('Order placed successfully! Your cart has been cleared.');
         
-        // Navigate after a short delay to ensure state updates
-        setTimeout(() => {
-          navigate('/Dashboard', { 
-            state: { 
-              orderId: generatedOrderId,
-              orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
-            },
-            replace: true
-          });
-        }, 200);
-      } catch (err) {
-        console.error('Error during cart clearing:', err);
-        // Even if cart clearing fails, still navigate but show warning
-        toast.warning('Order placed but cart clearing had issues. Please refresh the page.');
-        navigate('/Dashboard', { 
+        // Single navigation with both URL parameter and state
+        navigate('/Dashboard?section=orders', { 
           state: { 
             orderId: generatedOrderId,
-            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
+            activeSection: 'orders'  // This matches the state variable name in Dashboard
+          },
+          replace: true 
+        });
+      } catch (err) {
+        console.error('Error during cart clearing:', err);
+        toast.warning('Order placed but cart clearing had issues. Please refresh the page.');
+        // Even on error, ensure we navigate to orders section
+        navigate('/Dashboard?section=orders', { 
+          state: { 
+            orderId: generatedOrderId,
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
+            activeSection: 'orders'
           },
           replace: true
         });
       }
-      toast.success('Order placed successfully! Your cart has been cleared.');
-      
-      // Use setTimeout to ensure state updates have propagated
-      setTimeout(() => {
-        navigate('/Dashboard', { 
-          state: { 
-            orderId: generatedOrderId,
-            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid'
-          },
-          replace: true
-        });
-      }, 100);
     } catch (err) {
       console.error('Order or cart clearing failed:', err);
       toast.error('There was an issue processing your order. Please contact support.');

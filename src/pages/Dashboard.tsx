@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ReceiptModal } from '@/components/ReceiptModal';
 
 const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
@@ -93,7 +94,47 @@ type LucideIcon = React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement> 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Initialize the active section from URL search params or location state
+  const urlParams = new URLSearchParams(location.search);
+  const [activeSection, setActiveSection] = useState<'overview' | 'orders'>('overview');
+
+  // Set active section immediately when component mounts or URL/state changes
+  useEffect(() => {
+    const section = location.state?.activeSection || urlParams.get('section');
+    
+    if (section === 'orders') {
+      setActiveSection('orders');
+      // Ensure URL reflects the active section
+      if (urlParams.get('section') !== 'orders') {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('section', 'orders');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+    
+    // Debug log
+    console.log('Setting active section:', section);
+  }, [location, urlParams]);
+
+  // Effect to handle order redirects
+  useEffect(() => {
+    if (location.state?.orderId) {
+      setActiveSection('orders');
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('section', 'orders');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [location.state]);
+
+  // Debug logging to track section changes
+  useEffect(() => {
+    console.log('Active Section Changed:', activeSection);
+    console.log('Location State:', location.state);
+    console.log('URL Params:', Object.fromEntries(urlParams));
+  }, [activeSection, location.state, urlParams]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -192,6 +233,11 @@ const Dashboard: React.FC = () => {
         setIsOrdersLoading(true);
         setOrdersError(null);
         const token = localStorage.getItem('token');
+        
+        // If we're coming from checkout with an orderId, ensure we show orders section
+        if (location.state?.orderId) {
+          setActiveSection('orders');
+        }
         
         const response = await axios.get<ApiResponse>(
           'https://edumall-main-khkttx.laravel.cloud/api/orders',
