@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { VoiceAssistantProvider } from "./contexts/VoiceAssistantContext";
+import VoiceAssistant from "./components/VoiceAssistant/VoiceAssistant";
 import { AppStartupLoader } from "./components/ui/AppStartupLoader";
 import { AnimatePresence } from 'framer-motion';
 import { router } from './router';
@@ -31,18 +33,20 @@ const App = () => {
       <TooltipProvider>
         <AuthProvider>
           <CartProvider>
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <AppStartupLoader key="loader" onComplete={() => setIsLoading(false)} />
-              ) : (
-                <RouterProvider 
-                  router={router} 
-                  fallbackElement={<AppStartupLoader onComplete={() => {}} />}
-                />
-              )}
-            </AnimatePresence>
-            <Toaster />
-            <Sonner />
+            <VoiceAssistantProvider>
+              <AnimatePresence mode="wait">
+                {isLoading ? (
+                  <AppStartupLoader key="loader" onComplete={() => setIsLoading(false)} />
+                ) : (
+                  <RouterProvider 
+                    router={router} 
+                    fallbackElement={<AppStartupLoader onComplete={() => {}} />}
+                  />
+                )}
+              </AnimatePresence>
+              <Toaster />
+              <Sonner />
+            </VoiceAssistantProvider>
           </CartProvider>
         </AuthProvider>
       </TooltipProvider>

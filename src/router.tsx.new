@@ -20,6 +20,7 @@ import AboutUs from "./pages/AboutUs";
 import PaymentSuccess from './components/checkout/PaymentSuccess';
 import LabInventory from './pages/LabInventory';
 
+// Enable React Router v7 features
 const router = createBrowserRouter([
   {
     element: <VoiceAssistantWrapper />,
@@ -29,43 +30,43 @@ const router = createBrowserRouter([
         children: [
           {
             path: "/",
-            element: <Index />
+            element: <Index />,
           },
           {
             path: "/categories",
-            element: <Categories />
+            element: <Categories />,
           },
           {
             path: "/product/:id",
-            element: <ProductDetail />
+            element: <ProductDetail />,
           },
           {
             path: "/about",
-            element: <AboutUs />
+            element: <AboutUs />,
           },
           {
             path: "/cart",
-            element: <Cart />
+            element: <Cart />,
           },
           {
             path: "/checkout",
-            element: <Checkout />
+            element: <Checkout />,
           },
           {
             path: "/login",
-            element: <Login />
+            element: <Login />,
           },
           {
             path: "/register",
-            element: <Register />
+            element: <Register />,
           },
           {
             path: "/payment/success",
-            element: <PaymentSuccess />
+            element: <PaymentSuccess />,
           },
           {
             path: "/research",
-            element: <Research />
+            element: <Research />,
           },
           {
             path: "/dashboard",
@@ -73,30 +74,30 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <Dashboard />
+                element: <Dashboard />,
               },
               {
                 path: "notifications",
-                element: <Notifications />
+                element: <Notifications />,
               },
               {
                 path: "elibrary",
-                element: <ELibrary />
+                element: <ELibrary />,
               },
               {
                 path: "research",
-                element: <Research />
-              }
-            ]
-          }
-        ]
+                element: <Research />,
+              },
+            ],
+          },
+        ],
       },
       {
         path: "*",
-        element: <NotFound />
-      }
-    ]
-  }
+        element: <NotFound />,
+      },
+    ],
+  },
 ]);
 
 export { router };
