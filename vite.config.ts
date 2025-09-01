@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
   build: {
     target: ['es2015', 'safari11'],
     rollupOptions: {
+      external: ['fuse.js'],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
