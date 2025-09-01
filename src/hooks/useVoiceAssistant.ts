@@ -3,6 +3,8 @@ import { matchCommand } from '@/lib/commandRegistry';
 import { useVoiceStore } from '@/stores/voiceStore';
 import audioProcessor from '@/services/audioProcessor';
 import { VoiceCommandHandlers } from '@/types/speech';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 // Constants
 const HUGGING_FACE_API_KEY = import.meta.env.VITE_HUGGING_FACE_API_KEY;
@@ -158,18 +160,77 @@ export const useVoiceAssistant = (handlers: VoiceCommandHandlers) => {
     // Add to command history
     addCommand(transcript);
 
+    const navigate = useNavigate();
+    const { user, login, logout } = useAuth();
+
     // Execute matched command
     switch (matchResult.intent) {
+      case 'navigate':
+        if (matchResult.slots.page) {
+          const page = matchResult.slots.page.toLowerCase();
+          switch (page) {
+            case 'home':
+              navigate('/');
+              setState({ feedback: 'Taking you to the home page' });
+              break;
+            case 'dashboard':
+              if (!user) {
+                setState({ feedback: 'Please sign in to access the dashboard' });
+                navigate('/login');
+              } else {
+                navigate('/dashboard');
+                setState({ feedback: 'Opening dashboard' });
+              }
+              break;
+            case 'categories':
+            case 'products':
+            case 'items':
+              navigate('/categories');
+              setState({ feedback: 'Showing all products and categories' });
+              break;
+            default:
+              setState({ feedback: 'I didn\'t understand which page you want to go to' });
+          }
+        }
+        break;
+
+      case 'auth':
+        const action = transcript.toLowerCase();
+        if (action.includes('sign in') || action.includes('login') || action.includes('log in')) {
+          if (user) {
+            setState({ feedback: 'You are already signed in' });
+          } else {
+            navigate('/login');
+            setState({ feedback: 'Taking you to the login page' });
+          }
+        } else if (action.includes('sign out') || action.includes('logout') || action.includes('log out')) {
+          if (user) {
+            logout();
+            setState({ feedback: 'You have been signed out' });
+          } else {
+            setState({ feedback: 'You are not currently signed in' });
+          }
+        }
+        break;
+
       case 'search':
         if (handlers.onSearch) {
           // Extract query from slots or use the entire transcript
           const query = matchResult.slots.query || 
             transcript.toLowerCase()
-              .replace(/^(search|show|find|display|get)(\s+me)?(\s+for)?/i, '')
+              .replace(/^(search|show|find|display|get|view)(\s+me)?(\s+for)?(\s+to)?/i, '')
               .trim();
           
           if (query) {
-            handlers.onSearch(query);
+            // Check if the query is for general products/items
+            if (['products', 'items'].includes(query)) {
+              navigate('/categories');
+              setState({ feedback: 'Showing all products and categories' });
+            } else {
+              // Try to match with specific product
+              handlers.onSearch(query);
+              setState({ feedback: `Searching for ${query}` });
+            }
           }
         }
         break;

@@ -3,6 +3,47 @@ import { CommandIntent } from '@/types/speech';
 
 const commandRegistry: CommandIntent[] = [
   {
+    name: 'navigate',
+    patterns: [
+      'go to',
+      'take me to',
+      'navigate to',
+      'open',
+      'show me',
+      'go back to',
+      'return to'
+    ],
+    examples: [
+      'go to home',
+      'take me to dashboard',
+      'go back to home',
+      'open categories',
+      'show me products'
+    ],
+    slots: {
+      page: {
+        type: 'string'
+      }
+    }
+  },
+  {
+    name: 'auth',
+    patterns: [
+      'sign in',
+      'login',
+      'log in',
+      'sign out',
+      'logout',
+      'log out'
+    ],
+    examples: [
+      'sign in',
+      'login to my account',
+      'sign out',
+      'logout'
+    ]
+  },
+  {
     name: 'search',
     patterns: [
       'search for',
@@ -14,11 +55,21 @@ const commandRegistry: CommandIntent[] = [
       'search',
       'browse',
       'get me',
+      'view',
       'i want to see',
       'i want to find',
-      'where can i find'
+      'where can i find',
+      'take me to'
     ],
-    examples: ['search for books', 'find laptops', 'show me science kits', 'display products', 'show bags'],
+    examples: [
+      'search for books',
+      'find laptops',
+      'show me science kits',
+      'display products',
+      'show bags',
+      'view toads',
+      'take me to rats'
+    ],
     slots: {
       query: {
         type: 'string'
