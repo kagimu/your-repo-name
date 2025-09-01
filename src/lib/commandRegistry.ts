@@ -4,8 +4,21 @@ import { CommandIntent } from '@/types/speech';
 const commandRegistry: CommandIntent[] = [
   {
     name: 'search',
-    patterns: ['search for', 'find', 'look for', 'show me'],
-    examples: ['search for books', 'find laptops', 'show me science kits'],
+    patterns: [
+      'search for',
+      'find',
+      'look for',
+      'show me',
+      'display',
+      'show',
+      'search',
+      'browse',
+      'get me',
+      'i want to see',
+      'i want to find',
+      'where can i find'
+    ],
+    examples: ['search for books', 'find laptops', 'show me science kits', 'display products', 'show bags'],
     slots: {
       query: {
         type: 'string'
@@ -24,17 +37,37 @@ const commandRegistry: CommandIntent[] = [
   },
   {
     name: 'filter',
-    patterns: ['filter by', 'show items in', 'show products in'],
-    examples: ['filter by category books', 'show items under $50', 'filter by price over 100'],
+    patterns: [
+      'filter by',
+      'show items in',
+      'show products in',
+      'products under',
+      'items under',
+      'cheaper than',
+      'less than',
+      'more than',
+      'above',
+      'below',
+      'between'
+    ],
+    examples: [
+      'filter by category books',
+      'show items under 50000 UGX',
+      'filter by price over 100000 shillings',
+      'products between 50000 and 200000',
+      'items cheaper than 75000 UGX'
+    ],
     slots: {
       category: {
         type: 'string'
       },
       maxPrice: {
-        type: 'number'
+        type: 'number',
+        description: 'Maximum price in UGX (Uganda Shillings)'
       },
       minPrice: {
-        type: 'number'
+        type: 'number',
+        description: 'Minimum price in UGX (Uganda Shillings)'
       }
     }
   },

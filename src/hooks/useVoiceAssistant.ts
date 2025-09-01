@@ -134,6 +134,23 @@ export const useVoiceAssistant = (handlers: VoiceCommandHandlers) => {
     // Match command using fuzzy matching
     const matchResult = matchCommand(transcript);
     if (!matchResult) {
+      // If no direct command match, try to extract product queries
+      const words = transcript.toLowerCase().split(' ');
+      const productTerms = words.filter(word => 
+        word.length > 2 && 
+        !['the', 'and', 'for', 'show', 'me', 'find', 'search', 'display', 'get', 'search', 'filter'].includes(word)
+      );
+      
+      if (productTerms.length > 0) {
+        // Join terms to create a search query
+        const searchQuery = productTerms.join(' ');
+        if (handlers.onSearch) {
+          handlers.onSearch(searchQuery);
+          addCommand(transcript);
+          return;
+        }
+      }
+      
       console.log('No matching command found');
       return;
     }
@@ -144,8 +161,16 @@ export const useVoiceAssistant = (handlers: VoiceCommandHandlers) => {
     // Execute matched command
     switch (matchResult.intent) {
       case 'search':
-        if (handlers.onSearch && matchResult.slots.query) {
-          handlers.onSearch(matchResult.slots.query);
+        if (handlers.onSearch) {
+          // Extract query from slots or use the entire transcript
+          const query = matchResult.slots.query || 
+            transcript.toLowerCase()
+              .replace(/^(search|show|find|display|get)(\s+me)?(\s+for)?/i, '')
+              .trim();
+          
+          if (query) {
+            handlers.onSearch(query);
+          }
         }
         break;
       case 'addToCart':
@@ -170,10 +195,77 @@ export const useVoiceAssistant = (handlers: VoiceCommandHandlers) => {
         break;
       case 'filter':
         if (handlers.onFilter) {
-          const filters: { category?: string; minPrice?: number; maxPrice?: number } = {};
-          if (matchResult.slots.category) filters.category = matchResult.slots.category;
-          if (matchResult.slots.minPrice) filters.minPrice = matchResult.slots.minPrice;
-          if (matchResult.slots.maxPrice) filters.maxPrice = matchResult.slots.maxPrice;
+          const filters: { category?: string; minPrice?: number; maxPrice?: number; query?: string } = {};
+          
+          // Extract category from slots or transcript
+          if (matchResult.slots.category) {
+            filters.category = matchResult.slots.category;
+          } else {
+            // Try to extract category from transcript
+            const words = transcript.toLowerCase().split(' ');
+            const categoryIndex = words.findIndex(word => 
+              ['in', 'under', 'from', 'category', 'products'].includes(word)
+            );
+            if (categoryIndex !== -1 && words[categoryIndex + 1]) {
+              filters.category = words[categoryIndex + 1];
+            }
+          }
+          
+          // Handle price filters with UGX currency
+          const words = transcript.toLowerCase().split(' ');
+          
+          // Extract price values and convert to numbers
+          const priceValues = words
+            .map((word, index) => {
+              const num = parseFloat(word.replace(/,/g, ''));
+              if (!isNaN(num)) {
+                // Check if the next word indicates currency
+                const nextWord = words[index + 1];
+                if (nextWord && ['ugx', 'shillings', 'shilling'].includes(nextWord.toLowerCase())) {
+                  return num;
+                }
+                // If the number is followed by k or m, convert appropriately
+                if (nextWord) {
+                  if (nextWord.toLowerCase() === 'k') return num * 1000;
+                  if (nextWord.toLowerCase() === 'm') return num * 1000000;
+                }
+                // If it's a large number, assume it's UGX
+                if (num >= 1000) return num;
+              }
+              return null;
+            })
+            .filter(val => val !== null);
+
+          // Find price range indicators
+          const betweenIndex = words.indexOf('between');
+          const underIndex = words.findIndex(word => ['under', 'below', 'less', 'cheaper'].includes(word));
+          const overIndex = words.findIndex(word => ['over', 'above', 'more', 'higher'].includes(word));
+
+          if (betweenIndex !== -1 && priceValues.length >= 2) {
+            filters.minPrice = Math.min(priceValues[0], priceValues[1]);
+            filters.maxPrice = Math.max(priceValues[0], priceValues[1]);
+          } else if (underIndex !== -1 && priceValues.length > 0) {
+            filters.maxPrice = priceValues[0];
+          } else if (overIndex !== -1 && priceValues.length > 0) {
+            filters.minPrice = priceValues[0];
+          } else {
+            // Use slots if no price found in transcript
+            if (matchResult.slots.minPrice) filters.minPrice = matchResult.slots.minPrice;
+            if (matchResult.slots.maxPrice) filters.maxPrice = matchResult.slots.maxPrice;
+          }
+          
+          // Add search query if specific product mentioned
+          const productTerms = transcript.toLowerCase()
+            .split(' ')
+            .filter(word => 
+              word.length > 2 && 
+              !['in', 'under', 'from', 'category', 'products', 'filter', 'show', 'display'].includes(word)
+            );
+          
+          if (productTerms.length > 0) {
+            filters.query = productTerms.join(' ');
+          }
+          
           handlers.onFilter(filters);
         }
         break;
