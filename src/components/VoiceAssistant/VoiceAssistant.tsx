@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Mic, MicOff, HelpCircle, Volume2, VolumeX, X } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Mic, MicOff, HelpCircle, Volume2, VolumeX, X, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
 import { useCart } from '@/hooks/useCart';
 import TutorialModal from './TutorialModal';
+import DiagnosticsPanel from './DiagnosticsPanel';
+import { VoiceState } from '@/types/speech';
 
 interface VoiceAssistantProps {
   onSearch?: (query: string) => void;
@@ -17,10 +19,38 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [isWhisperEnabled, setIsWhisperEnabled] = useState(false);
+  const [lastCommand, setLastCommand] = useState('');
   
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const synthesis = window.speechSynthesis;
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT') return;
+      
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          handleMicrophoneClick();
+          break;
+        case 'm':
+          handleMute();
+          break;
+        case 'r':
+          if (lastCommand) {
+            handleCommand(lastCommand);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [lastCommand]);
 
   // Voice assistant hook with all command handlers
   const {
@@ -141,7 +171,18 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
         onSkip={handleTutorialSkip}
       />
 
-      <div className="fixed bottom-4 right-4 flex flex-col items-end space-y-2 z-50">
+      <div 
+        className="fixed bottom-4 right-4 flex flex-col items-end space-y-2 z-50"
+        role="region"
+        aria-label="Voice Assistant Controls"
+      >
+        {showDiagnostics && (
+          <DiagnosticsPanel
+            onForceWhisper={() => setIsWhisperEnabled(prev => !prev)}
+            isWhisperEnabled={isWhisperEnabled}
+          />
+        )}
+        
         {/* Transcript feedback */}
         <AnimatePresence>
           {(isListening || transcript || feedback) && (
@@ -150,6 +191,8 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className="bg-white rounded-lg shadow-lg p-4 max-w-sm relative"
+              role="status"
+              aria-live="polite"
             >
               <button
                 onClick={() => {
@@ -172,31 +215,50 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
         </AnimatePresence>
 
         {/* Controls */}
-        <div className="flex items-center space-x-2">
+        <div 
+          className="flex items-center space-x-2"
+          role="toolbar"
+          aria-label="Voice assistant controls"
+        >
           <button
             onClick={() => setShowHelp(true)}
-            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            aria-label="Help"
+            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            aria-label="Help and keyboard shortcuts"
+            tabIndex={0}
           >
             <HelpCircle size={20} />
           </button>
 
           <button
+            onClick={() => setShowDiagnostics(prev => !prev)}
+            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            aria-label="Show diagnostics panel"
+            aria-pressed={showDiagnostics}
+            tabIndex={0}
+          >
+            <Settings size={20} />
+          </button>
+
+          <button
             onClick={handleMute}
-            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            aria-label={isMuted ? "Unmute assistant" : "Mute assistant"}
+            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            aria-label={isMuted ? "Unmute assistant (Press 'M' to toggle)" : "Mute assistant (Press 'M' to toggle)"}
+            aria-pressed={isMuted}
+            tabIndex={0}
           >
             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
 
           <button
             onClick={handleMicrophoneClick}
-            className={`p-4 rounded-full transition-colors ${
+            className={`p-4 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none ${
               isListening
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
                 : 'bg-white hover:bg-gray-100 shadow-lg'
             }`}
-            aria-label={isListening ? "Stop listening" : "Start listening"}
+            aria-label={isListening ? "Stop listening (Press Spacebar to toggle)" : "Start listening (Press Spacebar to toggle)"}
+            aria-pressed={isListening}
+            tabIndex={0}
           >
             {isListening ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
@@ -223,16 +285,30 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
                 >
                   <X size={20} />
                 </button>
-                <h3 className="text-lg font-semibold mb-4">Voice Commands</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• "Search for [item]" - Search for products</li>
-                  <li>• "Show my cart" - View your shopping cart</li>
-                  <li>• "What can I buy with [amount]" - Get budget suggestions</li>
-                  <li>• "Filter by category [name]" - Filter products</li>
-                  <li>• "Add to cart" - Add current item to cart</li>
-                  <li>• "Go to checkout" - Proceed to checkout</li>
-                  <li>• "Show tutorial" - View the tutorial again</li>
-                </ul>
+                <h3 className="text-lg font-semibold mb-4">Voice Commands & Shortcuts</h3>
+                
+                <div className="mb-6">
+                  <h4 className="font-medium mb-2">Voice Commands:</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• "Search for [item]" - Search for products</li>
+                    <li>• "Show my cart" - View your shopping cart</li>
+                    <li>• "What can I buy with [amount]" - Get budget suggestions</li>
+                    <li>• "Filter by category [name]" - Filter products</li>
+                    <li>• "Add to cart" - Add current item to cart</li>
+                    <li>• "Go to checkout" - Proceed to checkout</li>
+                    <li>• "Show tutorial" - View the tutorial again</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Keyboard Shortcuts:</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">Space</kbd> - Start/Stop listening</li>
+                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">M</kbd> - Mute/Unmute voice feedback</li>
+                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">R</kbd> - Repeat last command</li>
+                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">Tab</kbd> - Navigate controls</li>
+                  </ul>
+                </div>
                 <button
                   onClick={() => setShowHelp(false)}
                   className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full"
