@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Mic, MicOff, HelpCircle, Volume2, VolumeX, X, Settings } from 'lucide-react';
+import { Mic, MicOff, HelpCircle, Volume2, VolumeX, X, Settings, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
@@ -16,7 +16,12 @@ interface VoiceAssistantProps {
 
 const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, onFilter }) => {
   const [showHelp, setShowHelp] = useState(false);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [isControlsOpen, setIsControlsOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(() => {
+    // Show tutorial by default if user hasn't seen it before
+    const hasSeenTutorial = localStorage.getItem('hasSeenVoiceTutorial');
+    return !hasSeenTutorial;
+  });
   const [isMuted, setIsMuted] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -26,6 +31,23 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const synthesis = window.speechSynthesis;
+
+  // Handle tutorial completion
+  const handleTutorialClose = useCallback(() => {
+    setIsTutorialOpen(false);
+    localStorage.setItem('hasSeenVoiceTutorial', 'true');
+  }, []);
+
+  const handleTutorialSkip = useCallback(() => {
+    setIsTutorialOpen(false);
+    localStorage.setItem('hasSeenVoiceTutorial', 'true');
+  }, []);
+
+  // Show tutorial manually when help is clicked
+  const showTutorial = useCallback(() => {
+    setIsTutorialOpen(true);
+    setShowHelp(false);
+  }, []);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -127,20 +149,11 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
 
   // Check tutorial status on mount
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('hasSeenVoiceAssistantTutorial');
+    const hasSeenTutorial = localStorage.getItem('hasSeenVoiceTutorial');
     if (!hasSeenTutorial) {
       setIsTutorialOpen(true);
     }
   }, []);
-
-  const handleTutorialClose = () => {
-    setIsTutorialOpen(false);
-  };
-
-  const handleTutorialSkip = () => {
-    localStorage.setItem('hasSeenVoiceAssistantTutorial', 'true');
-    setIsTutorialOpen(false);
-  };
 
   const handleMicrophoneClick = async () => {
     try {
@@ -177,10 +190,17 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
         aria-label="Voice Assistant Controls"
       >
         {showDiagnostics && (
-          <DiagnosticsPanel
-            onForceWhisper={() => setIsWhisperEnabled(prev => !prev)}
-            isWhisperEnabled={isWhisperEnabled}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="bg-white rounded-lg shadow-lg max-w-sm w-[calc(100vw-2rem)] sm:w-auto relative overflow-hidden"
+          >
+            <DiagnosticsPanel
+              onForceWhisper={() => setIsWhisperEnabled(prev => !prev)}
+              isWhisperEnabled={isWhisperEnabled}
+            />
+          </motion.div>
         )}
         
         {/* Transcript feedback */}
@@ -190,7 +210,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="bg-white rounded-lg shadow-lg p-4 max-w-sm relative"
+              className="bg-white rounded-lg shadow-lg p-3 sm:p-4 max-w-sm w-[calc(100vw-2rem)] sm:w-auto relative"
               role="status"
               aria-live="polite"
             >
@@ -214,9 +234,93 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
           )}
         </AnimatePresence>
 
-        {/* Controls */}
+        {/* Controls - Mobile View */}
+        <div className="md:hidden relative">
+          {/* Main microphone button with toggle */}
+          <div className="relative">
+            <button
+              onClick={handleMicrophoneClick}
+              className={`p-4 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none shadow-lg ${
+                isListening ? 'bg-blue-500 text-white' : 'bg-white'
+              }`}
+              aria-label={isListening ? "Stop listening" : "Start listening"}
+            >
+              {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+              {isListening && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute -top-2 -right-2 w-3 h-3">
+                  <span className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-75"></span>
+                  <span className="absolute w-full h-full bg-red-500 rounded-full"></span>
+                </motion.div>
+              )}
+            </button>
+            
+            {/* Controls Toggle Button */}
+            <button
+              onClick={() => setIsControlsOpen(prev => !prev)}
+              className={`absolute -top-2 -left-2 p-2 rounded-full bg-white shadow-md border border-gray-100 transition-transform ${
+                isControlsOpen ? 'rotate-180' : ''
+              }`}
+              aria-label={isControlsOpen ? "Close controls" : "Open controls"}
+            >
+              <ChevronUp size={14} className="text-gray-600" />
+            </button>
+          </div>
+
+          {/* Collapsible Controls Panel */}
+          <AnimatePresence>
+            {isControlsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-100 p-2 min-w-[200px]"
+              >
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setShowHelp(true);
+                      setIsControlsOpen(false);
+                    }}
+                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md w-full text-left"
+                    aria-label="Help"
+                  >
+                    <HelpCircle size={18} />
+                    <span className="text-sm font-medium text-gray-700">Help</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDiagnostics(prev => !prev);
+                      setIsControlsOpen(false);
+                    }}
+                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md w-full text-left"
+                    aria-label="Settings"
+                  >
+                    <Settings size={18} />
+                    <span className="text-sm font-medium text-gray-700">Settings</span>
+                  </button>
+                  <button
+                    onClick={handleMute}
+                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md w-full text-left"
+                    aria-label={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    <span className="text-sm font-medium text-gray-700">
+                      {isMuted ? "Unmute" : "Mute"} Voice
+                    </span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Controls - Desktop */}
         <div 
-          className="flex items-center space-x-2"
+          className="hidden md:flex items-center space-x-2"
           role="toolbar"
           aria-label="Voice assistant controls"
         >
@@ -242,7 +346,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
           <button
             onClick={handleMute}
             className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
-            aria-label={isMuted ? "Unmute assistant (Press 'M' to toggle)" : "Mute assistant (Press 'M' to toggle)"}
+            aria-label={isMuted ? "Unmute assistant" : "Mute assistant"}
             aria-pressed={isMuted}
             tabIndex={0}
           >
@@ -256,7 +360,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
                 : 'bg-white hover:bg-gray-100 shadow-lg'
             }`}
-            aria-label={isListening ? "Stop listening (Press Spacebar to toggle)" : "Start listening (Press Spacebar to toggle)"}
+            aria-label={isListening ? "Stop listening" : "Start listening"}
             aria-pressed={isListening}
             tabIndex={0}
           >
@@ -268,54 +372,88 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onSearch, onAddToCart, 
         <AnimatePresence>
           {showHelp && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
               onClick={() => setShowHelp(false)}
             >
-              <div 
-                className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              <motion.div 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25 }}
+                className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md max-h-[80vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
-                  onClick={() => setShowHelp(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                  aria-label="Close help"
-                >
-                  <X size={20} />
-                </button>
-                <h3 className="text-lg font-semibold mb-4">Voice Commands & Shortcuts</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Voice Commands & Shortcuts</h3>
+                  <button
+                    onClick={() => setShowHelp(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full"
+                    aria-label="Close help"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
                 
-                <div className="mb-6">
-                  <h4 className="font-medium mb-2">Voice Commands:</h4>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    <li>• "Search for [item]" - Search for products</li>
-                    <li>• "Show my cart" - View your shopping cart</li>
-                    <li>• "What can I buy with [amount]" - Get budget suggestions</li>
-                    <li>• "Filter by category [name]" - Filter products</li>
-                    <li>• "Add to cart" - Add current item to cart</li>
-                    <li>• "Go to checkout" - Proceed to checkout</li>
-                    <li>• "Show tutorial" - View the tutorial again</li>
-                  </ul>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2 text-gray-900">Voice Commands:</h4>
+                    <ul className="grid gap-2 text-sm text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500">•</span>
+                        <span>"Search for [item]" - Search for products</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500">•</span>
+                        <span>"Show my cart" - View your shopping cart</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500">•</span>
+                        <span>"What can I buy with [amount]" - Get budget suggestions</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500">•</span>
+                        <span>"Filter by category [name]" - Filter products</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-500">•</span>
+                        <span>"Add to cart" - Add current item to cart</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-2 text-gray-900">Shortcuts:</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                        <kbd className="px-2 py-1 bg-white rounded shadow text-gray-600">Space</kbd>
+                        <span className="text-gray-600">Listen</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                        <kbd className="px-2 py-1 bg-white rounded shadow text-gray-600">M</kbd>
+                        <span className="text-gray-600">Mute</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                        <kbd className="px-2 py-1 bg-white rounded shadow text-gray-600">R</kbd>
+                        <span className="text-gray-600">Repeat</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                        <kbd className="px-2 py-1 bg-white rounded shadow text-gray-600">?</kbd>
+                        <span className="text-gray-600">Help</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Keyboard Shortcuts:</h4>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">Space</kbd> - Start/Stop listening</li>
-                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">M</kbd> - Mute/Unmute voice feedback</li>
-                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">R</kbd> - Repeat last command</li>
-                    <li>• <kbd className="px-2 py-1 bg-gray-100 rounded">Tab</kbd> - Navigate controls</li>
-                  </ul>
-                </div>
                 <button
                   onClick={() => setShowHelp(false)}
-                  className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full"
+                  className="mt-4 w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
                   Got it
                 </button>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

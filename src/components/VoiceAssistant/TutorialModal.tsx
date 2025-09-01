@@ -14,33 +14,33 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose, onSkip }
   const steps = [
     {
       title: 'Welcome to Voice Shopping!',
-      description: 'Your personal voice assistant is here to help you shop hands-free.',
-      example: 'Click the microphone icon in the bottom-right corner to get started.'
+      description: 'Your personal voice assistant is here to help you shop hands-free. Watch for the voice indicator to know when it\'s listening.',
+      example: 'Click the microphone icon in the bottom-right corner or press Alt+M to start.'
     },
     {
       title: 'Search & Filter',
-      description: 'Use your voice to find products and filter by price.',
-      example: 'Try: "Search for lab equipment" or "Show me items under $100"'
+      description: 'Use natural voice commands to search products and apply filters. The assistant will confirm your request.',
+      example: 'Try: "Find lab equipment under $500" or "Search for microscopes in stock"'
     },
     {
       title: 'Shopping Made Easy',
-      description: 'Add items to cart, view categories, and manage your shopping entirely by voice.',
-      example: 'Say: "Add this to cart" or "Show me categories"'
+      description: 'Browse categories, add items to cart, and update quantities with voice commands. If something\'s unclear, just say "What can I say?"',
+      example: 'Say: "Add two of these to cart" or "Show me the education category"'
     },
     {
       title: 'Smart Budget Assistant',
-      description: 'Get personalized shopping recommendations based on your budget.',
-      example: 'Ask: "Help me shop with $200" or "What can I buy with $50?"'
+      description: 'Get personalized recommendations and stay within budget. The assistant will show options in your price range.',
+      example: 'Ask: "What lab equipment can I get for $1000?" or "Find chemistry sets within my budget"'
     },
     {
-      title: 'Quick Navigation',
-      description: 'Move through the app effortlessly with voice commands.',
-      example: 'Say: "Show my cart" or "Take me to checkout"'
+      title: 'Voice Feedback',
+      description: 'Watch the visual indicators to see when the assistant is listening, thinking, or ready for your next command.',
+      example: 'The microphone icon will pulse when listening and show a spinner when processing'
     },
     {
-      title: 'Accessibility Options',
-      description: 'Use keyboard shortcuts or voice commands - whatever works best for you.',
-      example: 'Press ? for keyboard shortcuts or say "Show help" for voice commands'
+      title: 'Help & Shortcuts',
+      description: 'Access help anytime with voice or keyboard. If a command isn\'t recognized, try rephrasing or use the suggested commands.',
+      example: 'Say "Show command list" or press "?" for help, Alt+M to toggle mic, Esc to cancel'
     }
   ];
 
