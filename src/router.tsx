@@ -20,7 +20,7 @@ import AboutUs from "./pages/AboutUs";
 import PaymentSuccess from './components/checkout/PaymentSuccess';
 import LabInventory from './pages/LabInventory';
 
-const router = createBrowserRouter([
+export const routes = [
   {
     element: <VoiceAssistantWrapper />,
     children: [
@@ -28,75 +28,80 @@ const router = createBrowserRouter([
         element: <PublicRoute />,
         children: [
           {
-            path: "/",
+            index: true,
             element: <Index />
           },
           {
-            path: "/categories",
+            path: "categories",
             element: <Categories />
           },
           {
-            path: "/product/:id",
+            path: "product/:id",
             element: <ProductDetail />
           },
           {
-            path: "/about",
+            path: "about",
             element: <AboutUs />
           },
           {
-            path: "/cart",
+            path: "cart",
             element: <Cart />
           },
           {
-            path: "/checkout",
+            path: "checkout",
             element: <Checkout />
           },
           {
-            path: "/login",
+            path: "login",
             element: <Login />
           },
           {
-            path: "/register",
+            path: "register",
             element: <Register />
           },
           {
-            path: "/payment/success",
+            path: "payment/success",
             element: <PaymentSuccess />
-          },
-          {
-            path: "/research",
-            element: <Research />
-          },
-          {
-            path: "/dashboard",
-            element: <ProtectedLayout />,
-            children: [
-              {
-                index: true,
-                element: <Dashboard />
-              },
-              {
-                path: "notifications",
-                element: <Notifications />
-              },
-              {
-                path: "elibrary",
-                element: <ELibrary />
-              },
-              {
-                path: "research",
-                element: <Research />
-              }
-            ]
           }
         ]
       },
       {
-        path: "*",
-        element: <NotFound />
+        element: <ProtectedLayout />,
+        children: [
+          {
+            path: "dashboard",
+            element: <Dashboard />,
+          },
+          {
+            path: "elibrary",
+            element: <ELibrary />
+          },
+          {
+            path: "research",
+            element: <Research />
+          },
+          {
+            path: "notifications",
+            element: <Notifications />
+          },
+          {
+            path: "courier",
+            element: <Courier />
+          },
+          {
+            path: "supplier",
+            element: <Supplier />
+          },
+          {
+            path: "inventory",
+            element: <LabInventory />
+          }
+        ]
       }
     ]
+  },
+  {
+    path: "*",
+    element: <NotFound />
   }
-]);
-
-export { router };
+];

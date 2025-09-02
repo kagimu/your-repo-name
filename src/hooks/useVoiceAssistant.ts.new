@@ -2,13 +2,6 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { matchCommand, executeIntent } from '@/lib/voice/registry';
 import { useVoiceStore } from '@/stores/voiceStore';
 import { VoiceCommandHandlers } from '@/types/speech';
-
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
 import { CartItem } from '@/contexts/cart-types';
 import { NavigateFunction } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -191,159 +184,57 @@ export const useVoiceAssistant = ({ handlers, navigate, onStateChange }: UseVoic
     }
   }, [setState, handlers, navigate, confidenceThreshold]);
 
-  // Initialize speech recognition
-  useEffect(() => {
-    const initializeSpeechRecognition = () => {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setState({
-          error: 'Speech recognition is not supported in this browser.',
-          status: 'error'
-        });
-        return;
-      }
-
-      if (!recognition.current) {
-        recognition.current = new SpeechRecognition();
-        recognition.current.continuous = true;
-        recognition.current.interimResults = true;
-        recognition.current.lang = 'en-US';
-
-        recognition.current.onstart = () => {
-          console.log('Speech recognition started');
-          setState({ 
-            isListening: true,
-            status: 'listening',
-            error: null
-          });
-        };
-
-        recognition.current.onresult = (event: any) => {
-          const last = event.results.length - 1;
-          const result = event.results[last];
-          const transcript = result[0].transcript;
-          const confidence = result[0].confidence;
-          
-          // Update transcript for all results
-          setState({ transcript });
-          console.log('Speech recognized:', transcript, 'Confidence:', confidence);
-          
-          // Only process final results
-          if (result.isFinal) {
-            handleCommand(transcript, confidence);
-          }
-        };
-
-        recognition.current.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
-          setState({
-            error: `Microphone error: ${event.error}`,
-            status: 'error',
-            isListening: false
-          });
-
-          // Attempt to restart after error if still supposed to be listening
-          if (state.isListening) {
-            setTimeout(() => {
-              try {
-                recognition.current?.start();
-              } catch (e) {
-                console.error('Failed to restart after error:', e);
-              }
-            }, 1000);
-          }
-        };
-
-        recognition.current.onend = () => {
-          console.log('Speech recognition ended');
-          
-          // If we're supposed to be listening but recognition ended, restart it
-          if (state.isListening && !state.error) {
-            try {
-              recognition.current.start();
-              console.log('Restarted speech recognition');
-            } catch (error) {
-              console.error('Failed to restart recognition:', error);
-              setState({
-                error: 'Failed to restart speech recognition',
-                status: 'error',
-                isListening: false
-              });
-            }
-          }
-        };
-      }
-    };
-
-    initializeSpeechRecognition();
-
-    // Cleanup function
-    return () => {
-      if (recognition.current) {
-        try {
-          recognition.current.stop();
-        } catch (e) {
-          // Ignore errors on cleanup
-        }
-      }
-    };
-  }, [setState, handleCommand, state.isListening, state.error]);
-
   const startListening = useCallback(async (): Promise<void> => {
+    resetErrors();
+    retryCount.current = 0;
+
+    if (state.isProcessing) {
+      console.log('Already processing audio, ignoring start request');
+      return;
+    }
+
+    if (preferences.whisperEnabled) {
+      await startWhisperRecording();
+      return;
+    }
+
     try {
-      // Reset state before starting
-      setState({ 
-        isListening: true, 
-        error: null,
-        status: 'listening',
-        transcript: '',
-        isProcessing: false
-      });
-      
-      if (!recognition.current) {
-        setState({
-          error: 'Speech recognition not initialized. Please refresh the page.',
-          status: 'error',
-          isListening: false
-        });
-        return;
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStream.current = stream;
 
-      // Ensure we have permission to use the microphone
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop()); // Release the stream immediately
-      } catch (error) {
-        console.error('Microphone permission error:', error);
-        setState({
-          error: 'Please allow microphone access to use voice commands.',
-          status: 'error',
-          isListening: false
-        });
-        return;
-      }
+      const recorder = new MediaRecorder(stream);
+      mediaRecorder.current = recorder;
+      audioChunks.current = [];
 
-      // Start recognition
-      try {
-        await recognition.current.start();
-        console.log('Speech recognition started successfully');
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'InvalidStateError') {
-          // Recognition is already running, this is fine
-          console.log('Recognition was already running');
-        } else {
-          throw error; // Re-throw other errors
+      recorder.onstart = () => {
+        audioChunks.current = [];
+        setState({ 
+          isListening: true, 
+          error: null,
+          status: 'listening'
+        });
+      };
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data);
         }
-      }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+        await processWhisperAudio(audioBlob);
+      };
+
+      recorder.start();
     } catch (error) {
       console.error('Error starting voice recognition:', error);
       setState({
-        error: 'Could not start voice recognition. Please try again.',
-        status: 'error',
-        isListening: false
+        error: 'Could not access microphone. Please check your settings.',
+        status: 'error'
       });
     }
-  }, [setState]);
+  }, [state.isProcessing, preferences.whisperEnabled, setState]);
 
   const stopListening = useCallback(() => {
     console.log('Stopping voice recognition');

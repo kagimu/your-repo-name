@@ -90,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex gap-3 sm:gap-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0 bg-white">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 overflow-hidden flex-shrink-0">
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
@@ -166,55 +166,56 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     <>
       <motion.div
         whileHover={{ y: -2, scale: 1.005 }}
-        className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col h-full"
+        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full"
       >
         {/* Product Image */}
-        <div className="w-full pt-[65%] relative bg-white">
+        <div className="w-full pt-[75%] relative">
           <img 
             src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-contain p-1.5"
+            className="absolute inset-0 w-full h-full object-contain p-6"
+            loading="lazy"
           />
         </div>
 
         {/* Product Details */}
-        <div className="p-2 flex flex-col flex-1">
-          <div className="flex-1 space-y-1">
+        <div className="p-4 flex flex-col flex-1">
+          <div className="flex-1 space-y-3">
             {/* Category & Status */}
-            <div className="flex items-center justify-between gap-1">
-              <span className="inline-block text-[9px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-block text-xs font-medium text-gray-600 bg-gray-50 px-2.5 py-1 rounded-lg">
                 {product.category}
               </span>
-              <p className={`text-[9px] font-medium ${product.in_stock ? 'text-green-600' : 'text-red-500'}`}>
+              <p className={`text-xs font-medium ${product.in_stock ? 'text-green-600' : 'text-red-500'}`}>
                 {product.in_stock ? 'In Stock' : 'Out'}
               </p>
             </div>
 
             {/* Title */}
-            <h3 className="font-medium text-gray-900 line-clamp-1 text-xs leading-tight">
+            <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-snug min-h-[40px]">
               {product.name}
             </h3>
 
             {/* Rating & Price Row */}
-            <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-0.5">
-                <div className="flex gap-px">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1">
+                <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={8}
+                      size={12}
                       className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-200'}
                     />
                   ))}
                 </div>
-                <span className="text-[8px] text-gray-400">({product.rating})</span>
+                <span className="text-xs text-gray-500">({product.rating})</span>
               </div>
               <div className="text-right">
-                <p className="text-xs font-bold text-gray-900 leading-none mb-0.5">
+                <p className="text-sm font-bold text-gray-900 leading-none mb-1">
                   {formatPrice(product.price)}
                 </p>
                 {product.unit && (
-                  <p className="text-[8px] text-gray-500 leading-none">
+                  <p className="text-xs text-gray-500 leading-none">
                     per {product.unit}
                   </p>
                 )}
@@ -223,15 +224,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-1.5 mt-1.5 border-t border-gray-50">
-            <div className="grid grid-cols-2 gap-1">
+          <div className="pt-3 mt-3 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-2">
               <EdumallButton
                 variant="secondary"
                 size="sm"
                 onClick={handleViewDetails}
-                className="h-7 flex items-center justify-center gap-0.5 text-[10px]"
+                className="h-9 flex items-center justify-center gap-1 text-sm bg-gray-50 hover:bg-gray-100"
               >
-                <Eye size={12} />
+                <Eye size={16} />
                 <span>View</span>
               </EdumallButton>
               <EdumallButton
@@ -239,9 +240,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 size="sm"
                 onClick={handleAddToCart}
                 disabled={!product.in_stock}
-                className="h-7 flex items-center justify-center gap-0.5 text-[10px] bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600"
+                className="h-9 flex items-center justify-center gap-1 text-sm font-medium bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
               >
-                <ShoppingCart size={12} />
+                <ShoppingCart size={16} />
                 <span>{product.purchaseType === 'hire' ? 'Book' : 'Add'}</span>
               </EdumallButton>
             </div>

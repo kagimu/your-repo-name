@@ -1,12 +1,36 @@
+interface VADOptions {
+  smoothingTimeConstant?: number;
+  minNoiseLevel?: number;
+  maxNoiseLevel?: number;
+  silenceDuration?: number;
+  energyThreshold?: number;
+  zcrThreshold?: number;
+}
+
 class AudioProcessor {
   private worker: Worker | null = null;
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private stream: MediaStream | null = null;
+  private scriptNode: ScriptProcessorNode | null = null;
   private onLevelUpdate: ((level: number) => void) | null = null;
+  private onVoiceStart: (() => void) | null = null;
+  private onVoiceEnd: (() => void) | null = null;
   private animationFrame: number | null = null;
+  private isProcessing: boolean = false;
+  private silenceStart: number = 0;
+  private options: Required<VADOptions>;
+  private audioData: Float32Array = new Float32Array(2048);
 
-  constructor() {
+  constructor(options: VADOptions = {}) {
+    this.options = {
+      smoothingTimeConstant: options.smoothingTimeConstant || 0.3,
+      minNoiseLevel: options.minNoiseLevel || -65,
+      maxNoiseLevel: options.maxNoiseLevel || -20,
+      silenceDuration: options.silenceDuration || 1500,
+      energyThreshold: options.energyThreshold || 0.015,
+      zcrThreshold: options.zcrThreshold || 0.05
+    };
     this.initWorker();
   }
 
@@ -18,9 +42,29 @@ class AudioProcessor {
       );
 
       this.worker.onmessage = (event) => {
-        const { noiseLevel, isVoiceDetected } = event.data;
+        const { noiseLevel, isVoiceDetected, energyLevel, zcrRate } = event.data;
+        
+        if (isVoiceDetected && !this.isProcessing) {
+          this.isProcessing = true;
+          this.silenceStart = 0;
+          this.onVoiceStart?.();
+        } else if (!isVoiceDetected && this.isProcessing) {
+          if (!this.silenceStart) {
+            this.silenceStart = Date.now();
+          } else if (Date.now() - this.silenceStart > this.options.silenceDuration) {
+            this.isProcessing = false;
+            this.onVoiceEnd?.();
+          }
+        }
+
         this.onLevelUpdate?.(noiseLevel);
       };
+
+      // Initialize VAD parameters
+      this.worker.postMessage({
+        type: 'init',
+        options: this.options
+      });
     } catch (error) {
       console.error('Failed to initialize audio worker:', error);
     }

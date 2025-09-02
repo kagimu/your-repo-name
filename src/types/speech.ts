@@ -1,3 +1,5 @@
+import { CartItem } from '@/contexts/cart-types';
+
 export interface BrowserFeatureSupport {
   webSpeechAPI: boolean;
   speechSynthesis: boolean;
@@ -15,6 +17,8 @@ export interface VoiceState {
   voiceLevel?: number;
   feedback: string;
   lastCommand: string | null;
+  lastResponse: string | null;
+  lastResult?: any;
   suggestions: string[];
   isThinking: boolean;
   status: 'idle' | 'listening' | 'processing' | 'responding' | 'error';
@@ -26,6 +30,7 @@ export interface VoicePreferences {
   pitch: number;
   volume: number;
   whisperEnabled: boolean;
+  language: string;
 }
 
 export interface CommandIntent {
@@ -40,15 +45,47 @@ export interface CommandIntent {
   };
 }
 
-export interface VoiceCommandHandlers {
-  onSearch?: (query: string) => void;
-  onAddToCart?: (item: string) => void;
-  onCheckout?: () => void;
-  onShowCategories?: () => void;
-  onBudgetHelp?: (budget: string) => void;
-  onFilter?: (filters: { 
-    category?: string; 
-    minPrice?: number; 
-    maxPrice?: number 
-  }) => void;
+export type VoiceIntent = 
+  | 'search'
+  | 'addToCart'
+  | 'filter'
+  | 'help'
+  | 'checkout'
+  | 'showCategories'
+  | 'budgetHelp'
+  | 'clearContext';
+
+export interface VoiceCommandResult {
+  intent: VoiceIntent;
+  slots: Record<string, any>;
+  confidence?: number;
+}
+
+export type VoiceCommandHandlers = {
+  onSearch?: (query: string) => Promise<any[]>;
+  onAddToCart?: (item: CartItem) => Promise<void>;
+  onCheckout: () => Promise<void>;
+  onShowCategories: () => Promise<void>;
+  onBudgetHelp: (budget: number) => Promise<void>;
+  onFilter: (filters: { [key: string]: any }) => Promise<void>;
+  onCustomCommand?: (command: string, args: any) => Promise<void>;
+};
+
+export interface VoiceCommand {
+  command: string;
+  response: string;
+  timestamp: string;
+  intent: string;
+  slots?: { [key: string]: any };
+  error?: string;
+}
+
+export interface VoiceIntentMatch {
+  intent: {
+    name: string;
+    patterns: string[];
+  };
+  slots: {
+    [key: string]: any;
+  };
 }
