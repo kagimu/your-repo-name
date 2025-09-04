@@ -10,15 +10,16 @@ const Index = () => {
     <>
     <Helmet>
         <title>Edumall Uganda | Buy Educational Materials, Books & School Supplies Online</title>
-        <meta name="description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
+        <meta name="description" content="Edumall Uganda is your online educational marketplace for laboratory supplies, school stationery, textbooks and other educational materials." />
         <meta name="keywords" content="education, textbooks, school supplies, laboratory equipment, Uganda, online marketplace" />
-        <link rel="canonical" href="https://www.edumallug.com/" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://edumallug.com" />
         
         {/* Open Graph */}
         <meta property="og:title" content="Edumall Uganda | Buy Educational Materials Online" />
-        <meta property="og:description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
+        <meta property="og:description" content="Edumall Uganda is your online educational marketplace for laboratory supplies, school stationery, textbooks and other educational materials." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.edumallug.com/" />
+        <meta property="og:url" content="https://edumallug.com" />
         <meta property="og:image" content="https://i.imghippo.com/files/R3552HkQ.png" />
         <meta property="og:site_name" content="Edumall Uganda" />
 
