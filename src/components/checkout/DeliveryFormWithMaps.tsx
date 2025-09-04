@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
+import axios from 'axios';
 
 
 interface Coordinates {
@@ -22,20 +23,29 @@ interface DeliveryFormData {
   instructions: string;
   useCurrentLocation: boolean;
   coordinates: Coordinates;
+  distance: number;
 }
 
 interface DeliveryFormProps {
-  user?: any;
-  defaultValues?: Partial<DeliveryFormData>;
-  onDetailsSubmit: (details: DeliveryFormData) => void;
-  openCageApiKey: string; // API key passed as prop
+  onDetailsSubmit: (details: any) => void;
+  user: any;
+  subtotal: number;
+  deliveryFee: number;
+  setDeliveryFee: Dispatch<SetStateAction<number>>;
+  setDeliveryDistance: Dispatch<SetStateAction<number>>;
+  defaultValues?: any;
+  openCageApiKey: string;
 }
 
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
-  user,
-  defaultValues,
   onDetailsSubmit,
-  openCageApiKey,
+  user,
+  subtotal,
+  deliveryFee,
+  setDeliveryFee,
+  setDeliveryDistance,
+  defaultValues,
+  openCageApiKey
 }) => {
   const [formData, setFormData] = useState<DeliveryFormData>({
     fullName: defaultValues?.fullName || (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') || user?.name || '',
@@ -48,80 +58,114 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     instructions: defaultValues?.instructions || '',
     useCurrentLocation: defaultValues?.useCurrentLocation || false,
     coordinates: defaultValues?.coordinates || { lat: 0.3476, lng: 32.5825 },
+    distance: defaultValues?.distance || 0,
   });
 
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const SHOP_COORDS: Coordinates = { lat: 0.3136, lng: 32.5811 }; // Energy Centre, Kampala
 
-  // Handle selection from autocomplete
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isCalculatingFee, setIsCalculatingFee] = useState(false);
+
+  const SAFE_CAR_BASE_FARE = 5000;   // Flat rate for the first 2 km
+  const RATE_STANDARD = 2800;        // UGX per km between 2 and 10 km
+  const RATE_LONG_DISTANCE = 2500;   // UGX per km beyond 10 km
+
+  const calculateDeliveryFee = async (clientCoords: Coordinates) => {
+  try {
+    setIsCalculatingFee(true);
+
+    const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0NjJkNzM5N2MyNTQ1NTc5NjM3NWZlZWVhMDFlNDI0IiwiaCI6Im11cm11cjY0In0=';
+    const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
+
+    const response = await axios.post(
+      url,
+      {
+        coordinates: [
+          [SHOP_COORDS.lng, SHOP_COORDS.lat],
+          [clientCoords.lng, clientCoords.lat]
+        ]
+      },
+      {
+        headers: {
+          Authorization: apiKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const distanceMeters = response.data.routes[0].segments[0].distance;
+    const distanceKm = distanceMeters / 1000; // Convert to KM
+
+    // Delivery pricing
+    let fee = 0;
+    if (distanceKm <= 2) {
+      fee = SAFE_CAR_BASE_FARE;
+    } else if (distanceKm <= 10) {
+      const extraKm = distanceKm - 2;
+      fee = SAFE_CAR_BASE_FARE + (extraKm * RATE_STANDARD);
+    } else {
+      const extraStandardKm = 8; // between 2-10 km
+      const extraLongKm = distanceKm - 10;
+      fee = SAFE_CAR_BASE_FARE + (extraStandardKm * RATE_STANDARD) + (extraLongKm * RATE_LONG_DISTANCE);
+    }
+
+    // Update state
+    setDeliveryFee(Math.round(fee));
+    setDeliveryDistance(parseFloat(distanceKm.toFixed(2)));
+    setFormData(prev => ({ ...prev, distance: parseFloat(distanceKm.toFixed(2)) }));
+
+    return {
+      distanceKm: parseFloat(distanceKm.toFixed(2)),
+      deliveryFee: Math.round(fee),
+    };
+  } catch (err) {
+    console.error('Error calculating delivery fee:', err);
+    setDeliveryFee(0);
+    return { distanceKm: 0, deliveryFee: 0 };
+  } finally {
+    setIsCalculatingFee(false);
+  }
+};
+
+
+    // Handle selection from autocomplete
   const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
     const parts = locationData.name.split(',').map(p => p.trim());
+    const coords = locationData.coordinates;
+
     setFormData(prev => ({
       ...prev,
       address: locationData.name,
-      coordinates: locationData.coordinates,
+      coordinates: coords,
       useCurrentLocation: false,
       city: parts[1] || 'Kampala',
       district: parts[2] || 'Central',
     }));
+
+    // Calculate delivery fee
+    calculateDeliveryFee(coords);
   };
 
-  // Get current location
-  const getCurrentLocation = () => {
-    setIsLoadingLocation(true);
+      const getCurrentLocation = () => {
+        setIsLoadingLocation(true);
 
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
-      setIsLoadingLocation(false);
-      return;
-    }
+        navigator.geolocation.getCurrentPosition(
+          async ({ coords }) => {
+            const clientCoords = { lat: coords.latitude, lng: coords.longitude };
+            setFormData(prev => ({ ...prev, coordinates: clientCoords, useCurrentLocation: true }));
+            await calculateDeliveryFee(clientCoords);
+            setIsLoadingLocation(false);
+          },
+          (err) => {
+            console.error(err);
+            setIsLoadingLocation(false);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      };
 
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        const { latitude, longitude } = coords;
 
-        try {
-          const res = await fetch(
-            `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${openCageApiKey}&limit=1&no_annotations=1`
-          );
-
-          if (!res.ok) throw new Error('Failed to reverse geocode location');
-
-          const data = await res.json();
-          const result = data.results?.[0];
-
-          if (result) {
-            const components = result.components || {};
-            const formatted = result.formatted || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-            setFormData(prev => ({
-              ...prev,
-              coordinates: { lat: latitude, lng: longitude },
-              useCurrentLocation: true,
-              address: formatted,
-              city: components.city || components.town || 'Kampala',
-              district: components.county || components.state_district || components.state || 'Central',
-            }));
-          }
-        } catch (err) {
-          console.error('Error fetching location:', err);
-          setFormData(prev => ({
-            ...prev,
-            coordinates: { lat: latitude, lng: longitude },
-            useCurrentLocation: true,
-            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-          }));
-        } finally {
-          setIsLoadingLocation(false);
-        }
-      },
-      err => {
-        console.error('Geolocation error:', err);
-        alert('Could not get your location. Please enable location services.');
-        setIsLoadingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
-
+ 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onDetailsSubmit(formData);
@@ -196,6 +240,21 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             )}
           </div>
 
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-lg font-bold">Order Costs</h3>
+            <p>Subtotal: <span className="font-semibold">{subtotal.toLocaleString()} UGX</span></p>
+            <p>Delivery Fee: <span className="font-semibold">
+              {isCalculatingFee ? 'Calculating...' : `${deliveryFee.toLocaleString()} UGX`}
+            </span></p>
+            <p>Total: <span className="font-bold">
+              {isCalculatingFee ? 'Calculating...' : `${(subtotal + deliveryFee).toLocaleString()} UGX`}
+            </span></p>
+          </div>
+
+
+        
+
+
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
            
             <div>
@@ -212,7 +271,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             </div>
           </div>
 
-          <EdumallButton type="submit" variant="primary" size="lg" className="w-full">
+          <EdumallButton type="submit" variant="primary" size="lg" className="w-full" disabled={isCalculatingFee || deliveryFee === 0}>
             Continue to Payment
           </EdumallButton>
         </form>

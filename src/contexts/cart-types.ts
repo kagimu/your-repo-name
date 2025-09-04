@@ -28,9 +28,11 @@ export interface DeliveryDetails {
   city?: string;
   postalCode?: string;
   instructions?: string;
+  distance?: number;
 }
 
 export interface PendingCheckoutDetails {
+  items?: CartItem[];
   deliveryDetails?: DeliveryDetails;
 }
 
