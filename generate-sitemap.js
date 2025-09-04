@@ -1,7 +1,7 @@
 import { SitemapStream, streamToPromise } from 'sitemap';
 import { createWriteStream } from 'fs';
 
-const hostname = 'https://www.edumallug.com';
+const hostname = 'https://edumallug.com';
 const sitemap = new SitemapStream({ hostname });
 
 // Categories (can be expanded later)
