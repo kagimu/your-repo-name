@@ -209,8 +209,8 @@ const filteredProducts = useMemo(() => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  icon={<Search size={20} className="sm:size-[22px]" />}
-                  className="w-full h-10 sm:h-12 text-sm sm:text-base bg-white/10 border-[#64b3f4] text-white placeholder-gray-300 focus:border-[#64b3f4]"
+                  icon={<Search size={20} className="sm:size-[22px] text-gray-500" />}
+                  className="w-full h-10 sm:h-12 text-sm sm:text-base bg-white border-[#64b3f4] text-gray-900 placeholder-gray-500 focus:border-[#64b3f4]"
                 />
               </div>
               
