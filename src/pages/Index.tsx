@@ -35,6 +35,8 @@ const Index = () => {
         <meta name="twitter:title" content="Edumall Uganda | Buy Educational Materials Online" />
         <meta name="twitter:description" content="Edumall Uganda is your online educational marketplace for textbooks, laboratory supplies, school stationery, and other educational materials." />
         <meta name="twitter:image" content="https://i.imghippo.com/files/R3552HkQ.png" />
+
+        <meta name="google-site-verification" content="GHreIH_Sm0favn5RbGUVkLfvDTv42ZFGQiwld9luuMU" />
       </Helmet>
 
      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
