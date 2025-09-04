@@ -20,13 +20,15 @@ export default defineConfig(({ mode }) => {
         return acc;
       }, {}),
     },
+
   plugins: [
     react({
       tsDecorators: true,
     }),
     legacy({
-      targets: ['defaults', 'not IE 11', 'safari 11'],
-      additionalLegacyPolyfills: ['regenerator-runtime/runtime', 'core-js'],
+      targets: ['defaults', 'not IE 11'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
+      modernPolyfills: true,
       renderLegacyChunks: true,
       polyfills: true
     })
