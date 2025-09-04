@@ -11,9 +11,15 @@ const Index = () => {
     <Helmet>
         <title>Edumall Uganda | Buy Educational Materials, Books & School Supplies Online</title>
         <meta name="description" content="Edumall Uganda is your online educational marketplace for laboratory supplies, school stationery, textbooks and other educational materials." />
-        <meta name="keywords" content="education, textbooks, school supplies, laboratory equipment, Uganda, online marketplace" />
+        <meta name="keywords" content="edumall, edu, education, ecommerce, textbooks, school supplies, laboratory equipment, Uganda, online marketplace" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://edumallug.com" />
+        <link rel="icon" type="image/png" href="%PUBLIC_URL%/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
+        <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Edumall" />
+        <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest" />
         
         {/* Open Graph */}
         <meta property="og:title" content="Edumall Uganda | Buy Educational Materials Online" />
