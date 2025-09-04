@@ -272,6 +272,7 @@ const Checkout = () => {
                    <DeliveryFormWithMaps
                      onDetailsSubmit={handleDetailsSubmit}
                      user={user}
+                     items={items}
                      deliveryFee={deliveryFee || 0}
                      setDeliveryFee={setDeliveryFee}
                      setDeliveryDistance={setDeliveryDistance}

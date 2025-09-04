@@ -1,11 +1,10 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
 import axios from 'axios';
-
 
 interface Coordinates {
   lat: number;
@@ -29,6 +28,7 @@ interface DeliveryFormData {
 interface DeliveryFormProps {
   onDetailsSubmit: (details: any) => void;
   user: any;
+  items: any[]; // cart items
   subtotal: number;
   deliveryFee: number;
   setDeliveryFee: Dispatch<SetStateAction<number>>;
@@ -40,6 +40,7 @@ interface DeliveryFormProps {
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   onDetailsSubmit,
   user,
+  items,
   subtotal,
   deliveryFee,
   setDeliveryFee,
@@ -61,74 +62,85 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     distance: defaultValues?.distance || 0,
   });
 
-  const SHOP_COORDS: Coordinates = { lat: 0.3136, lng: 32.5811 }; // Energy Centre, Kampala
-
+  const [SHOP_COORDS, setShopCoords] = useState<Coordinates>({ lat: 0.3136, lng: 32.5811 }); // Default Energy Centre
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isCalculatingFee, setIsCalculatingFee] = useState(false);
 
-  const SAFE_CAR_BASE_FARE = 5000;   // Flat rate for the first 2 km
-  const RATE_STANDARD = 2800;        // UGX per km between 2 and 10 km
-  const RATE_LONG_DISTANCE = 2500;   // UGX per km beyond 10 km
+  const SAFE_CAR_BASE_FARE = 5000;
+  const RATE_STANDARD = 2800;
+  const RATE_LONG_DISTANCE = 2500;
 
-  const calculateDeliveryFee = async (clientCoords: Coordinates) => {
-  try {
-    setIsCalculatingFee(true);
-
-    const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0NjJkNzM5N2MyNTQ1NTc5NjM3NWZlZWVhMDFlNDI0IiwiaCI6Im11cm11cjY0In0=';
-    const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
-
-    const response = await axios.post(
-      url,
-      {
-        coordinates: [
-          [SHOP_COORDS.lng, SHOP_COORDS.lat],
-          [clientCoords.lng, clientCoords.lat]
-        ]
-      },
-      {
-        headers: {
-          Authorization: apiKey,
-          'Content-Type': 'application/json',
-        },
-      }
+  // Determine shop location based on items
+  const getShopLocation = (items: any[]) => {
+    const hasAlbinoRat = items.some(
+      (item) =>
+        item.name.toLowerCase().includes('albino rat') &&
+        item.category.toLowerCase() === 'laboratory' &&
+        item.subcategory.toLowerCase() === 'specimen'
     );
 
-    const distanceMeters = response.data.routes[0].segments[0].distance;
-    const distanceKm = distanceMeters / 1000; // Convert to KM
+    return hasAlbinoRat
+      ? { lat: 0.3326, lng: 32.5823 } // Devine Rabbits & Quail Breeders
+      : { lat: 0.3136, lng: 32.5811 }; // Energy Centre
+  };
 
-    // Delivery pricing
-    let fee = 0;
-    if (distanceKm <= 2) {
-      fee = SAFE_CAR_BASE_FARE;
-    } else if (distanceKm <= 10) {
-      const extraKm = distanceKm - 2;
-      fee = SAFE_CAR_BASE_FARE + (extraKm * RATE_STANDARD);
-    } else {
-      const extraStandardKm = 8; // between 2-10 km
-      const extraLongKm = distanceKm - 10;
-      fee = SAFE_CAR_BASE_FARE + (extraStandardKm * RATE_STANDARD) + (extraLongKm * RATE_LONG_DISTANCE);
+  // Update shop location whenever cart items change
+  useEffect(() => {
+    setShopCoords(getShopLocation(items));
+  }, [items]);
+
+  const calculateDeliveryFee = async (clientCoords: Coordinates) => {
+    try {
+      setIsCalculatingFee(true);
+
+      const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0NjJkNzM5N2MyNTQ1NTc5NjM3NWZlZWVhMDFlNDI0IiwiaCI6Im11cm11cjY0In0=';
+      const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
+
+      const response = await axios.post(
+        url,
+        {
+          coordinates: [
+            [SHOP_COORDS.lng, SHOP_COORDS.lat],
+            [clientCoords.lng, clientCoords.lat]
+          ]
+        },
+        {
+          headers: {
+            Authorization: apiKey,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const distanceMeters = response.data.routes[0].segments[0].distance;
+      const distanceKm = distanceMeters / 1000;
+
+      let fee = 0;
+      if (distanceKm <= 2) {
+        fee = SAFE_CAR_BASE_FARE;
+      } else if (distanceKm <= 10) {
+        const extraKm = distanceKm - 2;
+        fee = SAFE_CAR_BASE_FARE + (extraKm * RATE_STANDARD);
+      } else {
+        const extraStandardKm = 8;
+        const extraLongKm = distanceKm - 10;
+        fee = SAFE_CAR_BASE_FARE + (extraStandardKm * RATE_STANDARD) + (extraLongKm * RATE_LONG_DISTANCE);
+      }
+
+      setDeliveryFee(Math.round(fee));
+      setDeliveryDistance(parseFloat(distanceKm.toFixed(2)));
+      setFormData(prev => ({ ...prev, distance: parseFloat(distanceKm.toFixed(2)) }));
+
+      return { distanceKm: parseFloat(distanceKm.toFixed(2)), deliveryFee: Math.round(fee) };
+    } catch (err) {
+      console.error('Error calculating delivery fee:', err);
+      setDeliveryFee(0);
+      return { distanceKm: 0, deliveryFee: 0 };
+    } finally {
+      setIsCalculatingFee(false);
     }
+  };
 
-    // Update state
-    setDeliveryFee(Math.round(fee));
-    setDeliveryDistance(parseFloat(distanceKm.toFixed(2)));
-    setFormData(prev => ({ ...prev, distance: parseFloat(distanceKm.toFixed(2)) }));
-
-    return {
-      distanceKm: parseFloat(distanceKm.toFixed(2)),
-      deliveryFee: Math.round(fee),
-    };
-  } catch (err) {
-    console.error('Error calculating delivery fee:', err);
-    setDeliveryFee(0);
-    return { distanceKm: 0, deliveryFee: 0 };
-  } finally {
-    setIsCalculatingFee(false);
-  }
-};
-
-
-    // Handle selection from autocomplete
   const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
     const parts = locationData.name.split(',').map(p => p.trim());
     const coords = locationData.coordinates;
@@ -142,30 +154,27 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
       district: parts[2] || 'Central',
     }));
 
-    // Calculate delivery fee
     calculateDeliveryFee(coords);
   };
 
-      const getCurrentLocation = () => {
-        setIsLoadingLocation(true);
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true);
 
-        navigator.geolocation.getCurrentPosition(
-          async ({ coords }) => {
-            const clientCoords = { lat: coords.latitude, lng: coords.longitude };
-            setFormData(prev => ({ ...prev, coordinates: clientCoords, useCurrentLocation: true }));
-            await calculateDeliveryFee(clientCoords);
-            setIsLoadingLocation(false);
-          },
-          (err) => {
-            console.error(err);
-            setIsLoadingLocation(false);
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      };
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const clientCoords = { lat: coords.latitude, lng: coords.longitude };
+        setFormData(prev => ({ ...prev, coordinates: clientCoords, useCurrentLocation: true }));
+        await calculateDeliveryFee(clientCoords);
+        setIsLoadingLocation(false);
+      },
+      (err) => {
+        console.error(err);
+        setIsLoadingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
-
- 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onDetailsSubmit(formData);
@@ -251,12 +260,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             </span></p>
           </div>
 
-
-        
-
-
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-           
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Delivery Instructions (Optional)

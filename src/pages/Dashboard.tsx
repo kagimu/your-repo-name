@@ -56,6 +56,8 @@ interface Order {
   created_at: string;
   payment_status: string;
   total: number;
+  subtotal: number;
+  delivery_fee?: number;
   items: OrderItem[];
 }
 
@@ -344,7 +346,7 @@ const Dashboard: React.FC = () => {
     pdf.setProperties({
       title: `Edumall Receipt #${order.id}`,
       subject: 'Order Receipt',
-      creator: 'Edumall',
+      creator: 'Edumall Uganda',
       author: 'Edumall System'
     });
 
@@ -352,7 +354,7 @@ const Dashboard: React.FC = () => {
     pdf.setProperties({
       title: `Edumall Receipt #${order.id}`,
       subject: 'Order Receipt',
-      creator: 'Edumall',
+      creator: 'Edumall Uganda',
       author: 'Edumall System'
     });
 
@@ -376,7 +378,7 @@ const Dashboard: React.FC = () => {
         // If even the base64 fails, use text
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
-        const text = 'EDUMALL';
+        const text = 'EDUMALL UGANDA';
         const textWidth = pdf.getStringUnitWidth(text) * pdf.getFontSize() / pdf.internal.scaleFactor;
         pdf.text(text, (pageWidth - textWidth) / 2, yPos + 8);
       }
@@ -475,37 +477,38 @@ const Dashboard: React.FC = () => {
     const finalY = (pdf as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
     yPos = finalY + 20;
 
-    // Totals section with improved styling
-    const subTotal = order.total;
-    
-    // Add a subtle line above totals
-    pdf.setDrawColor(220, 220, 220);
-    pdf.line(pageWidth - margin - 150, yPos - 5, pageWidth - margin, yPos - 5);
-    
-    // Subtotal
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Subtotal:', pageWidth - margin - 100, yPos);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(formatPrice(subTotal), pageWidth - margin - 5, yPos, { align: 'right' });
-    yPos += 12;
 
-    // Delivery fee line (to be confirmed)
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Delivery Fee:', pageWidth - margin - 100, yPos);
-    pdf.setTextColor(128, 128, 128); // Gray color for 'to be confirmed'
-    pdf.text('To be confirmed by courier', pageWidth - margin - 5, yPos, { align: 'right' });
-    pdf.setTextColor(0, 0, 0); // Reset to black
-    yPos += 12;
+          // Use values directly from the order object
+      const subTotal = order.subtotal || 0;       
+      const deliveryFee = order.delivery_fee || 0; 
+      const grandTotal = order.total || 0;      
 
-    // Total amount with enhanced styling
-    pdf.setFontSize(13);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Total (excl. delivery):', pageWidth - margin - 100, yPos);
-    pdf.setTextColor(0, 128, 128); // Teal color for total amount
-    pdf.text(formatPrice(order.total), pageWidth - margin - 5, yPos, { align: 'right' });
-    pdf.setTextColor(0, 0, 0); // Reset to black
-    yPos += 20;
+      // Add a subtle line above totals
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(pageWidth - margin - 150, yPos - 5, pageWidth - margin, yPos - 5);
+
+      // Subtotal
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Subtotal:', pageWidth - margin - 100, yPos);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(formatPrice(subTotal), pageWidth - margin - 5, yPos, { align: 'right' });
+      yPos += 12;
+
+      // Delivery Fee
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Delivery Fee:', pageWidth - margin - 100, yPos);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(formatPrice(deliveryFee), pageWidth - margin - 5, yPos, { align: 'right' });
+      yPos += 12;
+
+      // Grand Total
+      pdf.setFontSize(13);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Total:', pageWidth - margin - 100, yPos);
+      pdf.setTextColor(0, 128, 128);
+      pdf.text(formatPrice(grandTotal), pageWidth - margin - 5, yPos, { align: 'right' });
+      pdf.setTextColor(0, 0, 0);
+      yPos += 20;
 
     // Professional Footer - Moved up by reducing yPos increment and margins
     pdf.setFont(undefined, 'normal');
