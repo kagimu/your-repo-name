@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction, useEffect } from 'react';
+import React, { useState, Dispatch, SetStateAction, useEffect } from 'react'; 
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
@@ -84,11 +84,11 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
       : { lat: 0.3136, lng: 32.5811 }; // Energy Centre
   };
 
-  // Update shop location whenever cart items change
   useEffect(() => {
     setShopCoords(getShopLocation(items));
   }, [items]);
 
+  // Calculate delivery fee
   const calculateDeliveryFee = async (clientCoords: Coordinates) => {
     try {
       setIsCalculatingFee(true);
@@ -116,16 +116,9 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
       const distanceKm = distanceMeters / 1000;
 
       let fee = 0;
-      if (distanceKm <= 2) {
-        fee = SAFE_CAR_BASE_FARE;
-      } else if (distanceKm <= 10) {
-        const extraKm = distanceKm - 2;
-        fee = SAFE_CAR_BASE_FARE + (extraKm * RATE_STANDARD);
-      } else {
-        const extraStandardKm = 8;
-        const extraLongKm = distanceKm - 10;
-        fee = SAFE_CAR_BASE_FARE + (extraStandardKm * RATE_STANDARD) + (extraLongKm * RATE_LONG_DISTANCE);
-      }
+      if (distanceKm <= 2) fee = SAFE_CAR_BASE_FARE;
+      else if (distanceKm <= 10) fee = SAFE_CAR_BASE_FARE + ((distanceKm - 2) * RATE_STANDARD);
+      else fee = SAFE_CAR_BASE_FARE + (8 * RATE_STANDARD) + ((distanceKm - 10) * RATE_LONG_DISTANCE);
 
       setDeliveryFee(Math.round(fee));
       setDeliveryDistance(parseFloat(distanceKm.toFixed(2)));
@@ -141,25 +134,42 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     }
   };
 
-  const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
-    const parts = locationData.name.split(',').map(p => p.trim());
+  // Handle address selection from autocomplete
+  const handleAddressSelect = async (locationData: { name: string; coordinates: Coordinates }) => {
     const coords = locationData.coordinates;
-
     setFormData(prev => ({
       ...prev,
       address: locationData.name,
       coordinates: coords,
       useCurrentLocation: false,
-      city: parts[1] || 'Kampala',
-      district: parts[2] || 'Central',
     }));
-
-    calculateDeliveryFee(coords);
+    await calculateDeliveryFee(coords);
   };
 
+  // Handle manual address typing (on blur)
+  const handleManualAddressChange = async (address: string) => {
+    setFormData(prev => ({ ...prev, address, useCurrentLocation: false }));
+
+    try {
+      const res = await axios.get(
+        `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${openCageApiKey}`
+      );
+      if (res.data.results.length > 0) {
+        const coords = {
+          lat: res.data.results[0].geometry.lat,
+          lng: res.data.results[0].geometry.lng,
+        };
+        setFormData(prev => ({ ...prev, coordinates: coords }));
+        await calculateDeliveryFee(coords);
+      }
+    } catch (err) {
+      console.error('Geocode error:', err);
+    }
+  };
+
+  // Use current location
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
-
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         const clientCoords = { lat: coords.latitude, lng: coords.longitude };
@@ -225,6 +235,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             <label className="text-sm font-medium text-gray-900 mb-2 block">Delivery Address</label>
             <OpenCageAutocomplete
               onAddressSelect={handleAddressSelect}
+              onAddressChange={handleManualAddressChange}
               defaultValue={formData.address}
               className="w-full"
               apiKey={openCageApiKey}
@@ -252,19 +263,13 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="text-lg font-bold">Order Costs</h3>
             <p>Subtotal: <span className="font-semibold">{subtotal.toLocaleString()} UGX</span></p>
-            <p>Delivery Fee: <span className="font-semibold">
-              {isCalculatingFee ? 'Calculating...' : `${deliveryFee.toLocaleString()} UGX`}
-            </span></p>
-            <p>Total: <span className="font-bold">
-              {isCalculatingFee ? 'Calculating...' : `${(subtotal + deliveryFee).toLocaleString()} UGX`}
-            </span></p>
+            <p>Delivery Fee: <span className="font-semibold">{isCalculatingFee ? 'Calculating...' : `${deliveryFee.toLocaleString()} UGX`}</span></p>
+            <p>Total: <span className="font-bold">{isCalculatingFee ? 'Calculating...' : `${(subtotal + deliveryFee).toLocaleString()} UGX`}</span></p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Delivery Instructions (Optional)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Instructions (Optional)</label>
               <textarea
                 value={formData.instructions}
                 onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
