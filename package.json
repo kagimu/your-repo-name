@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
+        "@googlemaps/js-api-loader": "^1.16.10",
         "@headlessui/react": "^2.2.7",
         "@hookform/resolvers": "^3.9.0",
         "@huggingface/inference": "^4.7.1",
