@@ -1,24 +1,38 @@
-import { createBrowserRouter } from "react-router-dom";
+import React, { lazy, Suspense } from "react";
 import { PublicRoute } from "./components/layout/RouteGuards";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
 import VoiceAssistantWrapper from "./components/VoiceAssistant/VoiceAssistantWrapper";
-import Index from "./pages/Index";
-import Categories from "./pages/Categories";
-import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Checkout from "./pages/Checkout";
-import ELibrary from "./pages/ELibrary";
-import Research from "./pages/Research";
-import Notifications from "./pages/Notifications";
-import Courier from "./pages/Courier";
-import Supplier from "./pages/Supplier";
-import NotFound from "./pages/NotFound";
-import AboutUs from "./pages/AboutUs";
-import PaymentSuccess from './components/checkout/PaymentSuccess';
-import LabInventory from './pages/LabInventory';
+
+// Use React.lazy for code splitting
+const Index = lazy(() => import("./pages/Index"));
+const Categories = lazy(() => import("./pages/Categories"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const ELibrary = lazy(() => import("./pages/ELibrary"));
+const Research = lazy(() => import("./pages/Research"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Courier = lazy(() => import("./pages/Courier"));
+const Supplier = lazy(() => import("./pages/Supplier"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const PaymentSuccess = lazy(() => import("./components/checkout/PaymentSuccess"));
+const LabInventory = lazy(() => import("./pages/LabInventory"));
+
+// Fallback loader component
+const Loader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <span className="text-lg font-semibold">Loading...</span>
+  </div>
+);
+
+// Helper to wrap lazy-loaded components with Suspense
+const withSuspense = (Component: React.ReactNode) => (
+  <Suspense fallback={<Loader />}>{Component}</Suspense>
+);
 
 export const routes = [
   {
@@ -29,39 +43,39 @@ export const routes = [
         children: [
           {
             index: true,
-            element: <Index />
+            element: withSuspense(<Index />)
           },
           {
             path: "categories",
-            element: <Categories />
+            element: withSuspense(<Categories />)
           },
           {
             path: "product/:id",
-            element: <ProductDetail />
+            element: withSuspense(<ProductDetail />)
           },
           {
             path: "about",
-            element: <AboutUs />
+            element: withSuspense(<AboutUs />)
           },
           {
             path: "cart",
-            element: <Cart />
+            element: withSuspense(<Cart />)
           },
           {
             path: "checkout",
-            element: <Checkout />
+            element: withSuspense(<Checkout />)
           },
           {
             path: "login",
-            element: <Login />
+            element: withSuspense(<Login />)
           },
           {
             path: "register",
-            element: <Register />
+            element: withSuspense(<Register />)
           },
           {
             path: "payment/success",
-            element: <PaymentSuccess />
+            element: withSuspense(<PaymentSuccess />)
           }
         ]
       },
@@ -70,31 +84,31 @@ export const routes = [
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
+            element: withSuspense(<Dashboard />),
           },
           {
             path: "elibrary",
-            element: <ELibrary />
+            element: withSuspense(<ELibrary />)
           },
           {
             path: "research",
-            element: <Research />
+            element: withSuspense(<Research />)
           },
           {
             path: "notifications",
-            element: <Notifications />
+            element: withSuspense(<Notifications />)
           },
           {
             path: "courier",
-            element: <Courier />
+            element: withSuspense(<Courier />)
           },
           {
             path: "supplier",
-            element: <Supplier />
+            element: withSuspense(<Supplier />)
           },
           {
             path: "inventory",
-            element: <LabInventory />
+            element: withSuspense(<LabInventory />)
           }
         ]
       }
@@ -102,6 +116,6 @@ export const routes = [
   },
   {
     path: "*",
-    element: <NotFound />
+    element: withSuspense(<NotFound />)
   }
 ];

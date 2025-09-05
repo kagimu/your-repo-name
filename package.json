@@ -75,9 +75,10 @@
         "react-helmet-async": "^2.0.5",
         "react-hook-form": "^7.50.1",
         "react-resizable-panels": "^2.0.11",
-        "react-router-dom": "^6.22.1",
+        "react-router-dom": "^6.30.1",
         "react-toastify": "^11.0.5",
         "react-type-animation": "^3.2.0",
+        "react-virtualized": "^9.22.6",
         "sitemap": "^8.0.0",
         "sonner": "^1.4.3",
         "tailwind-merge": "^2.2.1",
@@ -105,6 +106,7 @@
         "eslint-plugin-react-hooks": "^4.6.0",
         "eslint-plugin-react-refresh": "^0.4.5",
         "regenerator-runtime": "^0.14.1",
+        "rollup-plugin-visualizer": "^6.0.3",
         "terser": "^5.43.1",
         "vite-plugin-pwa": "^1.0.3"
     }
