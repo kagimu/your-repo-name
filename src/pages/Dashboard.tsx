@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 import { lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ReceiptModal } from '@/components/ReceiptModal';
-
-const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -102,6 +100,8 @@ const Dashboard: React.FC = () => {
   // Initialize the active section from URL search params or location state
   const urlParams = new URLSearchParams(location.search);
   const [activeSection, setActiveSection] = useState<'overview' | 'orders'>('overview');
+  
+  const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
 
   // Set active section immediately when component mounts or URL/state changes
   useEffect(() => {
@@ -196,6 +196,7 @@ const Dashboard: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [confirmingPayOnDelivery, setConfirmingPayOnDelivery] = useState(false);
+  
 
   // Function to get sidebar items
   const getSidebarItems = useCallback((hasHistory: boolean) => {
@@ -480,7 +481,7 @@ const Dashboard: React.FC = () => {
 
           // Use values directly from the order object
       const subTotal = order.subtotal || 0;       
-      const deliveryFee = order.delivery_fee || 0; 
+      const deliveryFee = order.delivery_fee || 0; // Pick from API
       const grandTotal = order.total || 0;      
 
       // Add a subtle line above totals
