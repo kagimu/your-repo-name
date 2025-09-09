@@ -1,0 +1,27 @@
+import {  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);et, useNavigate } from 'react-router-dom';
+import { AdminRoute } from './RouteGuards';
+import { useAuth } from '@/hooks/useAuth';
+
+const ProtectedLayout = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated || !user) {
+    navigate('/login');
+    return null;
+  }
+
+  return (
+    <AdminRoute>
+      <Outlet />
+    </AdminRoute>
+  );
+};
+
+export default ProtectedLayout;
