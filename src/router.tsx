@@ -1,38 +1,25 @@
-import React, { lazy, Suspense } from "react";
+import { createBrowserRouter } from "react-router-dom";
 import { PublicRoute } from "./components/layout/RouteGuards";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
 import VoiceAssistantWrapper from "./components/VoiceAssistant/VoiceAssistantWrapper";
-
-// Use React.lazy for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Categories = lazy(() => import("./pages/Categories"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const ELibrary = lazy(() => import("./pages/ELibrary"));
-const Research = lazy(() => import("./pages/Research"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const Courier = lazy(() => import("./pages/Courier"));
-const Supplier = lazy(() => import("./pages/Supplier"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const AboutUs = lazy(() => import("./pages/AboutUs"));
-const PaymentSuccess = lazy(() => import("./components/checkout/PaymentSuccess"));
-const LabInventory = lazy(() => import("./pages/LabInventory"));
-
-// Fallback loader component
-const Loader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <span className="text-lg font-semibold">Loading...</span>
-  </div>
-);
-
-// Helper to wrap lazy-loaded components with Suspense
-const withSuspense = (Component: React.ReactNode) => (
-  <Suspense fallback={<Loader />}>{Component}</Suspense>
-);
+import Index from "./pages/Index";
+import Categories from "./pages/Categories";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Checkout from "./pages/Checkout";
+import ELibrary from "./pages/ELibrary";
+import Research from "./pages/Research";
+import Notifications from "./pages/Notifications";
+import Courier from "./pages/Courier";
+import Supplier from "./pages/Supplier";
+import NotFound from "./pages/NotFound";
+import AboutUs from "./pages/AboutUs";
+import PaymentSuccess from './components/checkout/PaymentSuccess';
+import { VoiceAssistantTester } from './components/VoiceAssistant/VoiceAssistantTester';
+import LabInventory from './pages/LabInventory';
 
 export const routes = [
   {
@@ -43,39 +30,39 @@ export const routes = [
         children: [
           {
             index: true,
-            element: withSuspense(<Index />)
+            element: <Index />
           },
           {
             path: "categories",
-            element: withSuspense(<Categories />)
+            element: <Categories />
           },
           {
             path: "product/:id",
-            element: withSuspense(<ProductDetail />)
+            element: <ProductDetail />
           },
           {
             path: "about",
-            element: withSuspense(<AboutUs />)
+            element: <AboutUs />
           },
           {
             path: "cart",
-            element: withSuspense(<Cart />)
+            element: <Cart />
           },
           {
             path: "checkout",
-            element: withSuspense(<Checkout />)
+            element: <Checkout />
           },
           {
             path: "login",
-            element: withSuspense(<Login />)
+            element: <Login />
           },
           {
             path: "register",
-            element: withSuspense(<Register />)
+            element: <Register />
           },
           {
             path: "payment/success",
-            element: withSuspense(<PaymentSuccess />)
+            element: <PaymentSuccess />
           }
         ]
       },
@@ -84,31 +71,35 @@ export const routes = [
         children: [
           {
             path: "dashboard",
-            element: withSuspense(<Dashboard />),
+            element: <Dashboard />,
           },
           {
             path: "elibrary",
-            element: withSuspense(<ELibrary />)
+            element: <ELibrary />
           },
           {
             path: "research",
-            element: withSuspense(<Research />)
+            element: <Research />
           },
           {
             path: "notifications",
-            element: withSuspense(<Notifications />)
+            element: <Notifications />
           },
           {
             path: "courier",
-            element: withSuspense(<Courier />)
+            element: <Courier />
           },
           {
             path: "supplier",
-            element: withSuspense(<Supplier />)
+            element: <Supplier />
           },
           {
             path: "inventory",
-            element: withSuspense(<LabInventory />)
+            element: <LabInventory />
+          },
+          {
+            path: "voice-test",
+            element: <VoiceAssistantTester />
           }
         ]
       }
@@ -116,6 +107,6 @@ export const routes = [
   },
   {
     path: "*",
-    element: withSuspense(<NotFound />)
+    element: <NotFound />
   }
 ];

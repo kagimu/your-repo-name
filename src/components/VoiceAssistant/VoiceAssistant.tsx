@@ -3,8 +3,8 @@ import { Mic, MicOff, HelpCircle, Volume2, VolumeX, ToggleLeft, ToggleRight } fr
 import { useNavigate } from 'react-router-dom';
 import { useVoiceMicrophone } from '../VoiceMicrophone';
 import TutorialModal from './TutorialModal';
-import { matchCommand } from '@/lib/voice/registry';
-import type { VoiceIntent } from '@/lib/voice/registry';
+import { findIntent, executeIntent } from '@/lib/commandRegistry';
+import type { VoiceIntent, VoiceContext } from '@/lib/voiceIntents';
 import { SpeechFeedback } from './SpeechFeedback';
 
 type VoiceAction = 'search' | 'addToCart' | 'filter' | 'help' | 'checkout' | 'showCategories' | 'budgetHelp' | 'clearContext';
@@ -93,85 +93,102 @@ export default function VoiceAssistant({
   // Handle command processing
   const handleCommand = useCallback(async (text: string) => {
     console.log('Processing command:', text);
+
+    // Create voice context
+    const context: VoiceContext = {
+      currentPage: window.location.pathname,
+      navigate,
+      addToCart: async (productId: number, quantity?: number) => {
+        if (onAddToCart) {
+          const item: CartItem = {
+            id: productId,
+            quantity: quantity || 1,
+            name: `Product ${productId}`,
+            price: 0,
+            image: '/placeholder.png'
+          };
+          await onAddToCart(item);
+        }
+      },
+      searchProducts: async (query: Record<string, any>) => {
+        if (onSearch) {
+          return await onSearch(query.query || '');
+        }
+        return [];
+      },
+      filterProducts: async (filters: Record<string, any>) => {
+        if (onFilter) {
+          await onFilter(filters);
+        }
+      },
+      user: { isAuthenticated: false },
+      lastInteraction: {
+        timestamp: Date.now(),
+        type: 'search'
+      },
+      confidence: 1.0
+    };
+
+    console.log('[VoiceAssistant] Finding intent for text:', text);
+    const match = findIntent(text, context);
     
-    const match = matchCommand(text);
     if (!match) {
+      console.log('[VoiceAssistant] No intent found for text');
       handleSpeak("I'm not sure what you mean. Try saying 'help' to see what I can do.");
       setIsProcessing(false);
       return;
     }
+    
+    console.log('[VoiceAssistant] Found intent:', match.intent.name);
 
     try {
-      switch ((match.intent as VoiceIntent).name as VoiceAction) {
-        case 'search':
-          if (onSearch && match.slots.query) {
-            handleSpeak(`Searching for ${match.slots.query}...`);
-            await onSearch(match.slots.query);
-          }
-          break;
+      const { intent, slots } = match;
+      console.log('[VoiceAssistant] Executing intent with slots:', slots);
 
-        case 'addToCart':
-          if (onAddToCart && match.slots.productId) {
-            const item: CartItem = {
-              id: match.slots.productId,
-              quantity: match.slots.quantity || 1,
-              name: match.slots.productName || `Product ${match.slots.productId}`,
-              price: match.slots.price || 0,
-              image: match.slots.image || '/placeholder.png'
-            };
-            handleSpeak(`Adding ${item.name} to cart...`);
-            await onAddToCart(item);
-          }
-          break;
+      // Execute the intent action
+      const success = await executeIntent(intent, slots, context);
+      console.log('[VoiceAssistant] Intent execution result:', success);
 
-        case 'filter':
-          if (onFilter) {
-            handleSpeak(`Applying filters...`);
-            await onFilter(match.slots);
-          }
-          break;
-
-        case 'help':
-          setShowHelp(true);
-          handleSpeak("Here are some things I can help you with.");
-          break;
-
-        case 'checkout':
-          if (onCheckout) {
+      if (success) {
+        console.log('[VoiceAssistant] Intent executed successfully, providing feedback');
+        // Provide appropriate feedback based on intent
+        switch (intent.name) {
+          case 'Search':
+            handleSpeak(`Searching for ${slots.query}...`);
+            break;
+          case 'ShowProducts':
+            handleSpeak('Here are our available products.');
+            break;
+          case 'addToCart':
+            handleSpeak('Item added to cart.');
+            break;
+          case 'Filter':
+            handleSpeak('Filters applied.');
+            break;
+          case 'Help':
+            setShowHelp(true);
+            handleSpeak("Here are some things I can help you with.");
+            break;
+          case 'Checkout':
             handleSpeak('Taking you to checkout...');
-            await onCheckout();
-          }
-          break;
-
-        case 'showCategories':
-          if (onShowCategories) {
+            break;
+          case 'ShowCategories':
             handleSpeak('Showing all categories...');
-            await onShowCategories();
-          }
-          break;
-
-        case 'budgetHelp':
-          if (onBudgetHelp && match.slots.budget) {
-            handleSpeak(`Looking for items within your ${match.slots.budget} dollar budget...`);
-            await onBudgetHelp(match.slots.budget);
-          }
-          break;
-
-        case 'clearContext':
-          if (onClearContext) {
-            handleSpeak('Clearing current context...');
-            await onClearContext();
-          }
-          break;
-
-        default:
-          handleSpeak("I'm not sure how to handle that command.");
-          break;
+            break;
+          case 'BudgetHelp':
+            handleSpeak(`Looking for items within your ${slots.budget} budget...`);
+            break;
+          default:
+            handleSpeak('Command executed successfully.');
+            break;
+        }
+      } else {
+        handleSpeak("Sorry, I couldn't complete that action.");
       }
 
       setIsProcessing(false);
       setTranscript('');
-      
+
       if (isContinuousMode) {
         handleSpeak('Anything else I can help you with?');
       }
@@ -183,6 +200,7 @@ export default function VoiceAssistant({
   }, [
     handleSpeak,
     isContinuousMode,
+    navigate,
     onSearch,
     onAddToCart,
     onFilter,

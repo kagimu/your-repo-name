@@ -1,10 +1,10 @@
-import React, { useState, Dispatch, SetStateAction, useEffect } from 'react'; 
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Check } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
-import axios from 'axios';
+
 
 interface Coordinates {
   lat: number;
@@ -22,31 +22,20 @@ interface DeliveryFormData {
   instructions: string;
   useCurrentLocation: boolean;
   coordinates: Coordinates;
-  distance: number;
 }
 
 interface DeliveryFormProps {
-  onDetailsSubmit: (details: any) => void;
-  user: any;
-  items: any[]; // cart items
-  subtotal: number;
-  deliveryFee: number;
-  setDeliveryFee: Dispatch<SetStateAction<number>>;
-  setDeliveryDistance: Dispatch<SetStateAction<number>>;
-  defaultValues?: any;
-  openCageApiKey: string;
+  user?: any;
+  defaultValues?: Partial<DeliveryFormData>;
+  onDetailsSubmit: (details: DeliveryFormData) => void;
+  openCageApiKey: string; // API key passed as prop
 }
 
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
-  onDetailsSubmit,
   user,
-  items,
-  subtotal,
-  deliveryFee,
-  setDeliveryFee,
-  setDeliveryDistance,
   defaultValues,
-  openCageApiKey
+  onDetailsSubmit,
+  openCageApiKey,
 }) => {
   const [formData, setFormData] = useState<DeliveryFormData>({
     fullName: defaultValues?.fullName || (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') || user?.name || '',
@@ -59,126 +48,74 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     instructions: defaultValues?.instructions || '',
     useCurrentLocation: defaultValues?.useCurrentLocation || false,
     coordinates: defaultValues?.coordinates || { lat: 0.3476, lng: 32.5825 },
-    distance: defaultValues?.distance || 0,
   });
 
-  const [SHOP_COORDS, setShopCoords] = useState<Coordinates>({ lat: 0.3136, lng: 32.5811 }); // Default Energy Centre
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [isCalculatingFee, setIsCalculatingFee] = useState(false);
 
-  const SAFE_CAR_BASE_FARE = 5000;
-  const RATE_STANDARD = 2800;
-  const RATE_LONG_DISTANCE = 2500;
-
-  // Determine shop location based on items
-  const getShopLocation = (items: any[]) => {
-    const hasAlbinoRat = items.some(
-      (item) =>
-        item.name.toLowerCase().includes('albino rat') &&
-        item.category.toLowerCase() === 'laboratory' &&
-        item.subcategory.toLowerCase() === 'specimen'
-    );
-
-    return hasAlbinoRat
-      ? { lat: 0.3326, lng: 32.5823 } // Devine Rabbits & Quail Breeders
-      : { lat: 0.3136, lng: 32.5811 }; // Energy Centre
-  };
-
-  useEffect(() => {
-    setShopCoords(getShopLocation(items));
-  }, [items]);
-
-  // Calculate delivery fee
-  const calculateDeliveryFee = async (clientCoords: Coordinates) => {
-    try {
-      setIsCalculatingFee(true);
-
-      const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0NjJkNzM5N2MyNTQ1NTc5NjM3NWZlZWVhMDFlNDI0IiwiaCI6Im11cm11cjY0In0=';
-      const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
-
-      const response = await axios.post(
-        url,
-        {
-          coordinates: [
-            [SHOP_COORDS.lng, SHOP_COORDS.lat],
-            [clientCoords.lng, clientCoords.lat]
-          ]
-        },
-        {
-          headers: {
-            Authorization: apiKey,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const distanceMeters = response.data.routes[0].segments[0].distance;
-      const distanceKm = distanceMeters / 1000;
-
-      let fee = 0;
-      if (distanceKm <= 2) fee = SAFE_CAR_BASE_FARE;
-      else if (distanceKm <= 10) fee = SAFE_CAR_BASE_FARE + ((distanceKm - 2) * RATE_STANDARD);
-      else fee = SAFE_CAR_BASE_FARE + (8 * RATE_STANDARD) + ((distanceKm - 10) * RATE_LONG_DISTANCE);
-
-      setDeliveryFee(Math.round(fee));
-      setDeliveryDistance(parseFloat(distanceKm.toFixed(2)));
-      setFormData(prev => ({ ...prev, distance: parseFloat(distanceKm.toFixed(2)) }));
-
-      return { distanceKm: parseFloat(distanceKm.toFixed(2)), deliveryFee: Math.round(fee) };
-    } catch (err) {
-      console.error('Error calculating delivery fee:', err);
-      setDeliveryFee(0);
-      return { distanceKm: 0, deliveryFee: 0 };
-    } finally {
-      setIsCalculatingFee(false);
-    }
-  };
-
-  // Handle address selection from autocomplete
-  const handleAddressSelect = async (locationData: { name: string; coordinates: Coordinates }) => {
-    const coords = locationData.coordinates;
+  // Handle selection from autocomplete
+  const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
+    const parts = locationData.name.split(',').map(p => p.trim());
     setFormData(prev => ({
       ...prev,
       address: locationData.name,
-      coordinates: coords,
+      coordinates: locationData.coordinates,
       useCurrentLocation: false,
+      city: parts[1] || 'Kampala',
+      district: parts[2] || 'Central',
     }));
-    await calculateDeliveryFee(coords);
   };
 
-  // Handle manual address typing (on blur)
-  const handleManualAddressChange = async (address: string) => {
-    setFormData(prev => ({ ...prev, address, useCurrentLocation: false }));
-
-    try {
-      const res = await axios.get(
-        `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${openCageApiKey}`
-      );
-      if (res.data.results.length > 0) {
-        const coords = {
-          lat: res.data.results[0].geometry.lat,
-          lng: res.data.results[0].geometry.lng,
-        };
-        setFormData(prev => ({ ...prev, coordinates: coords }));
-        await calculateDeliveryFee(coords);
-      }
-    } catch (err) {
-      console.error('Geocode error:', err);
-    }
-  };
-
-  // Use current location
+  // Get current location
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
+
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
+      setIsLoadingLocation(false);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
-        const clientCoords = { lat: coords.latitude, lng: coords.longitude };
-        setFormData(prev => ({ ...prev, coordinates: clientCoords, useCurrentLocation: true }));
-        await calculateDeliveryFee(clientCoords);
-        setIsLoadingLocation(false);
+        const { latitude, longitude } = coords;
+
+        try {
+          const res = await fetch(
+            `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${openCageApiKey}&limit=1&no_annotations=1`
+          );
+
+          if (!res.ok) throw new Error('Failed to reverse geocode location');
+
+          const data = await res.json();
+          const result = data.results?.[0];
+
+          if (result) {
+            const components = result.components || {};
+            const formatted = result.formatted || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            setFormData(prev => ({
+              ...prev,
+              coordinates: { lat: latitude, lng: longitude },
+              useCurrentLocation: true,
+              address: formatted,
+              city: components.city || components.town || 'Kampala',
+              district: components.county || components.state_district || components.state || 'Central',
+            }));
+          }
+        } catch (err) {
+          console.error('Error fetching location:', err);
+          setFormData(prev => ({
+            ...prev,
+            coordinates: { lat: latitude, lng: longitude },
+            useCurrentLocation: true,
+            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          }));
+        } finally {
+          setIsLoadingLocation(false);
+        }
       },
-      (err) => {
-        console.error(err);
+      err => {
+        console.error('Geolocation error:', err);
+        alert('Could not get your location. Please enable location services.');
         setIsLoadingLocation(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -235,7 +172,6 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             <label className="text-sm font-medium text-gray-900 mb-2 block">Delivery Address</label>
             <OpenCageAutocomplete
               onAddressSelect={handleAddressSelect}
-              onAddressChange={handleManualAddressChange}
               defaultValue={formData.address}
               className="w-full"
               apiKey={openCageApiKey}
@@ -260,16 +196,12 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             )}
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-bold">Order Costs</h3>
-            <p>Subtotal: <span className="font-semibold">{subtotal.toLocaleString()} UGX</span></p>
-            <p>Delivery Fee: <span className="font-semibold">{isCalculatingFee ? 'Calculating...' : `${deliveryFee.toLocaleString()} UGX`}</span></p>
-            <p>Total: <span className="font-bold">{isCalculatingFee ? 'Calculating...' : `${(subtotal + deliveryFee).toLocaleString()} UGX`}</span></p>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+           
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Instructions (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Delivery Instructions (Optional)
+              </label>
               <textarea
                 value={formData.instructions}
                 onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
@@ -280,7 +212,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             </div>
           </div>
 
-          <EdumallButton type="submit" variant="primary" size="lg" className="w-full" disabled={isCalculatingFee || deliveryFee === 0}>
+          <EdumallButton type="submit" variant="primary" size="lg" className="w-full">
             Continue to Payment
           </EdumallButton>
         </form>

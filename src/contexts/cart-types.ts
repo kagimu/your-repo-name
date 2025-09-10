@@ -28,11 +28,9 @@ export interface DeliveryDetails {
   city?: string;
   postalCode?: string;
   instructions?: string;
-  distance?: number;
 }
 
 export interface PendingCheckoutDetails {
-  items?: CartItem[];
   deliveryDetails?: DeliveryDetails;
 }
 
@@ -47,7 +45,7 @@ export interface CartContextType {
   clearCart: () => Promise<void>;
   getCartCount: () => number;
   getCartTotal: () => number;
-  mergeGuestCart: () => Promise<void>;
+  mergeGuestCart: () => Promise<boolean | void>;
   pendingCheckoutDetails: PendingCheckoutDetails | null;
   savePendingCheckout: (details: PendingCheckoutDetails) => void;
   clearPendingCheckout: () => void;

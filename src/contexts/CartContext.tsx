@@ -89,19 +89,34 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    ------------------ */
   useEffect(() => {
     const initializeCart = async () => {
+      console.log('[CartContext] Initializing cart', { isAuthenticated, hasToken: !!token });
       setIsLoading(true);
       setError(null);
+      
       try {
         if (isAuthenticated && token) {
+          console.log('[CartContext] User is authenticated, fetching auth cart');
           await fetchAuthCart();
+          
+          // Check if we have guest cart items that need to be merged
+          const guestCart = loadGuestCart();
+          if (guestCart.length > 0) {
+            console.log('[CartContext] Found guest cart items during init, triggering merge');
+            await mergeGuestCart();
+          }
         } else {
-          setItems(loadGuestCart());
+          console.log('[CartContext] Loading guest cart');
+          const guestItems = loadGuestCart();
+          console.log('[CartContext] Guest cart items:', guestItems);
+          setItems(guestItems);
         }
       } catch (err) {
-        console.error('Error initializing cart:', err);
+        console.error('[CartContext] Error initializing cart:', err);
         setError('Failed to load cart');
         if (isAuthenticated) {
-          setItems(loadGuestCart());
+          const guestItems = loadGuestCart();
+          console.log('[CartContext] Falling back to guest cart:', guestItems);
+          setItems(guestItems);
         }
       } finally {
         setIsLoading(false);
@@ -190,9 +205,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const clearCart = async () => {
+    console.log('[CartContext] Clearing cart', { isAuthenticated, hasToken: !!token });
     setError(null);
+    
     if (isAuthenticated && token) {
       try {
+        console.log('[CartContext] Clearing authenticated cart');
         // Remove each item individually since clear endpoint doesn't work
         const currentItems = [...items];
         const deletePromises = currentItems.map(item =>
@@ -208,6 +226,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // If any items remain, try one more time
         if (items.length > 0) {
+          console.log('[CartContext] Items remain after first clear attempt, retrying');
           const remainingItems = [...items];
           const retryPromises = remainingItems.map(item =>
             axios.delete(
@@ -218,14 +237,20 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await Promise.all(retryPromises);
           await fetchAuthCart();
         }
+
+        // Only clear local storage if authenticated cart clear was successful
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
       } catch (err) {
-        console.error('Error clearing authenticated cart:', err);
+        console.error('[CartContext] Error clearing authenticated cart:', err);
         setError('Failed to clear cart');
+        return; // Don't proceed with clearing local state on error
       }
+    } else {
+      // Only clear local storage for guest cart
+      console.log('[CartContext] Clearing guest cart');
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
     
-    // Always clear local storage and state
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
     localStorage.removeItem(PENDING_CHECKOUT_KEY);
     setItems([]);
     setPendingCheckoutDetails(null);
@@ -238,12 +263,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Merge Guest → Auth Cart
    ------------------ */
   const mergeGuestCart = useCallback(async () => {
+    console.log('[CartContext] Starting cart merge process');
     setError(null);
     const guestCart = loadGuestCart();
-    if (!guestCart.length || !token) return;
+    console.log('[CartContext] Guest cart items:', guestCart);
+    
+    if (!guestCart.length) {
+      console.log('[CartContext] No guest cart items to merge');
+      return;
+    }
+    
+    if (!token) {
+      console.log('[CartContext] No auth token available for merge');
+      return;
+    }
 
     try {
+      console.log('[CartContext] Starting to add guest items to auth cart');
       for (const product of guestCart) {
+        console.log('[CartContext] Adding product to auth cart:', { id: product.id, quantity: product.quantity });
         await axios.post(
           'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
           { 
@@ -254,11 +292,17 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
       }
       
+      console.log('[CartContext] All guest items added, removing local storage');
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      
+      console.log('[CartContext] Fetching updated auth cart');
       await fetchAuthCart();
+      console.log('[CartContext] Cart merge completed successfully');
     } catch (err) {
-      console.error('Error merging guest cart:', err);
+      console.error('[CartContext] Error merging guest cart:', err);
       setError('Failed to merge guest cart');
+      // Don't remove local storage on error
+      return false;
     }
   }, [token, fetchAuthCart]);
 

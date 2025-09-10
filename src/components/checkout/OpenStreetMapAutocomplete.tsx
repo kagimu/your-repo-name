@@ -39,7 +39,6 @@ interface LocationData {
 
 interface Props {
   onAddressSelect: (location: LocationData) => void;
-  onAddressChange?: (address: string) => void; // ✅ Added support for manual typing
   defaultValue?: string;
   className?: string;
   apiKey: string;
@@ -47,7 +46,6 @@ interface Props {
 
 export const OpenCageAutocomplete: React.FC<Props> = ({
   onAddressSelect,
-  onAddressChange,
   defaultValue = '',
   className = '',
   apiKey,
@@ -58,7 +56,6 @@ export const OpenCageAutocomplete: React.FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // 🔹 Fetch address suggestions from OpenCage API
   const searchAddress = useCallback(
     async (query: string) => {
       if (query.length < 3) {
@@ -100,7 +97,6 @@ export const OpenCageAutocomplete: React.FC<Props> = ({
     [apiKey]
   );
 
-  // 🔹 When user selects a suggestion
   const handleSelect = (location: Location) => {
     const lat = Number(location.lat);
     const lng = Number(location.lon);
@@ -127,25 +123,16 @@ export const OpenCageAutocomplete: React.FC<Props> = ({
           onChange={(e) => {
             const value = e.target.value;
             setSearchText(value);
-
-            // ✅ Call parent callback for manual typing
-            if (onAddressChange) {
-              onAddressChange(value);
-            }
-
-            // Delay search to reduce API calls
             setTimeout(() => searchAddress(value), 200);
           }}
         />
 
-        {/* Loading spinner */}
         {isLoading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-teal-600" />
           </div>
         )}
 
-        {/* Dropdown suggestions */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
             <ul className="py-1">
@@ -164,29 +151,29 @@ export const OpenCageAutocomplete: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Selected location summary */}
-      {selectedLocation && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-green-700">
-              <MapPin className="mr-2 h-4 w-4" />
-              <span className="text-sm font-medium">Location Selected</span>
+        {selectedLocation && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center text-green-700">
+                <MapPin className="mr-2 h-4 w-4" />
+                <span className="text-sm font-medium">Location Selected</span>
+              </div>
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${selectedLocation.lat}&mlon=${selectedLocation.lng}&zoom=16`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+              >
+                View on Map
+                <ExternalLink className="ml-1 h-3 w-3" />
+              </a>
             </div>
-            <a
-              href={`https://www.openstreetmap.org/?mlat=${selectedLocation.lat}&mlon=${selectedLocation.lng}&zoom=16`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
-            >
-              View on Map
-              <ExternalLink className="ml-1 h-3 w-3" />
-            </a>
+            <p className="text-xs text-gray-600 mt-1">
+              Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+            </p>
           </div>
-          <p className="text-xs text-gray-600 mt-1">
-            Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
-          </p>
-        </div>
-      )}
+        )}
+
     </div>
   );
 };

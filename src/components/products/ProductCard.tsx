@@ -78,7 +78,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
   if (viewMode === 'list') {
     return (
       <>
-     
+      <Helmet>
+        <title>{product.name} | Edumall Uganda</title>
+        <meta name="description" content={product.desc} />
+        <meta property="og:title" content={`${product.name} | Edumall Uganda`} />
+        <meta property="og:description" content={product.desc} />
+      </Helmet>
 
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -89,7 +94,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
-                loading="lazy" 
                 className="w-full h-full object-contain"
               />
             </div>

@@ -6,6 +6,7 @@ import { EdumallButton } from '@/components/ui/EdumallButton';
 import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
 import { PreLoader } from '@/components/ui/PreLoader';
+import { useCart } from '@/hooks/useCart';
 import axios from 'axios';
 
 
@@ -32,6 +33,7 @@ const Login = () => {
   });
   
   const { login } = useAuth();
+  const { mergeGuestCart } = useCart();
   const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -61,6 +63,12 @@ const Login = () => {
 
         const data: { token: string; user: User } = await response.json();
 
+        console.log('[Login] Authentication successful, preparing to merge cart');
+        
+        // Save guest cart before login
+        const guestCartData = localStorage.getItem('guest_cart');
+        console.log('[Login] Current guest cart:', guestCartData);
+
         // Call login with user AND token
         login(
           {
@@ -76,6 +84,14 @@ const Login = () => {
           },
           data.token
         );
+
+        // Give some time for auth state to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Merge guest cart with authenticated cart
+        console.log('[Login] Starting cart merge');
+        const mergeResult = await mergeGuestCart();
+        console.log('[Login] Cart merge completed:', mergeResult);
 
         // Get return URL from localStorage and clear it
         const returnUrl = localStorage.getItem('returnUrl');

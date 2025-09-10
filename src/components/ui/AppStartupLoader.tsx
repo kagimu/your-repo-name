@@ -82,7 +82,6 @@ export const AppStartupLoader: React.FC<{ onComplete: () => void }> = ({ onCompl
               <img 
                 src="/img/Edumall.png" 
                 alt="Edumall" 
-                loading="lazy" 
                 className="w-16 h-16 object-contain"
               />
             </div>

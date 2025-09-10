@@ -1,27 +1,28 @@
-import { 
-  VoiceIntent, 
-  VoiceContext, 
+import {
+  VoiceIntent,
+  VoiceContext,
   patterns
 } from './voiceIntents';
-
-// Helper function to }: Promise<boolean> => {
-  return intent.action(slots, context);
-};
 
 // Match a voice command to an intent and extract slots
 export const matchCommand = (command: string): { intent: VoiceIntent; slots: Record<string, any> } | null => {
   // Clean up the command
   const cleanCommand = command.trim().toLowerCase();
+  console.log('[CommandRegistry] Matching command:', cleanCommand);
 
   // Try to match against each intent
   for (const intent of intents) {
+    console.log('[CommandRegistry] Testing intent:', intent.name);
     for (const pattern of intent.patterns) {
+      console.log('[CommandRegistry] Testing pattern:', pattern);
       const match = cleanCommand.match(pattern);
       if (match) {
+        console.log('[CommandRegistry] Pattern matched:', pattern);
         const slots: Record<string, any> = {};
 
         // Extract named groups from regex match
         if (match.groups) {
+          console.log('[CommandRegistry] Found named groups:', match.groups);
           // Process each slot according to its definition
           Object.entries(match.groups).forEach(([name, value]) => {
             const slotDef = intent.slots?.[name];
@@ -30,6 +31,7 @@ export const matchCommand = (command: string): { intent: VoiceIntent; slots: Rec
               slots[name] = slotDef.transform ? 
                 slotDef.transform(value) : 
                 value;
+              console.log(`[CommandRegistry] Processed slot ${name}:`, slots[name]);
             }
           });
         }
@@ -41,7 +43,10 @@ export const matchCommand = (command: string): { intent: VoiceIntent; slots: Rec
             (slots[name] && def.validation && !def.validation(slots[name]))
           );
 
-        if (!invalidSlot) {
+        if (invalidSlot) {
+          console.log('[CommandRegistry] Invalid slot:', invalidSlot[0]);
+        } else {
+          console.log('[CommandRegistry] All slots valid, returning intent:', intent.name);
           return { intent, slots };
         }
       }
@@ -65,12 +70,38 @@ export const matchCommand = (command: string): { intent: VoiceIntent; slots: Rec
   }
 
   return null;
-};ate RegExp patterns
+};
+
+// Create RegExp patterns
 function createPattern(pattern: string): RegExp {
-  return new RegExp(pattern, 'i');
+ return new RegExp(pattern, 'i');
 }
 
 export const intents: VoiceIntent[] = [
+  // Help Intent
+  {
+    name: 'Help',
+    patterns: [
+      /^(?:show|display|tell me|what are|give me)?\s*(?:the\s+)?(?:help|commands|available commands|what can you do|what can i say)$/i,
+      /^help(?:\s+me)?$/i,
+      /^what\s+can\s+(?:you\s+)?do$/i
+    ],
+    priority: 3,
+    examples: [
+      'help',
+      'show help',
+      'what can you do',
+      'what can I say',
+      'available commands',
+      'tell me what you can do'
+    ],
+    action: async (_, { navigate }) => {
+      // For now, just navigate to a help page or show help modal
+      // This can be enhanced to show a help modal
+      return true;
+    }
+  },
+
   // Navigation Intents
   {
     name: 'NavigateHome',
@@ -159,17 +190,58 @@ export const intents: VoiceIntent[] = [
     }
   },
   {
+    name: 'ShowProducts',
+    patterns: [
+      /^(?:show|display|list|view)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:products|items)$/i,
+      /^(?:what|which)\s+(?:products|items)\s+(?:do\s+you\s+have|are\s+available)$/i,
+      /^browse\s+(?:products|items)$/i,
+      /^products?$/i,
+      /^items?$/i,
+      /^show\s+(?:me\s+)?(?:what\s+)?(?:you\s+)?(?:have|got)$/i,
+      /^(?:take|bring)\s+me\s+to\s+(?:the\s+)?(?:products|items)$/i,
+      /^open\s+(?:the\s+)?(?:products|items)$/i,
+      /^go\s+to\s+(?:the\s+)?(?:products|items)$/i
+    ],
+    priority: 2,
+    examples: [
+      'show products',
+      'show items', 
+      'display products',
+      'what products do you have',
+      'products',
+      'items',
+      'show me what you have',
+      'take me to products',
+      'go to items'
+    ],
+    action: async (_, { navigate }) => {
+      console.log('[VoiceAssistant] Navigating to categories from ShowProducts intent');
+      try {
+        if (!navigate) {
+          console.error('[ShowProducts] Navigation function not available in context');
+          return false;
+        }
+        navigate('/categories');
+        console.log('[ShowProducts] Successfully navigated to /categories');
+        return true;
+      } catch (error) {
+        console.error('[ShowProducts] Error during navigation:', error);
+        return false;
+      }
+    }
+  },
+  {
     name: 'Search',
     patterns: [
       /^(?:search|find|look) for (?<query>[a-z0-9\s-]+)$/i,
       /^(?:search|browse|find)(?: for)? (?<query>[a-z0-9\s-]+)$/i,
       /^(?:where can i find|i need to find|looking for) (?<query>[a-z0-9\s-]+)$/i,
-      'search',
-      'browse',
-      'find me',
-      'where can i find',
-      'i need to find',
-      'looking for'
+      /^search$/i,
+      /^browse$/i,
+      /^find me$/i,
+      /^where can i find$/i,
+      /^i need to find$/i,
+      /^looking for$/i
     ],
     examples: [
       'search for books',
@@ -182,18 +254,99 @@ export const intents: VoiceIntent[] = [
     ],
     slots: {
       query: {
+        name: 'query',
         type: 'string'
       }
+    },
+    action: async (slots, { navigate, searchProducts }) => {
+      try {
+        await searchProducts({ query: slots.query });
+      } catch (e) {
+        // ignore
+      }
+      navigate(`/categories?search=${encodeURIComponent(slots.query)}`);
+      return true;
+    }
+  },
+  {
+    name: 'ShowProductDetail',
+    patterns: [
+      /^(?:show|open|view|display)\s+(?:the\s+)?(?:product|item)\s+(?<name>[a-z0-9\s\-'"&,.]+)$/i,
+      /^(?:tell\s+me\s+about|details?\s+(?:for|of)|what\s+are\s+the\s+details\s+(?:for|of))\s+(?<name>[a-z0-9\s\-'"&,.]+)$/i
+    ],
+    slots: {
+      name: {
+        name: 'name',
+        type: 'product',
+        transform: (value: string) => value.trim().toLowerCase()
+      }
+    },
+    priority: 3,
+    examples: [
+      'show product ammeter',
+      'open item microscope',
+      'tell me about microscope',
+      'details for ammeter'
+    ],
+    action: async (slots, { navigate }) => {
+      const q = (slots.name || '').toString();
+      navigate(`/categories?search=${encodeURIComponent(q)}&open=1`);
+      return true;
+    }
+  },
+  {
+    name: 'AddToCartByName',
+    patterns: [
+      /^(?:add|put|place)\s+(?:an?\s+)?(?<name>[a-z0-9\s\-'"&,.]+)\s+(?:to|into)\s+(?:my\s+)?cart$/i,
+      /^(?:buy|purchase)\s+(?:an?\s+)?(?<name>[a-z0-9\s\-'"&,.]+)$/i
+    ],
+    slots: {
+      name: {
+        name: 'name',
+        type: 'product',
+        transform: (value: string) => value.trim().toLowerCase()
+      }
+    },
+    priority: 4,
+    examples: [
+      'add ammeter to cart',
+      'put microscope into cart',
+      'buy microscope',
+      'purchase ammeter'
+    ],
+    action: async (slots, { searchProducts, addToCart, navigate }) => {
+      const q = (slots.name || '').toString();
+      try {
+        const results = await searchProducts({ query: q });
+        if (Array.isArray(results) && results.length > 0) {
+          const product = results[0];
+          if (product?.id != null) {
+            await addToCart(product.id, 1);
+            return true;
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to navigation
+      }
+      // Fallback: navigate to categories with the search applied so user can add manually
+      navigate(`/categories?search=${encodeURIComponent(q)}`);
+      return false;
     }
   },
   {
     name: 'addToCart',
-    patterns: ['add to cart', 'buy', 'purchase'],
+    patterns: [/add to cart/i, /buy/i, /purchase/i],
     examples: ['add to cart', 'buy this item', 'add first one to cart'],
     slots: {
       item: {
+        name: 'item',
         type: 'string'
       }
+    },
+    action: async (slots, { currentProduct, addToCart }) => {
+      if (!currentProduct?.id) return false;
+      await addToCart(currentProduct.id, 1);
+      return true;
     }
   },
   {
@@ -334,11 +487,8 @@ export const intents: VoiceIntent[] = [
       'what can I buy with 100000 shillings',
       'show items for 75000'
     ],
-    action: async (slots, { filterProducts, setState }) => {
+    action: async (slots, { filterProducts }) => {
       await filterProducts({ maxPrice: slots.budget });
-      setState({
-        feedback: `Here are items within your budget of ${slots.budget} UGX`
-      });
       return true;
     }
   }
@@ -405,5 +555,18 @@ export const executeIntent = async (
   slots: Record<string, any>,
   context: VoiceContext
 ): Promise<boolean> => {
-  return intent.action(slots, context);
+  console.log('[CommandRegistry] Executing intent:', {
+    name: intent.name,
+    slots: slots,
+    hasNavigate: !!context.navigate
+  });
+  
+  try {
+    const result = await intent.action(slots, context);
+    console.log('[CommandRegistry] Intent execution result:', result);
+    return result;
+  } catch (error) {
+    console.error('[CommandRegistry] Error executing intent:', error);
+    return false;
+  }
 };

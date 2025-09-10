@@ -14,8 +14,6 @@
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false,
-    "lib": ["ESNext", "WebWorker"], 
-    "types": ["vite/client"]
+    "strictNullChecks": false
   }
 }

@@ -30,7 +30,6 @@ const Checkout = () => {
   const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'confirmation'>('details');
   const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails | null>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(0);
-  const [deliveryDistance, setDeliveryDistance] = useState<number>(0);
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [orderId, setOrderId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,14 +58,12 @@ const Checkout = () => {
       } else if (isAuthenticated && pendingCheckoutDetails) {
         setItems(pendingCheckoutDetails.items || []);
         setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
-        setDeliveryDistance(pendingCheckoutDetails.deliveryDetails?.distance || 0);
         setCurrentStep('payment');
         await mergeGuestCart();
         clearPendingCheckout();
       } else if (!isAuthenticated && pendingCheckoutDetails?.items?.length) {
         setItems(pendingCheckoutDetails.items);
         setDeliveryDetails(pendingCheckoutDetails.deliveryDetails || null);
-        setDeliveryDistance(pendingCheckoutDetails.deliveryDetails?.distance || 0);
       }
     };
 
@@ -99,7 +96,7 @@ const Checkout = () => {
   const total = subtotal + deliveryFee;
 
   /** Step 1: Delivery Details */
-  const handleDetailsSubmit = (details: any) => {
+  const handleDetailsSubmit = (details: DeliveryDetails) => {
     const sanitized: DeliveryDetails = {
       ...details,
       fullName: details.fullName?.trim() || '',
@@ -110,11 +107,10 @@ const Checkout = () => {
       district: details.district?.trim() || '',
       postalCode: details.postalCode?.trim() || '',
       instructions: details.instructions?.trim() || '',
-      distance: details.distance || 0,
     };
 
     setDeliveryDetails(sanitized);
-    setDeliveryDistance(details.distance || 0);
+    setDeliveryFee(0); // placeholder fee
 
     if (!isAuthenticated) {
       savePendingCheckout({ items, deliveryDetails: sanitized });
@@ -124,90 +120,97 @@ const Checkout = () => {
   };
 
   /** Step 2: Payment */
- const handlePaymentComplete = async (paymentData: PaymentDetails) => {
-  if (!deliveryDetails) {
-    alert('Delivery details missing.');
-    return;
-  }
-
-  setIsProcessing(true);
-  setPaymentDetails(paymentData);
-
-  try {
-    // 1. First create the order
-    const orderPayload = {
-      customer_name: deliveryDetails.fullName,
-      customer_email: deliveryDetails.email,
-      customer_phone: deliveryDetails.phone,
-      address: [
-        {
-          street: deliveryDetails.address,
-          city: deliveryDetails.city,
-          district: deliveryDetails.district,
-          postal_code: deliveryDetails.postalCode,
-          coordinates: deliveryDetails.coordinates,
-          instructions: deliveryDetails.instructions,
-        },
-      ],
-      items: items.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        price: Number(item.price),
-      })),
-      subtotal,
-      delivery_fee: deliveryFee,
-      distance_km: deliveryDistance, 
-      total,
-      payment_method: paymentData.method,
-      payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
-    };
-
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await axios.post<OrderResponse>(
-      'https://edumall-main-khkttx.laravel.cloud/api/orders',
-      orderPayload,
-      { headers }
-    );
-
-    const generatedOrderId = response.data.order_id || `EDU${Date.now()}`;
-    setOrderId(generatedOrderId);
-
-    // Clear cart and navigate
-    try {
-      setCurrentStep('confirmation');
-      await clearCart();
-      setItems([]);
-      clearPendingCheckout();
-      toast.success('Order placed successfully! Your cart has been cleared.');
-
-      navigate('/Dashboard?section=orders', { 
-        state: { 
-          orderId: generatedOrderId,
-          orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
-          activeSection: 'orders'
-        },
-        replace: true 
-      });
-    } catch (err) {
-      console.error('Error during cart clearing:', err);
-      toast.warning('Order placed but cart clearing had issues. Please refresh the page.');
-      navigate('/Dashboard?section=orders', { 
-        state: { 
-          orderId: generatedOrderId,
-          orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
-          activeSection: 'orders'
-        },
-        replace: true
-      });
+  const handlePaymentComplete = async (paymentData: PaymentDetails) => {
+    if (!deliveryDetails) {
+      alert('Delivery details missing.');
+      return;
     }
-  } catch (err) {
-    console.error('Order or cart clearing failed:', err);
-    toast.error('There was an issue processing your order. Please contact support.');
-  } finally {
-    setIsProcessing(false);
-  }
-};
 
+    setIsProcessing(true);
+    setPaymentDetails(paymentData);
+
+    try {
+      // 1. First create the order
+      const orderPayload = {
+        customer_name: deliveryDetails.fullName,
+        customer_email: deliveryDetails.email,
+        customer_phone: deliveryDetails.phone,
+        address: [
+          {
+            street: deliveryDetails.address,
+            city: deliveryDetails.city,
+            district: deliveryDetails.district,
+            postal_code: deliveryDetails.postalCode,
+            coordinates: deliveryDetails.coordinates,
+            instructions: deliveryDetails.instructions,
+          },
+        ],
+        items: items.map((item) => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        payment_method: paymentData.method,
+        payment_status: paymentData.status === 'success' ? 'paid' : 'pending',
+      };
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.post<OrderResponse>(
+        'https://edumall-main-khkttx.laravel.cloud/api/orders',
+        orderPayload,
+        { headers }
+      );
+
+      const generatedOrderId = response.data.order_id || `EDU${Date.now()}`;
+      setOrderId(generatedOrderId);
+
+      // Clear the cart and navigate
+      try {
+        // Set order confirmation first
+        setCurrentStep('confirmation');
+        
+        // Clear cart using the context method (which now handles both backend and local)
+        await clearCart();
+        
+        // Clear all local state
+        setItems([]);
+        clearPendingCheckout();
+
+        // Show success message
+        toast.success('Order placed successfully! Your cart has been cleared.');
+        
+        // Single navigation with both URL parameter and state
+        navigate('/Dashboard?section=orders', { 
+          state: { 
+            orderId: generatedOrderId,
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
+            activeSection: 'orders'  // This matches the state variable name in Dashboard
+          },
+          replace: true 
+        });
+      } catch (err) {
+        console.error('Error during cart clearing:', err);
+        toast.warning('Order placed but cart clearing had issues. Please refresh the page.');
+        // Even on error, ensure we navigate to orders section
+        navigate('/Dashboard?section=orders', { 
+          state: { 
+            orderId: generatedOrderId,
+            orderStatus: paymentData.method === 'pay_on_delivery' ? 'pending' : 'paid',
+            activeSection: 'orders'
+          },
+          replace: true
+        });
+      }
+    } catch (err) {
+      console.error('Order or cart clearing failed:', err);
+      toast.error('There was an issue processing your order. Please contact support.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative">
@@ -269,18 +272,12 @@ const Checkout = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                   <DeliveryFormWithMaps
-                     onDetailsSubmit={handleDetailsSubmit}
-                     user={user}
-                     items={items}
-                     deliveryFee={deliveryFee || 0}
-                     setDeliveryFee={setDeliveryFee}
-                     setDeliveryDistance={setDeliveryDistance}
-                     subtotal={subtotal}
-                     defaultValues={deliveryDetails}
-                     openCageApiKey="d4e8d976350b449abd4e4988c364748d"
-                   />
-
+                    <DeliveryFormWithMaps
+                      onDetailsSubmit={handleDetailsSubmit}
+                      user={user}
+                      defaultValues={deliveryDetails}
+                      openCageApiKey="d4e8d976350b449abd4e4988c364748d"
+                    />
                   </motion.div>
                 )}
 

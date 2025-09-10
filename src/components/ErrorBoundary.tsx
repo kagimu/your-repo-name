@@ -1,23 +1,30 @@
+
 import React from 'react';
 
-interface ErrorBoundaryProps {
+interface Props {
   children: React.ReactNode;
-  fallback?: React.ReactNode; // Optional fallback
 }
 
-interface ErrorBoundaryState {
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+interface State {
   hasError: boolean;
   error?: Error;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: undefined };
+    this.state = { hasError: false };
   }
 
-  // Update state when an error is thrown
-  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  public state: State = {
+    hasError: false
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
@@ -26,22 +33,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   public render() {
-    const { hasError, error } = this.state;
-    const { fallback, children } = this.props;
-
-    if (hasError) {
-      // If a custom fallback UI was provided, show it
-      if (fallback) {
-        return fallback;
-      }
-
-      // Otherwise, show the default error UI
+    if (this.state.hasError) {
       return (
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="rounded-lg bg-white p-8 text-center shadow-xl">
-            <h2 className="mb-4 text-2xl font-semibold text-gray-800">
-              Oops! Something went wrong
-            </h2>
+            <h2 className="mb-4 text-2xl font-semibold text-gray-800">Oops! Something went wrong</h2>
             <p className="mb-4 text-gray-600">
               The voice assistant encountered an error. Please try refreshing the page.
             </p>
@@ -51,9 +47,9 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             >
               Refresh Page
             </button>
-            {error && (
+            {this.state.error && (
               <p className="mt-4 text-sm text-red-500">
-                Error: {error.message}
+                Error: {this.state.error.message}
               </p>
             )}
           </div>
@@ -61,9 +57,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       );
     }
 
-    return children;
+
+    return this.props.children;
   }
 }
 
-export default ErrorBoundary;
 export { ErrorBoundary };
+export default ErrorBoundary;

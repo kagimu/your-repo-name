@@ -14,9 +14,15 @@ export const useVoiceMicrophone = ({ onTranscript, onError, isEnabled = true }: 
   // Initialize speech recognition
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!recognition.current && SpeechRecognition) {
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported in this browser');
+      onError?.('Speech recognition is not supported in this browser. Please try using Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (!recognition.current) {
       const instance = new SpeechRecognition();
-      
+
       // Configure for continuous recognition
       instance.continuous = true;
       instance.interimResults = true;
@@ -35,7 +41,7 @@ export const useVoiceMicrophone = ({ onTranscript, onError, isEnabled = true }: 
         }
       }
     };
-  }, []);
+  }, [onError]);
 
   // Set up recognition handlers
   useEffect(() => {
@@ -58,9 +64,27 @@ export const useVoiceMicrophone = ({ onTranscript, onError, isEnabled = true }: 
 
     recognition.current.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      if (event.error === 'not-allowed') {
-        onError?.('Microphone access denied');
-        setIsListening(false);
+      setIsListening(false);
+
+      switch (event.error) {
+        case 'not-allowed':
+          onError?.('Microphone access denied. Please allow microphone access and try again.');
+          break;
+        case 'no-speech':
+          onError?.('No speech detected. Please speak clearly into your microphone.');
+          break;
+        case 'audio-capture':
+          onError?.('Audio capture failed. Please check your microphone and try again.');
+          break;
+        case 'network':
+          onError?.('Network error occurred. Please check your internet connection.');
+          break;
+        case 'service-not-allowed':
+          onError?.('Speech recognition service is not available. Please try again later.');
+          break;
+        default:
+          onError?.(`Speech recognition error: ${event.error}`);
+          break;
       }
     };
 
