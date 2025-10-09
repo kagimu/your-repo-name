@@ -46,7 +46,7 @@ const Login = () => {
       setIsLoggingIn(true);
 
       try {
-        const response = await fetch('https://edumall-main-khkttx.laravel.cloud/api/login', {
+        const response = await fetch('https://backend-main.laravel.cloud/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
