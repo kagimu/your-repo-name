@@ -61,7 +61,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
     try {
       const res = await axios.get<{ cart: ApiCartItem[] }>(
-        'https://edumall-main-khkttx.laravel.cloud/api/cart',
+        'https://backend-main.laravel.cloud/api/cart',
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -136,7 +136,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated && token) {
       try {
         await axios.post(
-          'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
+          'https://backend-main.laravel.cloud/api/cart/add',
           { 
             product_id: product.id, 
             quantity: qty 
@@ -166,7 +166,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated && token) {
       try {
         await axios.delete(
-          `https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${productId}`,
+          `https://backend-main.laravel.cloud/api/cart/remove/${productId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         await fetchAuthCart();
@@ -187,7 +187,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated && token) {
       try {
         await axios.put(
-          `https://edumall-main-khkttx.laravel.cloud/api/cart/${productId}`,
+          `https://backend-main.laravel.cloud/api/cart/${productId}`,
           { quantity },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -215,7 +215,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const currentItems = [...items];
         const deletePromises = currentItems.map(item =>
           axios.delete(
-            `https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${item.id}`,
+            `https://backend-main.laravel.cloud/api/cart/remove/${item.id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           )
         );
@@ -230,7 +230,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const remainingItems = [...items];
           const retryPromises = remainingItems.map(item =>
             axios.delete(
-              `https://edumall-main-khkttx.laravel.cloud/api/cart/remove/${item.id}`,
+              `https://backend-main.laravel.cloud/api/cart/remove/${item.id}`,
               { headers: { Authorization: `Bearer ${token}` } }
             )
           );
@@ -283,7 +283,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       for (const product of guestCart) {
         console.log('[CartContext] Adding product to auth cart:', { id: product.id, quantity: product.quantity });
         await axios.post(
-          'https://edumall-main-khkttx.laravel.cloud/api/cart/add',
+          'https://backend-main.laravel.cloud/api/cart/add',
           { 
             product_id: product.id, 
             quantity: product.quantity

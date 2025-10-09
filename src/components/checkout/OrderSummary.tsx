@@ -44,10 +44,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
     
     // Handle storage paths
     if (imagePath.startsWith('/storage/')) {
-      return `https://edumall-main-khkttx.laravel.cloud${imagePath}`;
+      return `https://backend-main.laravel.cloud${imagePath}`;
     }
     
-    return `https://edumall-main-khkttx.laravel.cloud/storage/${imagePath}`;
+    return `https://backend-main.laravel.cloud/storage/${imagePath}`;
   };
 
   return (

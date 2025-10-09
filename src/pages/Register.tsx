@@ -86,7 +86,7 @@ const Register = () => {
   try {
    
 
-    const response = await fetch('https://edumall-main-khkttx.laravel.cloud/api/register', {
+    const response = await fetch('https://backend-main.laravel.cloud/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

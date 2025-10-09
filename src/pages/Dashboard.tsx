@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
         }
         
         const response = await axios.get<ApiResponse>(
-          'https://edumall-main-khkttx.laravel.cloud/api/orders',
+          'https://backend-main.laravel.cloud/api/orders',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -548,7 +548,7 @@ const Dashboard: React.FC = () => {
       setConfirmingPayOnDelivery(true);
       const token = localStorage.getItem('token');
       const response = await axios.post<ApiResponse>(
-        `https://edumall-main-khkttx.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
+        `https://backend-main.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
         { order_id: orderId },
         {
           headers: {

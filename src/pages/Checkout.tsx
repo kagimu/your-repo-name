@@ -159,7 +159,7 @@ const Checkout = () => {
 
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await axios.post<OrderResponse>(
-        'https://edumall-main-khkttx.laravel.cloud/api/orders',
+        'https://backend-main.laravel.cloud/api/orders',
         orderPayload,
         { headers }
       );
