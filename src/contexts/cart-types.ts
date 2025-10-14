@@ -28,10 +28,13 @@ export interface DeliveryDetails {
   city?: string;
   postalCode?: string;
   instructions?: string;
+  deliveryFee?: number;
+  distanceKm?: number;
 }
 
 export interface PendingCheckoutDetails {
   deliveryDetails?: DeliveryDetails;
+  items?: CartItem[];
 }
 
 export interface CartContextType {
