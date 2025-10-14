@@ -72,6 +72,14 @@ const Cart = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 20;
       let yPos = margin;
+      
+      // Set PDF properties for better compatibility
+      pdf.setProperties({
+        title: 'Edumall Invoice',
+        subject: 'Shopping Cart Invoice',
+        creator: 'Edumall',
+        author: 'Edumall System'
+      });
 
       // Helper function to center text
       const centerText = (text: string, y: number) => {
@@ -172,7 +180,9 @@ const Cart = () => {
       if (shouldDownload) {
         pdf.save('edumall-invoice.pdf');
       } else {
-        const pdfUrl = pdf.output('bloburl');
+        // Create blob and URL with explicit MIME type
+        const pdfBlob = new Blob([pdf.output('blob')], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
         setInvoicePdfUrl(pdfUrl);
         setShowInvoicePreview(true);
       }
@@ -183,11 +193,23 @@ const Cart = () => {
     }
   };
 
-  // Close invoice preview
+  // Close invoice preview and clean up blob URL
   const closeInvoicePreview = () => {
+    if (invoicePdfUrl) {
+      URL.revokeObjectURL(invoicePdfUrl);
+    }
     setShowInvoicePreview(false);
     setInvoicePdfUrl('');
   };
+
+  // Clean up blob URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (invoicePdfUrl) {
+        URL.revokeObjectURL(invoicePdfUrl);
+      }
+    };
+  }, [invoicePdfUrl]);
 
   // Helper function to get correct image URL
   const getImageUrl = (imagePath: string) => {
@@ -210,10 +232,10 @@ const Cart = () => {
     
     // Handle storage paths
     if (imagePath.startsWith('/storage/')) {
-      return `https://edumall-main-khkttx.laravel.cloud${imagePath}`;
+      return `https://backend-main.laravel.cloud${imagePath}`;
     }
     
-    return `https://edumall-main-khkttx.laravel.cloud/storage/${imagePath}`;
+    return `https://backend-main.laravel.cloud/storage/${imagePath}`;
   };
 
   // Debug logged in state and image paths
@@ -488,12 +510,21 @@ const Cart = () => {
 
                       {/* Content with improved responsive height and scroll */}
                       <div className="relative w-full h-[80vh] sm:h-[70vh] md:h-[65vh] lg:h-[60vh] overflow-auto bg-gray-50">
-                        <iframe
-                          src={invoicePdfUrl as string}
-                          className="w-full h-full min-h-[400px] bg-white rounded-b-2xl border-none"
-                          title="Invoice Preview"
-                          style={{ minHeight: '400px', borderRadius: '0 0 1rem 1rem', backgroundColor: '#fff' }}
-                        />
+                        <object
+                          data={invoicePdfUrl}
+                          type="application/pdf"
+                          className="w-full h-full min-h-[400px] bg-white rounded-b-2xl"
+                        >
+                          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                            <p className="text-gray-600 mb-4">Unable to display PDF directly.</p>
+                            <button
+                              onClick={() => window.open(invoicePdfUrl, '_blank')}
+                              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                            >
+                              Open PDF in New Tab
+                            </button>
+                          </div>
+                        </object>
                       </div>
 
                       {/* Close button for mobile at bottom */}
@@ -511,6 +542,7 @@ const Cart = () => {
                 )}
                   {!isAuthenticated ? (
                     <>
+                
                       <motion.div
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.95 }}
@@ -520,21 +552,6 @@ const Cart = () => {
                           variant="primary"
                           size="lg"
                           className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 active:from-teal-700 active:to-blue-800 text-white transition-all duration-300 shadow-md hover:shadow-xl py-3 sm:py-2.5 group"
-                          onClick={() => navigate('/checkout', { state: { items, subtotal, mode: 'guest' } })}
-                        >
-                          Continue as Guest
-                          <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1 group-active:translate-x-1.5" />
-                        </EdumallButton>
-                      </motion.div>
-                      <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full touch-manipulation"
-                      >
-                        <EdumallButton
-                          variant="secondary"
-                          size="lg"
-                          className="w-full border border-gray-200 hover:border-gray-300 active:bg-gray-100 hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md py-3 sm:py-2.5 group"
                           onClick={() => navigate('/login', { state: { from: '/cart' } })}
                         >
                           <LogIn className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110 group-active:scale-105" />

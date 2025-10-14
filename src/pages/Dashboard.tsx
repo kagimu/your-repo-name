@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ReceiptModal } from '@/components/ReceiptModal';
 
 const LabInventory = lazy(() => import(/* webpackChunkName: "lab-inventory" */ './LabInventory'));
 import { jsPDF } from 'jspdf';
@@ -92,7 +94,47 @@ type LucideIcon = React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement> 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Initialize the active section from URL search params or location state
+  const urlParams = new URLSearchParams(location.search);
+  const [activeSection, setActiveSection] = useState<'overview' | 'orders'>('overview');
+
+  // Set active section immediately when component mounts or URL/state changes
+  useEffect(() => {
+    const section = location.state?.activeSection || urlParams.get('section');
+    
+    if (section === 'orders') {
+      setActiveSection('orders');
+      // Ensure URL reflects the active section
+      if (urlParams.get('section') !== 'orders') {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('section', 'orders');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+    
+    // Debug log
+    console.log('Setting active section:', section);
+  }, [location, urlParams]);
+
+  // Effect to handle order redirects
+  useEffect(() => {
+    if (location.state?.orderId) {
+      setActiveSection('orders');
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('section', 'orders');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [location.state]);
+
+  // Debug logging to track section changes
+  useEffect(() => {
+    console.log('Active Section Changed:', activeSection);
+    console.log('Location State:', location.state);
+    console.log('URL Params:', Object.fromEntries(urlParams));
+  }, [activeSection, location.state, urlParams]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -192,8 +234,13 @@ const Dashboard: React.FC = () => {
         setOrdersError(null);
         const token = localStorage.getItem('token');
         
+        // If we're coming from checkout with an orderId, ensure we show orders section
+        if (location.state?.orderId) {
+          setActiveSection('orders');
+        }
+        
         const response = await axios.get<ApiResponse>(
-          'https://edumall-main-khkttx.laravel.cloud/api/orders',
+          'https://backend-main.laravel.cloud/api/orders',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -274,6 +321,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Cleanup receipt URL when component unmounts or modal closes
+  useEffect(() => {
+    return () => {
+      if (receiptUrl) {
+        URL.revokeObjectURL(receiptUrl);
+      }
+    };
+  }, [receiptUrl]);
+
+  // Base64 encoded small Edumall logo as fallback
+  const fallbackLogoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAYAAABzyUiPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAF4WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNy4yLWMwMDAgNzkuMWI2NWE3OWI0LCAyMDIyLzA2LzEzLTIyOjAxOjAxICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgMjQuMCAoTWFjaW50b3NoKSIgeG1wOkNyZWF0ZURhdGU9IjIwMjMtMDgtMjhUMTM6NTA6MjktMDc6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjMtMDgtMjhUMTM6NTA6MjktMDc6MDAiIHhtcDpNb2RpZnlEYXRlPSIyMDIzLTA4LTI4VDEzOjUwOjI5LTA3OjAwIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjQ5ZTczY2Y1LTJiOGEtNDFiYS05ZGQ1LTJiOGE0MWJhOWRkNSIgeG1wTU06RG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjQ5ZTczY2Y1LTJiOGEtNDFiYS05ZGQ1LTJiOGE0MWJhOWRkNSIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOjQ5ZTczY2Y1LTJiOGEtNDFiYS05ZGQ1LTJiOGE0MWJhOWRkNSIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjQ5ZTczY2Y1LTJiOGEtNDFiYS05ZGQ1LTJiOGE0MWJhOWRkNSIgc3RFdnQ6d2hlbj0iMjAyMy0wOC0yOFQxMzo1MDoyOS0wNzowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI0LjAgKE1hY2ludG9zaCkiLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+vwdKRwAAAYBJREFUWIXt179LQlEUB/CvGhQEQUs0NQQN/QENNbQ0NDQ1NDQ0NDQ0NDQ0NDS0NkZENLQ0NDQ0NDQ0NDQ0NDQ0NETQEBFBEARBEATdfueFR6F5z3v+eHo+cMbL5X7vuYfDOfeaCoWCBWEwGNBoNNBsNtFut9Hr9TCZTGBZFhKJBOLxOKLRKMLhMBzHQSqVWty3bcRiMQSDQXi9XqTTaXg8nkU7nU4xHA7R7XbRarXQ6XQwGo0wm81gWRYCgQDS6TQikQhCoRAcxwEAOI4Dv9+/VG9V31qtFr1eD91uF/1+H+PxGPP5HLZtw+fzIZPJIBwOw+/3w3VdpNPppc8jLcsK2rYd93g8SCaTcF0XhmHA7/evvHwwGKDf72MymWA2m8GyLLiui0gkglAoBJ/PB9M0YRgGDMOA67rw+/1Lz1wsFphOp2i32+h0OhiPx5jP57AsC47jIBqNIhaLwXEcGIYB0zRhmiYMw4Bt20vPXKVSqaDRaGA4HGI6ncKyLCSTScTjcYRCIbiui0wmg1wut5Zn/gJ6ulnU05l4lgAAAABJRU5ErkJggg==';
+
   const generateReceiptPDF = (order: Order, shouldDownload: boolean = false) => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -281,18 +340,52 @@ const Dashboard: React.FC = () => {
     const margin = 20;
     let yPos = margin;
 
+    // Set PDF properties for better browser compatibility
+    pdf.setProperties({
+      title: `Edumall Receipt #${order.id}`,
+      subject: 'Order Receipt',
+      creator: 'Edumall',
+      author: 'Edumall System'
+    });
+
+    // Set PDF properties for better browser compatibility
+    pdf.setProperties({
+      title: `Edumall Receipt #${order.id}`,
+      subject: 'Order Receipt',
+      creator: 'Edumall',
+      author: 'Edumall System'
+    });
+
     // Function to center text
     const centerText = (text: string, y: number) => {
       const textWidth = pdf.getStringUnitWidth(text) * pdf.getFontSize() / pdf.internal.scaleFactor;
       return (pageWidth - textWidth) / 2;
     };
 
-    // Add Logo (unchanged)
-    const logoWidth = 40;
-    const logoHeight = 10;
-    const logoX = (pageWidth - logoWidth) / 2;
-    pdf.addImage('/edumall-logo.png', 'PNG', logoX, yPos, logoWidth, logoHeight);
-    yPos += logoHeight + 10;
+    // Add Logo with fallbacks
+    try {
+      const logoWidth = 40;
+      const logoHeight = 10;
+      const logoX = (pageWidth - logoWidth) / 2;
+      
+      // Try to add the fallback base64 logo
+      try {
+        pdf.addImage(fallbackLogoBase64, 'PNG', logoX, yPos, logoWidth, logoHeight);
+      } catch (logoError) {
+        console.warn('Logo loading failed, using text fallback:', logoError);
+        // If even the base64 fails, use text
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        const text = 'EDUMALL';
+        const textWidth = pdf.getStringUnitWidth(text) * pdf.getFontSize() / pdf.internal.scaleFactor;
+        pdf.text(text, (pageWidth - textWidth) / 2, yPos + 8);
+      }
+      yPos += logoHeight + 10;
+    } catch (error) {
+      console.warn('Logo section failed completely:', error);
+      // Skip logo section and continue with the rest of the receipt
+      yPos += 20;
+    }
 
     pdf.setFontSize(12);
     pdf.setTextColor(128, 128, 128);
@@ -431,10 +524,22 @@ const Dashboard: React.FC = () => {
       pdf.save(`receipt-order-${order.id}.pdf`);
       toast.success('Receipt downloaded successfully!');
     } else {
-      const pdfDataUri = pdf.output('datauristring');
-      setReceiptUrl(pdfDataUri);
-      setSelectedOrder(order);
-      setShowReceiptModal(true);
+      try {
+        // Clean up previous URL if it exists
+        if (receiptUrl) {
+          URL.revokeObjectURL(receiptUrl);
+        }
+        // Create blob with explicit MIME type
+        const pdfBlob = new Blob([pdf.output('blob')], { type: 'application/pdf' });
+        // Create URL with explicit MIME type
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        setReceiptUrl(pdfUrl);
+        setSelectedOrder(order);
+        setShowReceiptModal(true);
+      } catch (error) {
+        console.error('Error creating PDF preview:', error);
+        toast.error('Could not generate preview. Try downloading instead.');
+      }
     }
   };
 
@@ -443,7 +548,7 @@ const Dashboard: React.FC = () => {
       setConfirmingPayOnDelivery(true);
       const token = localStorage.getItem('token');
       const response = await axios.post<ApiResponse>(
-        `https://edumall-main-khkttx.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
+        `https://backend-main.laravel.cloud/api/checkout/confirm-pay-on-delivery`,
         { order_id: orderId },
         {
           headers: {
@@ -1595,7 +1700,22 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <CustomCursor />
       <Navbar />
-      <ReceiptPreviewModal />
+      {showReceiptModal && receiptUrl && selectedOrder && (
+        <ReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => {
+            if (receiptUrl) {
+              URL.revokeObjectURL(receiptUrl);
+            }
+            setShowReceiptModal(false);
+            setSelectedOrder(null);
+            setReceiptUrl(null);
+          }}
+          receiptUrl={receiptUrl}
+          order={selectedOrder}
+          onDownload={() => generateReceiptPDF(selectedOrder, true)}
+        />
+      )}
       <main className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div 

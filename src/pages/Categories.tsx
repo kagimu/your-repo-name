@@ -15,6 +15,7 @@ interface ApiProduct {
   id: number;
   name: string;
   category: string;
+  subcategory?: string;
   avatar: string;
   images: string;
   color: string;
@@ -35,6 +36,7 @@ interface Product {
   id: number;
   name: string;
   category: string;
+  subcategory?: string;
   avatar: string;
   images: string[];
   color: string;
@@ -67,15 +69,26 @@ const Categories = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilter);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [purchaseTypeFilter, setPurchaseTypeFilter] = useState<string>('');
   const navigate = useNavigate();
 
+  const categoryMap: Record<string, string[]> = {
+    laboratory: ['apparatus', 'specimen', 'chemical'],
+    textbooks: ['textbook', 'revision guide', 'novel'],
+    stationery: ['scholastic', 'paper'],
+    school_accessories: ['accessories', 'schoolwear'],
+    boardingSchool: ['dormitory', 'toiletries'],
+    sports: ['equipment', 'wear'],
+    food: ['snacks', 'beverages']
+  };
+
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await axios.get<ApiResponse>('https://edumall-main-khkttx.laravel.cloud/api/labs', {
+      const response = await axios.get<ApiResponse>('https://backend-main.laravel.cloud/api/labs', {
         headers: {
           Accept: 'application/json',
         }
@@ -119,11 +132,22 @@ useEffect(() => {
 
 
 
-  // Filter products based on search query and filters
-  const filteredProducts = useMemo(() => {
+ // Filter products based on all criteria
+  // Function to format price with specimen unit
+const formatSpecimenPrice = (product: Product) => {
+  if (product.category?.toLowerCase() === 'laboratory' && 
+      (product.subcategory?.toLowerCase() === 'specimen' || 
+       product.subcategory?.toLowerCase() === 'animals')) {
+    return `USh ${product.price.toLocaleString()} per specimen`;
+  }
+  return `USh ${product.price.toLocaleString()}`;
+};
+
+const filteredProducts = useMemo(() => {
     return products.filter((product: Product) => {
       const name = product.name || '';
       const category = product.category || '';
+      const subcategory = product.subcategory || '';
       const price = product.price || 0;
       const inStock = product.inStock ?? product.in_stock ?? true;
       const purchaseType = product.purchaseType ?? product.purchase_type ?? '';
@@ -133,16 +157,15 @@ useEffect(() => {
         category.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = !selectedCategory || category.toLowerCase() === selectedCategory.toLowerCase();
+      const matchesSubcategory = !selectedSubcategory || subcategory.toLowerCase() === selectedSubcategory.toLowerCase();
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
       const matchesStock = !inStockOnly || inStock;
       const matchesPurchaseType = !purchaseTypeFilter || purchaseType === purchaseTypeFilter;
 
-      return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesPurchaseType;
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesPrice && matchesStock && matchesPurchaseType;
     });
-  }, [searchQuery, selectedCategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
+  }, [searchQuery, selectedCategory, selectedSubcategory, priceRange, inStockOnly, purchaseTypeFilter, products]);
 
-  // Categories for quick filters
-  const categories = ['Specimen', 'Apparatus', 'Chemical'];
 
   return (
     <div className="min-h-screen">
@@ -186,8 +209,8 @@ useEffect(() => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  icon={<Search size={20} className="sm:size-[22px]" />}
-                  className="w-full h-10 sm:h-12 text-sm sm:text-base bg-white/10 border-[#64b3f4] text-white placeholder-gray-300 focus:border-[#64b3f4]"
+                  icon={<Search size={20} className="sm:size-[22px] text-gray-500" />}
+                  className="w-full h-10 sm:h-12 text-sm sm:text-base bg-white border-[#64b3f4] text-gray-900 placeholder-gray-500 focus:border-[#64b3f4]"
                 />
               </div>
               
@@ -232,32 +255,135 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Quick Filters - Horizontal scrollable on mobile */}
-            <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 sm:gap-3 pb-2 min-w-min">
-                <button
-                  onClick={() => setSelectedCategory('')}
-                  className={`px-4 sm:px-6 py-1 sm:py-3 rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-colors ${
-                    !selectedCategory 
-                      ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-md sm:shadow-lg shadow-purple-500/25' 
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  All
-                </button>
-                {categories.map(category => (
+            {/* Category & Subcategory Filters */}
+            <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0">
+              {/* Mobile Categories Section */}
+              <div className="sm:hidden">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium whitespace-nowrap transition-colors ${
-                      selectedCategory === category 
-                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-md sm:shadow-lg shadow-purple-500/25' 
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                    className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                      !selectedCategory 
+                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                        : 'bg-gray-50 text-gray-700 border border-gray-200'
                     }`}
                   >
-                    {category}
+                    All Categories
                   </button>
-                ))}
+                  {Object.keys(categoryMap).map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => { 
+                        setSelectedCategory(cat === selectedCategory ? '' : cat);
+                        setSelectedSubcategory('');
+                      }}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                        selectedCategory === cat 
+                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                          : 'bg-gray-50 text-gray-700 border border-gray-200'
+                      }`}
+                    >
+                      {cat.replace(/_/g, ' ').split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')}
+                    </button>
+                  ))}
+              </div>
+
+              </div>
+              
+              {/* Mobile Subcategories Section */}
+              {selectedCategory && (
+                <div className="sm:hidden mt-6 bg-gray-50/80 rounded-xl p-4">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">
+                    {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')} Subcategories
+                  </h3>
+                  <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+                    <div className="flex gap-2 pb-1">
+                      {categoryMap[selectedCategory].map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(sub)}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                            selectedSubcategory === sub 
+                              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
+                              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop View */}
+              <div className="hidden sm:block">
+                {/* Categories Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
+                  <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2">
+                    <button
+                      onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                        !selectedCategory 
+                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                          : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      All Categories
+                    </button>
+
+                    {Object.keys(categoryMap).map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => { 
+                          setSelectedCategory(cat === selectedCategory ? '' : cat);
+                          setSelectedSubcategory('');
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                          selectedCategory === cat 
+                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                            : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {cat.replace(/_/g, ' ').split(' ').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subcategories Section */}
+                {selectedCategory && (
+                  <div className="bg-gray-50/80 rounded-xl p-4 mb-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-3">
+                      {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')} Subcategories
+                    </h3>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                      {categoryMap[selectedCategory].map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(sub)}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                            selectedSubcategory === sub 
+                              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
+                              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

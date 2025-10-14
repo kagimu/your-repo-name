@@ -5,7 +5,7 @@ import { EdumallButton } from '../ui/EdumallButton';
 import { useMobile } from '@/hooks/use-mobile';
 import { MobileHeroBackground } from './MobileHeroBackground';
 import HeroScene from '../3d/HeroScene';
-import { ErrorBoundary } from '../ErrorBoundary';
+import ErrorBoundary from '../ErrorBoundary';
 
 export const HeroSection: React.FC = () => {
   const navigate = useNavigate();

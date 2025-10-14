@@ -4,6 +4,7 @@ import { AIProviderManager } from '../services/aiProviderManager';
 const aiManager = new AIProviderManager();
 
 interface UseAIResult {
+  generateResponse: (message: string, context: string[]) => Promise<string>;
   generateText: (prompt: string) => Promise<string>;
   generateStructuredResponse: <T>(prompt: string) => Promise<T>;
   isLoading: boolean;
@@ -46,8 +47,37 @@ export const useAI = (): UseAIResult => {
     }
   }, []);
 
+  const generateResponse = useCallback(async (message: string, context: string[]): Promise<string> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const prompt = `
+Previous conversation:
+${context.join('\n')}
+
+User: ${message}
+
+Respond in a helpful and natural way, keeping in mind this is an educational and lab equipment store. Reference the context of previous messages when appropriate.`;
+
+      const response = await aiManager.generateText(prompt);
+      return response;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+      setError(err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     generateText,
+    generateStructuredResponse,
+    generateResponse,
+    isLoading,
+    error
+  };
     generateStructuredResponse,
     isLoading,
     error,

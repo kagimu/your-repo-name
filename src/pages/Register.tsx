@@ -6,6 +6,7 @@ import { EdumallButton } from '@/components/ui/EdumallButton';
 import { EdumallInput } from '@/components/ui/EdumallInput';
 import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 import { PreLoader } from '@/components/ui/PreLoader';
 
 const Register = () => {
@@ -14,6 +15,7 @@ const Register = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
+  const { mergeGuestCart } = useCart();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -84,7 +86,7 @@ const Register = () => {
   try {
    
 
-    const response = await fetch('https://edumall-main-khkttx.laravel.cloud/api/register', {
+    const response = await fetch('https://backend-main.laravel.cloud/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -125,6 +127,9 @@ const Register = () => {
       firstName: result.user.firstName,
       lastName: result.user.lastName,
     }, result.token); // ← pass token here too
+
+    // Merge guest cart with authenticated cart
+    await mergeGuestCart();
 
     navigate('/categories');
   } catch (error) {

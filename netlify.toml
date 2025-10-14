@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && NODE_ENV=production npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [[redirects]]
@@ -7,12 +7,26 @@
   to = "/index.html"
   status = 200
 
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
 
-# Opt out of asset optimization since we're handling it in Vite
+# Enable processing for better performance
 [build.processing]
-  skip_processing = true
+  skip_processing = false
 
 # Configure secrets scanning
 [build.secrets]

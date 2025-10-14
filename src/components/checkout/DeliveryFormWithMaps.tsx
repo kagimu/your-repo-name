@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Navigation, Check } from 'lucide-react';
+import { MapPin, Navigation, Check, Ruler, CreditCard } from 'lucide-react';
 import { EdumallButton } from '../ui/EdumallButton';
 import { EdumallInput } from '../ui/EdumallInput';
 import { OpenCageAutocomplete } from './OpenStreetMapAutocomplete';
-
 
 interface Coordinates {
   lat: number;
@@ -22,13 +21,15 @@ interface DeliveryFormData {
   instructions: string;
   useCurrentLocation: boolean;
   coordinates: Coordinates;
+  distanceKm?: number;
+  deliveryFee?: number;
 }
 
 interface DeliveryFormProps {
   user?: any;
   defaultValues?: Partial<DeliveryFormData>;
   onDetailsSubmit: (details: DeliveryFormData) => void;
-  openCageApiKey: string; // API key passed as prop
+  openCageApiKey: string;
 }
 
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
@@ -37,8 +38,14 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   onDetailsSubmit,
   openCageApiKey,
 }) => {
+  const MAPEERA_BUILDING = { lat: 0.3156, lng: 32.5822 }; // Kampala pickup point
+
   const [formData, setFormData] = useState<DeliveryFormData>({
-    fullName: defaultValues?.fullName || (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') || user?.name || '',
+    fullName:
+      defaultValues?.fullName ||
+      (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') ||
+      user?.name ||
+      '',
     email: defaultValues?.email || user?.email || '',
     phone: defaultValues?.phone || '',
     address: defaultValues?.address || '',
@@ -50,12 +57,60 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     coordinates: defaultValues?.coordinates || { lat: 0.3476, lng: 32.5825 },
   });
 
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // Handle selection from autocomplete
+  // 🔢 Haversine formula for distance
+  const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => {
+    const R = 6371; // Earth radius in km
+    const dLat = ((coord2.lat - coord1.lat) * Math.PI) / 180;
+    const dLng = ((coord2.lng - coord1.lng) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((coord1.lat * Math.PI) / 180) *
+        Math.cos((coord2.lat * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // 💸 Uber-style delivery fee calculation
+  const calculateDeliveryFee = (distanceKm: number): number => {
+    const BASE_FARE = 3500; // starting
+    const PER_KM_RATE = 1200; // per km
+    const MIN_FARE = 6000; // minimum total
+    const SERVICE_FEE_RATE = 0.05; // 5%
+
+    let total = BASE_FARE + distanceKm * PER_KM_RATE;
+    if (total < MIN_FARE) total = MIN_FARE;
+
+    total = total + total * SERVICE_FEE_RATE; // add service fee
+    return Math.round(total);
+  };
+
+  // 🧮 Auto-update distance + fee when coordinates change
+  useEffect(() => {
+    if (formData.coordinates?.lat && formData.coordinates?.lng) {
+      const dist = calculateDistance(MAPEERA_BUILDING, formData.coordinates);
+      const roundedDist = parseFloat(dist.toFixed(2));
+      const fee = calculateDeliveryFee(roundedDist);
+
+      setDistanceKm(roundedDist);
+      setDeliveryFee(fee);
+
+      setFormData((prev) => ({
+        ...prev,
+        distanceKm: roundedDist,
+        deliveryFee: fee,
+      }));
+    }
+  }, [formData.coordinates]);
+
+  // 📍 Handle address select
   const handleAddressSelect = (locationData: { name: string; coordinates: Coordinates }) => {
-    const parts = locationData.name.split(',').map(p => p.trim());
-    setFormData(prev => ({
+    const parts = locationData.name.split(',').map((p) => p.trim());
+    setFormData((prev) => ({
       ...prev,
       address: locationData.name,
       coordinates: locationData.coordinates,
@@ -65,7 +120,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
     }));
   };
 
-  // Get current location
+  // 🌍 Get current location
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
 
@@ -91,19 +146,24 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
 
           if (result) {
             const components = result.components || {};
-            const formatted = result.formatted || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-            setFormData(prev => ({
+            const formatted =
+              result.formatted || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            setFormData((prev) => ({
               ...prev,
               coordinates: { lat: latitude, lng: longitude },
               useCurrentLocation: true,
               address: formatted,
               city: components.city || components.town || 'Kampala',
-              district: components.county || components.state_district || components.state || 'Central',
+              district:
+                components.county ||
+                components.state_district ||
+                components.state ||
+                'Central',
             }));
           }
         } catch (err) {
           console.error('Error fetching location:', err);
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             coordinates: { lat: latitude, lng: longitude },
             useCurrentLocation: true,
@@ -113,7 +173,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
           setIsLoadingLocation(false);
         }
       },
-      err => {
+      (err) => {
         console.error('Geolocation error:', err);
         alert('Could not get your location. Please enable location services.');
         setIsLoadingLocation(false);
@@ -141,7 +201,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
               <EdumallInput
                 label="Full Name"
                 value={formData.fullName}
-                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
                 required
               />
               {user?.firstName && user?.lastName && (
@@ -155,7 +215,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
               label="Email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
               required
             />
           </div>
@@ -164,7 +224,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             label="Phone Number"
             type="tel"
             value={formData.phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
             required
           />
 
@@ -196,20 +256,33 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-           
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Delivery Instructions (Optional)
-              </label>
-              <textarea
-                value={formData.instructions}
-                onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
-                placeholder="Any special delivery instructions..."
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all duration-300"
-              />
+          {/* Distance & Delivery Fee Display */}
+          {distanceKm && (
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mt-4 space-y-2">
+              <div className="flex items-center text-teal-700 font-medium">
+                <Ruler className="mr-2" size={18} />
+                Distance from Pickup: {distanceKm} km
+              </div>
+              {deliveryFee && (
+                <div className="flex items-center text-green-700 font-semibold">
+                  <CreditCard className="mr-2" size={18} />
+                  Estimated Delivery Fee: {deliveryFee.toLocaleString()} UGX
+                </div>
+              )}
             </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Delivery Instructions (Optional)
+            </label>
+            <textarea
+              value={formData.instructions}
+              onChange={(e) => setFormData((prev) => ({ ...prev, instructions: e.target.value }))}
+              placeholder="Any special delivery instructions..."
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all duration-300"
+            />
           </div>
 
           <EdumallButton type="submit" variant="primary" size="lg" className="w-full">
