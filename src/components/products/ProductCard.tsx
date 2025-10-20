@@ -90,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex gap-3 sm:gap-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 overflow-hidden flex-shrink-0">
+            <div className="w-16 h-14 sm:w-20 sm:h-20 overflow-hidden flex-shrink-0">
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
