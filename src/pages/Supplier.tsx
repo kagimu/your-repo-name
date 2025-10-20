@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Package, DollarSign, TrendingUp, AlertTriangle, Eye, User, Lock } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 
 const Supplier = () => {
