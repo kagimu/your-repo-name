@@ -34,7 +34,6 @@ import {
 import { Navbar } from '@/components/layout/Navbar';
 import LabMenuItem from '@/components/layout/LabMenuItem';
 import { toast } from 'react-toastify';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -1698,7 +1697,6 @@ const Dashboard: React.FC = () => {
   // Main render
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <CustomCursor />
       <Navbar />
       {showReceiptModal && receiptUrl && selectedOrder && (
         <ReceiptModal

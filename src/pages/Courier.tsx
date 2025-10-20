@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout/Navbar';
 import { CourierLogin } from '@/components/courier/CourierLogin';
 import { CourierDashboard } from '@/components/courier/CourierDashboard';
@@ -22,7 +21,6 @@ const Courier = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <CustomCursor />
       <Navbar />
       
       <main className="pt-20 px-4 sm:px-6 lg:px-8">

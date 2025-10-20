@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -161,7 +160,6 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative">
-      <CustomCursor />
       <Navbar />
 
       <main className="pt-28 px-4 sm:px-6 lg:px-8 pb-32 md:pb-8">

@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { EdumallInput } from '@/components/ui/EdumallInput';
-import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { PreLoader } from '@/components/ui/PreLoader';
@@ -557,7 +556,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
-      <CustomCursor />
+
       <PreLoader isLoading={isRegistering} message="Creating your account..." />
       
       <motion.div

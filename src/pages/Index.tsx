@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout/Navbar';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { Helmet } from 'react-helmet-async';
@@ -40,7 +39,6 @@ const Index = () => {
       </Helmet>
 
      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <CustomCursor />
       <Navbar />
       <main>
         <HeroSection />

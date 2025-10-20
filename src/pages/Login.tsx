@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
-import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
 import { PreLoader } from '@/components/ui/PreLoader';
 import { useCart } from '@/hooks/useCart';
@@ -141,7 +140,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <CustomCursor />
       <PreLoader isLoading={isLoggingIn} message="Signing you in..." type="auth" />
       
       <motion.div
