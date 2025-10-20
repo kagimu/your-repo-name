@@ -169,7 +169,6 @@ const filteredProducts = useMemo(() => {
 
   return (
     <div className="min-h-screen">
-      <CustomCursor />
       <Navbar/>
       
       <main className="pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8">

@@ -117,8 +117,8 @@
 
   body {
     @apply bg-background text-foreground font-poppins;
-    cursor: none;/* We'll use custom cursor */
-    
+    cursor: auto;/* Default cursor restored */
+
   }
   
   html {

@@ -40,7 +40,6 @@ const Index = () => {
       </Helmet>
 
      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <CustomCursor />
       <Navbar />
       <main>
         <HeroSection />
