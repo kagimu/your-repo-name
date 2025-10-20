@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { EdumallInput } from '@/components/ui/EdumallInput';
-import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { PreLoader } from '@/components/ui/PreLoader';

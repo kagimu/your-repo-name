@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout/Navbar';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { Helmet } from 'react-helmet-async';

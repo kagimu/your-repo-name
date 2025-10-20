@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, LogIn, FileText, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -280,7 +279,6 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        <CustomCursor />
         <Navbar />
         <main className="pt-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center py-16">
@@ -306,7 +304,6 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <CustomCursor />
       <Navbar />
       <main className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">

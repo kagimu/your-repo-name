@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';

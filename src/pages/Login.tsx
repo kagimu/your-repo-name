@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EdumallButton } from '@/components/ui/EdumallButton';
-import { CustomCursor } from '@/components/CustomCursor';
 import { useAuth } from '@/hooks/useAuth';
 import { PreLoader } from '@/components/ui/PreLoader';
 import { useCart } from '@/hooks/useCart';

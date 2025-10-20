@@ -7,7 +7,6 @@ import { Navbar } from '@/components/layout/Navbar';
 import { EdumallInput } from '@/components/ui/EdumallInput';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductCard } from '@/components/products/ProductCard';
-import { CustomCursor } from '@/components/CustomCursor';
 import axios from 'axios';
 
 // Type definitions for the API response and product structure

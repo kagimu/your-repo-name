@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout/Navbar';
 import { CourierLogin } from '@/components/courier/CourierLogin';
 import { CourierDashboard } from '@/components/courier/CourierDashboard';

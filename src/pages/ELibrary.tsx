@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Filter, Search, Clock, Eye, ArrowRight, Star, Download, Bookmark } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 
 const ELibrary = () => {
