@@ -3,12 +3,9 @@ import React from 'react';
 
 interface Props {
   children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-interface State {
-  hasError: boolean;
-  error?: Error;
-}
 interface State {
   hasError: boolean;
   error?: Error;
@@ -34,6 +31,9 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
       return (
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="rounded-lg bg-white p-8 text-center shadow-xl">

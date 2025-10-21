@@ -170,7 +170,7 @@ const filteredProducts = useMemo(() => {
     <div className="min-h-screen">
       <Navbar/>
       
-      <main className="pt-10 sm:pt-20 px-4 sm:px-6 lg:px-8">
+      <main className="pt-10 md:pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex sm:mb-2" aria-label="Breadcrumb">
@@ -179,9 +179,9 @@ const filteredProducts = useMemo(() => {
             <motion.div   
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-1"
+              className="mb-1 md:pt-10"
             >
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl md:mt-10 md:text-xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
                 Educational Supplies
               </h1>
             
@@ -199,11 +199,11 @@ const filteredProducts = useMemo(() => {
             <div className="mt-1 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0">
               {/* Mobile Categories Section */}
               <div className="sm:hidden">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Categories</h3>
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
                     onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                    className={`px-1 py-2 rounded-xl text-sm xl:font-medium flex items-center justify-center ${
                       !selectedCategory 
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
                         : 'bg-gray-50 text-gray-700 border border-gray-200'
@@ -218,7 +218,7 @@ const filteredProducts = useMemo(() => {
                         setSelectedCategory(cat === selectedCategory ? '' : cat);
                         setSelectedSubcategory('');
                       }}
-                      className={`px-3 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center ${
+                      className={`px-1 py-1 rounded-xl text-sm font-medium flex items-center justify-center ${
                         selectedCategory === cat 
                           ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
                           : 'bg-gray-50 text-gray-700 border border-gray-200'
@@ -242,12 +242,12 @@ const filteredProducts = useMemo(() => {
                     ).join(' ')} Subcategories
                   </h3>
                   <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
-                    <div className="flex gap-2 pb-1">
+                    <div className="flex gap-2 mb-1">
                       {categoryMap[selectedCategory].map(sub => (
                         <button
                           key={sub}
                           onClick={() => setSelectedSubcategory(sub)}
-                          className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                          className={`px-1 py-1 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                             selectedSubcategory === sub 
                               ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
                               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'

@@ -90,19 +90,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
           className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 hover:shadow-xl transition-all duration-300"
         >
           <div className="flex gap-3 sm:gap-6">
-            <div className="w-16 h-14 sm:w-20 sm:h-20 overflow-hidden flex-shrink-0">
+            <div className="w-16 h-14 sm:w-20 sm:h-10 overflow-hidden">
               <img 
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-10 object-contain"
               />
             </div>
             
             <div className="flex-1 min-w-0">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-1">{product.name}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2">{product.category}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-1">{product.category}</p>
               
-                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-1">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -113,7 +113,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                   ))}
                 </div>
                 <span className="text-[10px] sm:text-xs text-gray-600">({product.rating})</span>
-              </div>              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              </div>              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div>
                   <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-lg sm:text-2xl font-bold text-gray-900">{formatPrice(product.price)}</span>
