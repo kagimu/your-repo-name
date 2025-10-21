@@ -231,4 +231,34 @@
       animation-duration: 0.01ms !important;
     }
   }
+  /* 👇 Tiny phone override (below 360px wide) */
+/* ========= Tiny Screen (≤360px) Layout Override ========= */
+@media (max-width: 360px) {
+  /* Force 1 column on ultra-small phones */
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Compact the product card */
+  .product-card {
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .product-card img {
+    padding: 0.25rem !important;
+  }
+
+  .product-card h3 {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+
+  /* Stack action buttons vertically on tiny devices */
+  .product-card .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
 }

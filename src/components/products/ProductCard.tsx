@@ -102,12 +102,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-1">{product.name}</h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-1">{product.category}</p>
               
-                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-1">
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={10}
+                      size={8}
                       className={`${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'}`}
                     />
                   ))}
@@ -117,9 +117,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-lg sm:text-2xl font-bold text-gray-900">{formatPrice(product.price)}</span>
+                    <span className="text-lg sm:text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
                     {product.purchaseType === 'hire' && (
-                      <span className="text-xs sm:text-sm text-gray-600">per day</span>
+                      <span className="text-xs sm:text-xs text-gray-600">per day</span>
                     )}
                   </div>
                   <p className={`text-xs sm:text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
@@ -165,10 +165,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
 
   return (
     <>
-      <motion.div
+     <motion.div
         whileHover={{ y: -2, scale: 1.005 }}
-        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full"
+         transition={{ type: "spring", stiffness: 300 }}
+        className="product-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full"
       >
+
         {/* Product Image */}
         <div className="w-full pt-[75%] relative">
           <img 

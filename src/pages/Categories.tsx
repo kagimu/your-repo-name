@@ -265,7 +265,7 @@ const filteredProducts = useMemo(() => {
               <div className="hidden sm:block">
                 {/* Categories Section */}
                 <div className="flex gap-10 mb-6">
-                  <div className="flex overflow-x-auto scrollbar-hide gap-2">
+                  <div className="flex overflow-x-auto overflow-y-auto scrollbar-hide gap-2 ">
                     <button
                       onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
                       className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
@@ -537,7 +537,7 @@ const filteredProducts = useMemo(() => {
                 transition={{ delay: 0.3 }}
                 className={`grid gap-4 sm:gap-6 ${
                   viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                     : 'grid-cols-1'
                 }`}
                 role="list"
