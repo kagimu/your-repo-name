@@ -168,7 +168,7 @@ export const HeroSection: React.FC = () => {
           className="flex-1 flex flex-wrap justify-center gap-4"
         >
           {filteredProducts
-            .filter((p) => [9, 26, 31, 34].includes(p.id))
+            .filter((p) => [26, 27, 28, 29].includes(p.id))
             .map((product) => (
               <HeroProductCard key={product.id} product={product} />
             ))}
