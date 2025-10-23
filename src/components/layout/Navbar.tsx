@@ -393,7 +393,7 @@ export const Navbar = () => {
           </div>
 
           {/* Mobile Menu */}
-          <motion.div initial={false} animate={{ height: isMenuOpen ? 'auto' : 0 }} className="md:hidden overflow-hidden">
+          <motion.div initial={false} animate={{ height: isMenuOpen ? 'auto' : 0 }} className="md:hidden overflow-hidden rounded-xl bg-white/20 backdrop-blur-lg">
             <div className="py-4 space-y-2 border-t border-gray-200">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -414,47 +414,7 @@ export const Navbar = () => {
                 );
               })}
 
-              {/* Mobile-only actions */}
-              <div className="pt-4 border-t border-gray-200 space-y-2">
-                <div className="px-4">
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  />
-                </div>
-
-                {isAuthenticated && (
-                  <>
-                    {/* Show dashboard button in mobile menu */}
-                    {(user?.accountType === 'institution' || user?.accountType === 'individual') && (
-                      <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                        <button className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl w-full">
-                          <LayoutDashboard size={18} />
-                          <span className="font-medium">Dashboard</span>
-                        </button>
-                      </Link>
-                    )}
-                    {/* Show courier dashboard in mobile menu */}
-                    {user?.accountType === 'courier' && (
-                      <Link to="/courier" onClick={() => setIsMenuOpen(false)}>
-                        <button className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl w-full">
-                          <LayoutDashboard size={18} />
-                          <span className="font-medium">Courier Dashboard</span>
-                        </button>
-                      </Link>
-                    )}
-                    {/* Logout button */}
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl w-full"
-                    >
-                      <User size={18} />
-                      <span className="font-medium">Logout</span>
-                    </button>
-                  </>
-                )}
-              </div>
+        
             </div>
           </motion.div>
         </div>
