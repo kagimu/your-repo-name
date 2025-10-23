@@ -160,16 +160,7 @@ export const HeroSection: React.FC = () => {
             Explore thousands of lab materials, textbooks, and school essentials at unbeatable prices.
           </p>
 
-          {/* Search Input */}
-          <div className="mt-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={onSearchChange}
-              placeholder="Search products..."
-              className="w-full md:w-80 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            />
-          </div>
+        
 
           <div className="mt-6 flex gap-4">
             <EdumallButton

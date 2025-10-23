@@ -6,6 +6,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { PreLoader } from '@/components/ui/PreLoader';
+import axios from 'axios';
+import debounce from 'lodash.debounce';
+
 
 interface NavItem {
   path: string;
@@ -31,6 +34,9 @@ export const Navbar = () => {
 
   // Pending payment alert state, only relevant if user is authenticated
   const [hasPendingPayment, setHasPendingPayment] = useState(false);
+
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<{id: number, name: string}[]>([]);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -137,6 +143,24 @@ export const Navbar = () => {
     ];
   };
 
+  const fetchSuggestions = debounce(async (query: string) => {
+      if (!query || query.length < 2) {
+        setDynamicSuggestions([]);
+        return;
+      }
+      try {
+        const res = await axios.get('https://backend-main.laravel.cloud/api/labs', {
+          params: { search: query },
+        });
+        const suggestions = res.data.data?.slice(0, 5) || []; // top 5 suggestions
+        setDynamicSuggestions(suggestions);
+      } catch (err) {
+        console.error('Error fetching search suggestions:', err);
+        setDynamicSuggestions([]);
+      }
+    }, 300);
+
+
   return (
     <>
       <motion.nav
@@ -169,12 +193,12 @@ export const Navbar = () => {
                 const isProducts = item.path === '/categories' && location.pathname.startsWith('/categories');
                 
                 // Skip courier/supplier specific items for regular users
-                if (item.requiredType && (!user || user.type !== item.requiredType)) {
+                if (item.requiredType && (!user || user.accountType !== item.requiredType)) {
                   return null;
                 }
 
                 // Skip regular user items for couriers/suppliers
-                if (!item.requiredType && user?.type && ['courier', 'supplier'].includes(user.type)) {
+                if (!item.requiredType && user?.accountType && ['courier', 'supplier'].includes(user.accountType)) {
                   return null;
                 }
 
@@ -232,7 +256,11 @@ export const Navbar = () => {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      fetchSuggestions(e.target.value); // fetch from API
+                      setShowSearchSuggestions(true);
+                    }}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
                   onKeyDown={(e) => {
@@ -248,7 +276,7 @@ export const Navbar = () => {
                   <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </motion.div>
 
-                {showSearchSuggestions && isAuthenticated && (
+                {showSearchSuggestions && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -256,15 +284,21 @@ export const Navbar = () => {
                   >
                     <div className="p-2">
                       <p className="text-xs text-gray-500 mb-2 px-2">Suggested for you:</p>
-                      {getSearchSuggestions().map((suggestion, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg text-sm text-gray-700 transition-colors"
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
+                      {dynamicSuggestions.length > 0 ? (
+                        dynamicSuggestions.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => handleSuggestionClick(p.name)}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg text-sm text-gray-700 transition-colors"
+                          >
+                            {p.name}
+                          </button>
+                        ))
+                      ) : searchQuery.length >= 2 ? (
+                        <p className="text-xs text-gray-500 px-2">No results found</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 px-2">Type at least 2 characters to search</p>
+                      )}
                     </div>
                   </motion.div>
                 )}

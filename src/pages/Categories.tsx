@@ -65,6 +65,14 @@ const Categories = () => {
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+
+  // Update search query when URL params change
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam !== null) {
+      setSearchQuery(searchParam);
+    }
+  }, [searchParams]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilter);
@@ -153,7 +161,11 @@ const filteredProducts = useMemo(() => {
 
       const matchesSearch =
         name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.toLowerCase().includes(searchQuery.toLowerCase());
+        category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        subcategory?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.desc?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.condition?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        purchaseType?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = !selectedCategory || category.toLowerCase() === selectedCategory.toLowerCase();
       const matchesSubcategory = !selectedSubcategory || subcategory.toLowerCase() === selectedSubcategory.toLowerCase();
