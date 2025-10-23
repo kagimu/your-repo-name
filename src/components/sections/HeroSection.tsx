@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; 
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -24,10 +24,11 @@ const HeroProductCard: React.FC<{ product: Product }> = React.memo(({ product })
     className="bg-white rounded-2xl p-4 shadow-xl w-40 text-center border border-gray-100"
   >
     <img
-      src={product.avatar_url || '/placeholder.png'}
+      src={product.avatar_url || '/placeholder.webp'}
       alt={product.name}
       className="w-30 h-28 object-contain mx-auto rounded-xl mb-3"
       loading="lazy"
+      decoding="async"
     />
     <p className="text-sm font-medium text-gray-800">{product.name}</p>
     <p className="text-cyan-500 text-sm font-semibold mt-1">
@@ -52,14 +53,35 @@ export const HeroSection: React.FC = () => {
     food: ['snacks', 'beverages'],
   };
 
-  const categoryImages: Record<string, string> = {
-    laboratory: 'https://i.imghippo.com/files/jEtB4760plw.jpg',
-    textbooks: 'https://i.imghippo.com/files/uSx6707TIU.jpg',
-    stationery: 'https://i.imghippo.com/files/RxwP4716QuM.jpg',
-    school_accessories: 'https://i.imghippo.com/files/WMS3666Nv.jpg',
-    boardingSchool: 'https://i.imghippo.com/files/Dzst5740Rnc.jpg',
-    sports: 'https://i.imghippo.com/files/RHVb4642o.jpg',
-    food: 'https://i.imghippo.com/files/dheR7269PDY.jpg',
+  const categoryImages: Record<string, { webp: string; fallback: string }> = {
+    laboratory: {
+      webp: '/images/categories/lab.webp',
+      fallback: 'https://i.imghippo.com/files/jEtB4760plw.jpg',
+    },
+    textbooks: {
+      webp: '/images/categories/books.webp',
+      fallback: 'https://i.imghippo.com/files/uSx6707TIU.jpg',
+    },
+    stationery: {
+      webp: '/images/categories/stationary.webp',
+      fallback: 'https://i.imghippo.com/files/RxwP4716QuM.jpg',
+    },
+    school_accessories: {
+      webp: '/images/categories/school.webp',
+      fallback: 'https://i.imghippo.com/files/WMS3666Nv.jpg',
+    },
+    boardingSchool: {
+      webp: '/images/categories/boarding.webp',
+      fallback: 'https://i.imghippo.com/files/Dzst5740Rnc.jpg',
+    },
+    sports: {
+      webp: '/images/categories/sports.webp',
+      fallback: 'https://i.imghippo.com/files/RHVb4642o.jpg',
+    },
+    food: {
+      webp: '/images/categories/food.webp',
+      fallback: 'https://i.imghippo.com/files/dheR7269PDY.jpg',
+    },
   };
 
   useEffect(() => {
@@ -190,12 +212,16 @@ export const HeroSection: React.FC = () => {
             onClick={() => navigate(`/categories?filter=${cat}`)}
             className="relative group rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition cursor-pointer justify-items-center"
           >
-            <img
-              src={categoryImages[cat] || '/images/default-bg.jpg'}
-              alt={cat}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
+            <picture className="absolute inset-0 w-full h-full">
+              <source srcSet={categoryImages[cat]?.webp} type="image/webp" />
+              <img
+                src={categoryImages[cat]?.fallback || '/images/categories/school.jpg'}
+                alt={cat}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all" />
 
