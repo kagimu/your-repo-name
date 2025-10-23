@@ -179,9 +179,9 @@ const filteredProducts = useMemo(() => {
             <motion.div   
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-1 md:pt-10"
+              className="mb-1 md:pt-2"
             >
-              <h1 className="text-2xl md:mt-10 md:text-xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl md:mt-2 md:text-xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
                 Educational Supplies
               </h1>
             
@@ -193,17 +193,16 @@ const filteredProducts = useMemo(() => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0  }}
             transition={{ delay: 0.1 }}
-            className="bg-white backdrop-blur-xl rounded-xl sm:rounded-2xl p-1 sm:p-6 mb-4 sm:mb-8 border border-[#64b3f4] shadow-xl"
+            className="bg-white backdrop-blur-xl rounded-xl sm:rounded-2xl sm:p-6 mb-4 sm:mb-8 border border-[#64b3f4] shadow-xl"
           >
             {/* Category & Subcategory Filters */}
-            <div className="mt-1 sm:mt-6 -mx-3 sm:-mx-0 px-3 sm:px-0">
+            <div className="mt-1 sm:mt-6 -mx-2 sm:-mx-0 px-1 sm:px-0">
               {/* Mobile Categories Section */}
               <div className="sm:hidden">
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Categories</h3>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
                     onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                    className={`px-1 py-2 rounded-xl text-sm xl:font-medium flex items-center justify-center ${
+                    className={`px-1 py-1 rounded-xl text-sm xl:font-medium flex items-center justify-center ${
                       !selectedCategory 
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
                         : 'bg-gray-50 text-gray-700 border border-gray-200'
@@ -261,69 +260,107 @@ const filteredProducts = useMemo(() => {
                 </div>
               )}
 
-              {/* Desktop View */}
-              <div className="hidden sm:block">
-                {/* Categories Section */}
-                <div className="flex gap-10 mb-6">
-                  <div className="flex overflow-x-auto overflow-y-auto scrollbar-hide gap-2 ">
-                    <button
-                      onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                        !selectedCategory 
-                          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                          : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                      }`}
-                    >
-                      All Categories
-                    </button>
+              <div className="flex justify-between gap-4">
+                   {/* Desktop View */}
+                    <div className="hidden sm:block">
+                      
+                      {/* Categories Section */}
+                      <div className="flex gap-10 mb-6">
+                        <div className="flex overflow-x-auto overflow-y-auto scrollbar-hide gap-2 ">
+                          <button
+                            onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); }}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                              !selectedCategory 
+                                ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                                : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            All Categories
+                          </button>
 
-                    {Object.keys(categoryMap).map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => { 
-                          setSelectedCategory(cat === selectedCategory ? '' : cat);
-                          setSelectedSubcategory('');
-                        }}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                          selectedCategory === cat 
-                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
-                            : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                        }`}
-                      >
-                        {cat.replace(/_/g, ' ').split(' ').map(word => 
-                          word.charAt(0).toUpperCase() + word.slice(1)
-                        ).join(' ')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                          {Object.keys(categoryMap).map(cat => (
+                            <button
+                              key={cat}
+                              onClick={() => { 
+                                setSelectedCategory(cat === selectedCategory ? '' : cat);
+                                setSelectedSubcategory('');
+                              }}
+                              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                                selectedCategory === cat 
+                                  ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/25' 
+                                  : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                              }`}
+                            >
+                              {cat.replace(/_/g, ' ').split(' ').map(word => 
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                              ).join(' ')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
-                {/* Subcategories Section */}
-                {selectedCategory && (
-                  <div className="bg-gray-50/80 rounded-xl p-4 mb-1">
-                    <h3 className="text-sm font-medium text-gray-600 mb-1">
-                      {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
-                        word.charAt(0).toUpperCase() + word.slice(1)
-                      ).join(' ')} Subcategories
-                    </h3>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                      {categoryMap[selectedCategory].map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => setSelectedSubcategory(sub)}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                            selectedSubcategory === sub 
-                              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
-                              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          {sub.charAt(0).toUpperCase() + sub.slice(1)}
-                        </button>
-                      ))}
+                      {/* Subcategories Section */}
+                      {selectedCategory && (
+                        <div className="bg-gray-50/80 rounded-xl p-4 mb-1">
+                          <h3 className="text-sm font-medium text-gray-600 mb-1">
+                            {selectedCategory.replace(/_/g, ' ').split(' ').map(word => 
+                              word.charAt(0).toUpperCase() + word.slice(1)
+                            ).join(' ')} Subcategories
+                          </h3>
+                          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                            {categoryMap[selectedCategory].map(sub => (
+                              <button
+                                key={sub}
+                                onClick={() => setSelectedSubcategory(sub)}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                                  selectedSubcategory === sub 
+                                    ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg shadow-pink-400/25' 
+                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                              >
+                                {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
+                      {/* Sidebar Filters - Desktop */}
+                    <div className="hidden md:block w-64 flex-shrink-0">
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-[#64b3f4] backdrop-blur-xl rounded-2xl p-3 border border-purple-300/20 shadow-xl"
+                      >
+                        <h3 className="text-lg font-semibold text-white mb-2">Filters</h3>
+                        
+                        <div className="space-y-6">
+                          <div className="pb-4 border-b border-gray-100">
+                            <label className="block text-sm font-medium text-gray-900 mb-1">
+                              Price Range (UGX)
+                            </label>
+                            <div className="space-y-2">
+                              <input
+                                type="range"
+                                min="0"
+                                max="2000000"
+                                step="50000"
+                                value={priceRange[1]}
+                                onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                              />
+                              <div className="flex justify-between text-xs text-gray-600">
+                                <span>UGX 0</span>
+                                <span>UGX {priceRange[1].toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                    </div>
+             
             </div>
           </motion.div>
 
@@ -442,88 +479,7 @@ const filteredProducts = useMemo(() => {
           </div>
 
           <div className="flex gap-8">
-            {/* Sidebar Filters - Desktop */}
-            <div className="hidden md:block w-64 flex-shrink-0">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-[#64b3f4] backdrop-blur-xl rounded-2xl p-6 border border-purple-300/20 shadow-xl"
-              >
-                <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
-                
-                <div className="space-y-6">
-                  <div className="pb-4 border-b border-gray-100">
-                    <label className="block text-sm font-medium text-gray-900 mb-3">
-                      Price Range (UGX)
-                    </label>
-                    <div className="space-y-4">
-                      <input
-                        type="range"
-                        min="0"
-                        max="2000000"
-                        step="50000"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                      />
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>UGX 0</span>
-                        <span>UGX {priceRange[1].toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pb-4 border-b border-gray-100">
-                    <label className="block text-sm font-medium text-gray-900 mb-3">
-                      Purchase Type
-                    </label>
-                    <div className="space-y-2">
-                      {[
-                        { value: '', label: 'All' },
-                        { value: 'purchase', label: 'Purchase' },
-                        { value: 'hire', label: 'For Hire' }
-                      ].map(option => (
-                        <label key={option.value} className="flex items-center py-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="purchaseType"
-                            value={option.value}
-                            checked={purchaseTypeFilter === option.value}
-                            onChange={(e) => setPurchaseTypeFilter(e.target.value)}
-                            className="w-4 h-4 text-cyan-500 border-gray-300 focus:ring-cyan-500"
-                          />
-                          <span className="ml-2.5 text-sm text-gray-700">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center py-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inStockOnly}
-                        onChange={(e) => setInStockOnly(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
-                      />
-                      <span className="ml-2.5 text-sm text-gray-700">In stock only</span>
-                    </label>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setPriceRange([0, 2000000]);
-                      setPurchaseTypeFilter('');
-                      setInStockOnly(false);
-                    }}
-                    className="w-full py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              </motion.div>
-            </div>
+            
 
             {/* Product Grid */}
             <div className="flex-1">
@@ -537,7 +493,7 @@ const filteredProducts = useMemo(() => {
                 transition={{ delay: 0.3 }}
                 className={`grid gap-4 sm:gap-6 ${
                   viewMode === 'grid' 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    ? 'grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
                     : 'grid-cols-1'
                 }`}
                 role="list"

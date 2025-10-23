@@ -127,53 +127,9 @@
 }
 
 @layer utilities {
-  /* Glass morphism utilities */
-  .glass {
-    background: hsl(var(--edumall-glass));
-    backdrop-filter: blur(10px);
-    border: 1px solid hsl(var(--edumall-glass-border));
-  }
-  
-  .glass-strong {
-    background: hsl(var(--edumall-glass));
-    backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid hsl(var(--edumall-glass-border));
-  }
 
 
   /* Animation keyframes */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes hoverLift {
-    from {
-      transform: translateY(0) scale(1);
-    }
-    to {
-      transform: translateY(-4px) scale(1.02);
-    }
-  }
-  
-  @keyframes buttonPress {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
-  }
-  
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-  }
-  
   @keyframes ripple {
     0% {
       transform: scale(0);
@@ -184,81 +140,14 @@
       opacity: 0;
     }
   }
-  
-  @keyframes drawLine {
-    0% { width: 0; }
-    100% { width: 100%; }
-  }
-
-  .animate-fade-in-up {
-    animation: fadeInUp var(--motion-medium) ease-out;
-  }
-  
-  .animate-hover-lift:hover {
-    animation: hoverLift var(--motion-fast) ease-out forwards;
-  }
-  
-  .animate-button-press:active {
-    animation: buttonPress var(--motion-fast) ease-out;
-  }
-  
-  .animate-shake {
-    animation: shake 0.3s ease-in-out;
-  }
-  
-  .animate-draw-line::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    background: hsl(var(--dynamic-accent));
-    animation: drawLine var(--motion-medium) ease-out;
-  }
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
-    .animate-fade-in-up,
-    .animate-hover-lift:hover,
-    .animate-button-press:active,
-    .animate-shake,
-    .animate-draw-line::after {
-      animation: none;
-    }
-    
     * {
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
   }
-  /* 👇 Tiny phone override (below 360px wide) */
-/* ========= Tiny Screen (≤360px) Layout Override ========= */
-@media (max-width: 360px) {
-  /* Force 1 column on ultra-small phones */
-  .grid-cols-2 {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Compact the product card */
-  .product-card {
-    padding: 0.5rem !important;
-    font-size: 0.8rem !important;
-  }
-
-  .product-card img {
-    padding: 0.25rem !important;
-  }
-
-  .product-card h3 {
-    font-size: 0.75rem !important;
-    line-height: 1rem !important;
-  }
-
-  /* Stack action buttons vertically on tiny devices */
-  .product-card .grid {
-    grid-template-columns: 1fr !important;
-  }
-}
 
 
 }
