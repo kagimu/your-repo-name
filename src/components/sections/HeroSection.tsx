@@ -18,10 +18,11 @@ interface Product {
 }
 
 // Memoized product card
-const HeroProductCard: React.FC<{ product: Product }> = React.memo(({ product }) => (
+const HeroProductCard: React.FC<{ product: Product; onClick?: () => void }> = React.memo(({ product, onClick }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
-    className="bg-white rounded-2xl p-4 shadow-xl w-40 text-center border border-gray-100"
+    className="bg-white rounded-2xl p-4 shadow-xl w-40 text-center border border-gray-100 cursor-pointer"
+    onClick={onClick}
   >
     <img
       src={product.avatar_url || '/placeholder.webp'}
@@ -183,7 +184,11 @@ export const HeroSection: React.FC = () => {
           {filteredProducts
             .filter((p) => [26, 27, 28, 29].includes(p.id))
             .map((product) => (
-              <HeroProductCard key={product.id} product={product} />
+              <HeroProductCard
+                key={product.id}
+                product={product}
+                onClick={() => navigate(`/categories?filter=${product.category}`)}
+              />
             ))}
         </motion.div>
       </div>
