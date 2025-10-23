@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Grid, List, MapPin, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { EdumallInput } from '@/components/ui/EdumallInput';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductCard } from '@/components/products/ProductCard';
 import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 
 // Type definitions for the API response and product structure
 interface ApiProduct {
@@ -45,7 +46,7 @@ interface Product {
   price: number;
   unit: string;
   desc: string;
-  purchaseType: string;
+  purchaseType: 'purchase' | 'hire';
   created_at: string;
   updated_at: string;
   avatar_url: string;
@@ -61,9 +62,6 @@ interface ApiResponse {
 const Categories = () => {
   const [searchParams] = useSearchParams();
   const initialFilter = searchParams.get('filter') || '';
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   // Update search query when URL params change
@@ -73,6 +71,7 @@ const Categories = () => {
       setSearchQuery(searchParam);
     }
   }, [searchParams]);
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilter);
@@ -81,6 +80,42 @@ const Categories = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [purchaseTypeFilter, setPurchaseTypeFilter] = useState<string>('');
   const navigate = useNavigate();
+
+  // Use React Query for data fetching with caching
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await axios.get<ApiResponse>('https://backend-main.laravel.cloud/api/labs', {
+        headers: {
+          Accept: 'application/json',
+        }
+      });
+
+      const apiData = response.data;
+      const labData = apiData?.data ?? (Array.isArray(apiData) ? apiData : []);
+
+      if (!Array.isArray(labData)) {
+        console.error('Invalid lab data format:', response.data);
+        return [];
+      }
+
+      return labData.map((item: ApiProduct) => ({
+        ...item,
+        price: parseFloat(item.price) || 0,
+        rating: parseFloat(item.rating) || 0,
+        in_stock: parseInt(item.in_stock) > 0,
+        inStock: parseInt(item.in_stock) > 0,
+        avatar: item.avatar_url || item.avatar || '',
+        avatar_url: item.avatar_url || item.avatar || '',
+        images: item.images_url || [],
+        images_url: item.images_url || [],
+        purchase_type: item.purchaseType,
+        purchaseType: item.purchaseType as 'purchase' | 'hire',
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   const categoryMap: Record<string, string[]> = {
     laboratory: ['apparatus', 'specimen', 'chemical'],
@@ -92,49 +127,6 @@ const Categories = () => {
     food: ['snacks', 'beverages']
   };
 
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get<ApiResponse>('https://backend-main.laravel.cloud/api/labs', {
-        headers: {
-          Accept: 'application/json',
-        }
-      });
-
-      // Type-safe access to response data
-      const apiData = response.data;
-      const labData = apiData?.data ?? (Array.isArray(apiData) ? apiData : []);
-
-      if (!Array.isArray(labData)) {
-        console.error('Invalid lab data format:', response.data);
-        setProducts([]);
-        return;
-      }
-
-      const labs: Product[] = labData.map((item: ApiProduct) => ({
-        ...item,
-        price: parseFloat(item.price) || 0,
-        rating: parseFloat(item.rating) || 0,
-        in_stock: parseInt(item.in_stock) > 0,
-        inStock: parseInt(item.in_stock) > 0, // Add both variants for compatibility
-        avatar: item.avatar_url || item.avatar || '',
-        avatar_url: item.avatar_url || item.avatar || '',
-        images: item.images_url || [],
-        images_url: item.images_url || [],
-        purchase_type: item.purchaseType, // Add snake_case variant for compatibility
-      }));
-
-      setProducts(labs);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchProducts();
-}, []);
 
 
 

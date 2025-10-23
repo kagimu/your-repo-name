@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react'; 
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import debounce from 'lodash.debounce';
+import { useQuery } from '@tanstack/react-query';
 
 interface Product {
   id: number;
@@ -39,10 +40,33 @@ const HeroProductCard: React.FC<{ product: Product; onClick?: () => void }> = Re
 ));
 
 export const HeroSection: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const navigate = useNavigate();
+
+  // Use React Query for hero products
+  const { data: products = [] } = useQuery({
+    queryKey: ['hero-products'],
+    queryFn: async () => {
+      const response = await axios.get('https://backend-main.laravel.cloud/api/labs', {
+        headers: { Accept: 'application/json' },
+      });
+
+      const apiData = response.data?.data ?? (Array.isArray(response.data) ? response.data : []);
+      return apiData.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        subcategory: item.subcategory,
+        avatar_url: item.avatar_url || item.avatar || '',
+        price: parseFloat(item.price) || 0,
+        rating: parseFloat(item.rating) || 0,
+        in_stock: parseInt(item.in_stock) > 0,
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   const categoryMap: Record<string, string[]> = {
     laboratory: ['apparatus', 'specimen', 'chemical'],
@@ -85,34 +109,10 @@ export const HeroSection: React.FC = () => {
     },
   };
 
+  // Update filtered products when products change
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('https://backend-main.laravel.cloud/api/labs', {
-          headers: { Accept: 'application/json' },
-        });
-
-        const apiData = response.data?.data ?? (Array.isArray(response.data) ? response.data : []);
-        const formatted: Product[] = apiData.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          category: item.category,
-          subcategory: item.subcategory,
-          avatar_url: item.avatar_url || item.avatar || '',
-          price: parseFloat(item.price) || 0,
-          rating: parseFloat(item.rating) || 0,
-          in_stock: parseInt(item.in_stock) > 0,
-        }));
-
-        setProducts(formatted);
-        setFilteredProducts(formatted); // initial full list
-      } catch (error) {
-        console.error('Error fetching hero products:', error);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+    setFilteredProducts(products);
+  }, [products]);
 
   // Debounced search
   const handleSearch = useCallback(

@@ -11,7 +11,7 @@ export interface Product {
   price: string;
   unit: string;
   desc: string;
-  purchaseType: string;
+  purchaseType: 'purchase' | 'hire';
   created_at: string;
   updated_at: string;
   avatar_url: string;

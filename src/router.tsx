@@ -2,24 +2,27 @@ import { createBrowserRouter } from "react-router-dom";
 import { PublicRoute } from "./components/layout/RouteGuards";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
 import VoiceAssistantWrapper from "./components/VoiceAssistant/VoiceAssistantWrapper";
-import Index from "./pages/Index";
-import Categories from "./pages/Categories";
-import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Checkout from "./pages/Checkout";
-import ELibrary from "./pages/ELibrary";
-import Research from "./pages/Research";
-import Notifications from "./pages/Notifications";
-import Courier from "./pages/Courier";
-import Supplier from "./pages/Supplier";
-import NotFound from "./pages/NotFound";
-import AboutUs from "./pages/AboutUs";
-import PaymentSuccess from './components/checkout/PaymentSuccess';
-import { VoiceAssistantTester } from './components/VoiceAssistant/VoiceAssistantTester';
-import LabInventory from './pages/LabInventory';
+import { lazy } from "react";
+
+// Lazy load pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const Categories = lazy(() => import("./pages/Categories"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const ELibrary = lazy(() => import("./pages/ELibrary"));
+const Research = lazy(() => import("./pages/Research"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Courier = lazy(() => import("./pages/Courier"));
+const Supplier = lazy(() => import("./pages/Supplier"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const PaymentSuccess = lazy(() => import('./components/checkout/PaymentSuccess'));
+const VoiceAssistantTester = lazy(() => import('./components/VoiceAssistant/VoiceAssistantTester').then(module => ({ default: module.VoiceAssistantTester })));
+const LabInventory = lazy(() => import('./pages/LabInventory'));
 
 export const routes = [
   {

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,16 @@ import { AnimatePresence } from 'framer-motion';
 import { routes } from './router';
 import { useAIInitialization } from './hooks/useAIInitialization';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Wrap the app content in a component that will be rendered inside the router
 const AppContent = () => {
@@ -37,11 +47,15 @@ const AppContent = () => {
   }
 
   return (
-    <>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-500"></div>
+      </div>
+    }>
       <Outlet />
       <Toaster />
       <Sonner />
-    </>
+    </Suspense>
   );
 };
 
