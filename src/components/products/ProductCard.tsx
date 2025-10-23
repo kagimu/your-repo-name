@@ -4,6 +4,7 @@ import { Star, ShoppingCart, Eye, Loader2 } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductDetailModal } from './ProductDetailModal';
 import { useCart } from '../../hooks/useCart';
+import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 
 interface Product {
@@ -30,6 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addToCart } = useCart();
+  const { toast } = useToast();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-UG', {
@@ -40,9 +42,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
   };
 
   const handleAddToCart = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     try {
       setLoading(true);
       // Optional: simulate network delay for demo
@@ -57,8 +56,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         category: product.category,
         unit: product.unit,
       });
+
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart. Yes, keep going!`,
+      });
     } catch (err) {
       console.error('Add to cart failed', err);
+      toast({
+        title: "Failed to add to cart",
+        description: "Please try again or check your connection. have you signed in?",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

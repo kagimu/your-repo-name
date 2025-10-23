@@ -149,11 +149,13 @@ export const Navbar = () => {
         return;
       }
       try {
-        const res = await axios.get('https://backend-main.laravel.cloud/api/labs', {
-          params: { search: query },
-        });
-        const suggestions = res.data.data?.slice(0, 5) || []; // top 5 suggestions
-        setDynamicSuggestions(suggestions);
+        const res = await axios.get('https://backend-main.laravel.cloud/api/labs');
+        const allProducts = res.data.data || [];
+        const firstTwoChars = query.substring(0, 2).toLowerCase();
+        const filteredSuggestions = allProducts
+          .filter((product: any) => product.name.toLowerCase().startsWith(firstTwoChars))
+          .slice(0, 10); // top 10 suggestions
+        setDynamicSuggestions(filteredSuggestions);
       } catch (err) {
         console.error('Error fetching search suggestions:', err);
         setDynamicSuggestions([]);
