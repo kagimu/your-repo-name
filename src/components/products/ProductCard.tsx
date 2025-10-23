@@ -111,6 +111,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-10 object-contain"
+                loading="lazy"
+                decoding="async"
               />
             </div>
 
@@ -212,6 +214,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
             alt={product.name}
             className="absolute inset-0 w-full h-full object-contain p-6"
             loading="lazy"
+            decoding="async"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
 

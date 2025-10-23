@@ -7,11 +7,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import { VoiceAssistantProvider } from "./contexts/VoiceAssistantContext";
 import { AppStartupLoader } from "./components/ui/AppStartupLoader";
 import { AnimatePresence } from 'framer-motion';
 import { routes } from './router';
-import { useAIInitialization } from './hooks/useAIInitialization';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,26 +25,6 @@ const queryClient = new QueryClient({
 
 // Wrap the app content in a component that will be rendered inside the router
 const AppContent = () => {
-  const [isLoading, setIsLoading] = React.useState(true);
-  const { isInitialized } = useAIInitialization();
-
-  React.useEffect(() => {
-    if (!isInitialized) return;
-    
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [isInitialized]);
-
-  if (isLoading) {
-    return (
-      <AnimatePresence>
-        <AppStartupLoader key="loader" onComplete={() => setIsLoading(false)} />
-      </AnimatePresence>
-    );
-  }
-
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
@@ -66,9 +45,7 @@ const RootLayout = () => {
       <TooltipProvider>
         <AuthProvider>
           <CartProvider>
-            <VoiceAssistantProvider>
-              <AppContent />
-            </VoiceAssistantProvider>
+            <AppContent />
           </CartProvider>
         </AuthProvider>
       </TooltipProvider>
@@ -87,7 +64,11 @@ const browserRouter = createBrowserRouter([
 
 // Main App component that provides the router
 const App = () => {
-  return <RouterProvider router={browserRouter} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={browserRouter} />
+    </ErrorBoundary>
+  );
 };
 
 export default App;

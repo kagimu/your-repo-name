@@ -1,10 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import { PublicRoute } from "./components/layout/RouteGuards";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
-import VoiceAssistantWrapper from "./components/VoiceAssistant/VoiceAssistantWrapper";
 import { lazy } from "react";
 
-// Lazy load pages for better performance
+// Lazy load pages for better performance with error boundaries
 const Index = lazy(() => import("./pages/Index"));
 const Categories = lazy(() => import("./pages/Categories"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -21,12 +20,10 @@ const Supplier = lazy(() => import("./pages/Supplier"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const PaymentSuccess = lazy(() => import('./components/checkout/PaymentSuccess'));
-const VoiceAssistantTester = lazy(() => import('./components/VoiceAssistant/VoiceAssistantTester').then(module => ({ default: module.VoiceAssistantTester })));
 const LabInventory = lazy(() => import('./pages/LabInventory'));
 
 export const routes = [
   {
-    element: <VoiceAssistantWrapper />,
     children: [
       {
         element: <PublicRoute />,
@@ -100,10 +97,6 @@ export const routes = [
             path: "inventory",
             element: <LabInventory />
           },
-          {
-            path: "voice-test",
-            element: <VoiceAssistantTester />
-          }
         ]
       }
     ]
