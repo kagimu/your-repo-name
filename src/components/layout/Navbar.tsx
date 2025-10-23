@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ShoppingCart, User, Menu, X, BookOpen, Bell, LayoutDashboard } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, BookOpen, Bell, LayoutDashboard, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { PreLoader } from '@/components/ui/PreLoader';
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  mobileLabel: string;
+  requiredType?: string;
+}
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -53,7 +61,7 @@ export const Navbar = () => {
 
   const cartItemCount = getCartCount();
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { path: '/categories', label: 'Our Products', icon: BookOpen, mobileLabel: 'Products' },
     { path: '/research', label: 'Research', icon: Search, mobileLabel: 'Research' },
    // { path: '/courier', label: 'Courier', icon: BookOpen, mobileLabel: 'Courier', requiredType: 'courier' },

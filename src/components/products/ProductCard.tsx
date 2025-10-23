@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, ShoppingCart, Eye } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Loader2 } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { ProductDetailModal } from './ProductDetailModal';
 import { useCart } from '../../hooks/useCart';
@@ -29,20 +28,27 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { addToCart } = useCart();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
       currency: 'UGX',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem('token');
-  
-    addToCart({
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      // Optional: simulate network delay for demo
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      addToCart({
         id: product.id,
         name: product.name,
         price: product.price,
@@ -51,14 +57,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         category: product.category,
         unit: product.unit,
       });
-    };
-
-
-
-
-  const handleViewDetails = () => {
-    setShowDetailModal(true);
+    } catch (err) {
+      console.error('Add to cart failed', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleViewDetails = () => setShowDetailModal(true);
 
   const detailedProduct = {
     ...product,
@@ -66,24 +72,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     desc: product.desc || `High-quality ${product.name} perfect for educational use.`,
     unit: product.unit || 'piece',
     specifications: product.specifications || {
-      'Category': product.category,
-      'Availability': product.in_stock ? 'In Stock' : 'Out of Stock',
-      'Rating': product.rating.toString()
+      Category: product.category,
+      Availability: product.in_stock ? 'In Stock' : 'Out of Stock',
+      Rating: product.rating.toString(),
     },
     images: product.images_url || [product.avatar_url || '/placeholder.svg'],
     inStock: product.in_stock,
-    description: product.desc || `High-quality ${product.name} perfect for educational use.`
-  };  
+    description: product.desc || `High-quality ${product.name} perfect for educational use.`,
+  };
 
+  // ----- List view -----
   if (viewMode === 'list') {
     return (
       <>
-      <Helmet>
-        <title>{product.name} | Edumall Uganda</title>
-        <meta name="description" content={product.desc} />
-        <meta property="og:title" content={`${product.name} | Edumall Uganda`} />
-        <meta property="og:description" content={product.desc} />
-      </Helmet>
+        <Helmet>
+          <title>{product.name} | Edumall Uganda</title>
+          <meta name="description" content={product.desc} />
+          <meta property="og:title" content={`${product.name} | Edumall Uganda`} />
+          <meta property="og:description" content={product.desc} />
+        </Helmet>
 
         <motion.div
           whileHover={{ scale: 1.02 }}
@@ -91,63 +98,81 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         >
           <div className="flex gap-3 sm:gap-6">
             <div className="w-16 h-14 sm:w-20 sm:h-10 overflow-hidden">
-              <img 
-                src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
+              <img
+                src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-10 object-contain"
               />
             </div>
-            
+
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-1">{product.name}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-1">
+                {product.name}
+              </h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-1">{product.category}</p>
-              
-                <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+
+              <div className="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       size={8}
-                      className={`${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'}`}
+                      className={`${
+                        i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'
+                      }`}
                     />
                   ))}
                 </div>
                 <span className="text-[10px] sm:text-xs text-gray-600">({product.rating})</span>
-              </div>              
+              </div>
+
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                 <div>
                   <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-lg sm:text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
-                    {product.purchaseType === 'hire' && (
-                      <span className="text-xs sm:text-xs text-gray-600">per day</span>
-                    )}
+                    {product.purchaseType === 'hire' && <span className="text-xs sm:text-xs text-gray-600">per day</span>}
                   </div>
                   <p className={`text-xs sm:text-sm ${product.in_stock ? 'text-green-600' : 'text-red-600'}`}>
                     {product.in_stock ? 'In Stock' : 'Out of Stock'}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
-                  <EdumallButton 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleViewDetails} 
+                  <EdumallButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleViewDetails}
                     className="h-8 sm:h-9 w-8 sm:w-9 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   >
                     <Eye size={16} />
                   </EdumallButton>
-                  <EdumallButton 
-                    variant="primary" 
-                    size="sm"
-                    disabled={!product.in_stock}
-                    onClick={handleAddToCart}
-                    className="h-8 sm:h-9 px-3 sm:px-4 text-white bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 flex items-center gap-1.5"
+
+                  <motion.div
+                    animate={{ scale: loading ? 0.95 : 1 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
                   >
-                    <ShoppingCart size={14} className="flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
-                      {product.purchaseType === 'hire' ? 'Book Now' : 'Add to Cart'}
-                    </span>
-                  </EdumallButton>
+                    <EdumallButton
+                      variant="primary"
+                      size="sm"
+                      disabled={!product.in_stock || loading}
+                      onClick={handleAddToCart}
+                      className="h-8 sm:h-9 px-3 sm:px-4 text-white bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 flex items-center gap-1.5 justify-center"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span className="ml-1 text-xs sm:text-sm font-medium opacity-70">Adding...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={14} />
+                          <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                            {product.purchaseType === 'hire' ? 'Book Now' : 'Add to Cart'}
+                          </span>
+                        </>
+                      )}
+                    </EdumallButton>
+                  </motion.div>
                 </div>
               </div>
             </div>
@@ -163,18 +188,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
     );
   }
 
+  // ----- Grid view -----
   return (
     <>
-     <motion.div
+      <motion.div
         whileHover={{ y: -2, scale: 1.005 }}
-         transition={{ type: "spring", stiffness: 300 }}
+        transition={{ type: 'spring', stiffness: 300 }}
         className="product-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full"
       >
-
         {/* Product Image */}
         <div className="w-full pt-[75%] relative">
-          <img 
-            src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'} 
+          <img
+            src={product.avatar_url || product.images_url?.[0] || '/placeholder.svg'}
             alt={product.name}
             className="absolute inset-0 w-full h-full object-contain p-6"
             loading="lazy"
@@ -184,7 +209,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
         {/* Product Details */}
         <div className="p-4 flex flex-col flex-1">
           <div className="flex-1 space-y-3">
-            {/* Category & Status */}
             <div className="flex items-center justify-between gap-2">
               <span className="inline-block text-xs font-medium text-gray-600 bg-gray-50 px-2.5 py-1 rounded-lg">
                 {product.category}
@@ -194,12 +218,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               </p>
             </div>
 
-            {/* Title */}
             <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-snug min-h-[40px]">
               {product.name}
             </h3>
 
-            {/* Rating & Price Row */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1">
                 <div className="flex gap-0.5">
@@ -214,46 +236,50 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 <span className="text-xs text-gray-500">({product.rating})</span>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-gray-900 leading-none mb-1">
-                  {formatPrice(product.price)}
-                </p>
-                {product.unit && (
-                  <p className="text-xs text-gray-500 leading-none">
-                    per {product.unit}
-                  </p>
-                )}
+                <p className="text-sm font-bold text-gray-900 leading-none mb-1">{formatPrice(product.price)}</p>
+                {product.unit && <p className="text-xs text-gray-500 leading-none">per {product.unit}</p>}
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-3 mt-3 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-2">
-              <EdumallButton
-                variant="secondary"
-                size="sm"
-                onClick={handleViewDetails}
-                className="h-9 flex items-center justify-center gap-1 text-sm bg-gray-50 hover:bg-gray-100"
-              >
-                <Eye size={16} />
-                <span>View</span>
-              </EdumallButton>
+          <div className="pt-3 mt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+            <EdumallButton
+              variant="secondary"
+              size="sm"
+              onClick={handleViewDetails}
+              className="h-9 flex items-center justify-center gap-1 text-sm bg-gray-50 hover:bg-gray-100"
+            >
+              <Eye size={16} />
+              <span>View</span>
+            </EdumallButton>
+
+            <motion.div
+              animate={{ scale: loading ? 0.95 : 1 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
               <EdumallButton
                 variant="primary"
                 size="sm"
+                disabled={!product.in_stock || loading}
                 onClick={handleAddToCart}
-                disabled={!product.in_stock}
                 className="h-9 flex items-center justify-center gap-1 text-sm font-medium bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
               >
-                <ShoppingCart size={16} />
-                <span>{product.purchaseType === 'hire' ? 'Book' : 'Add'}</span>
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="ml-1 text-xs sm:text-sm font-medium opacity-70">Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={16} />
+                    <span>{product.purchaseType === 'hire' ? 'Book' : 'Add'}</span>
+                  </>
+                )}
               </EdumallButton>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
-
-
 
       <ProductDetailModal
         product={detailedProduct}
