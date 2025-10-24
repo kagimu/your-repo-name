@@ -135,7 +135,7 @@ export const HeroSection: React.FC = () => {
     handleSearch(e.target.value);
   };
 
-  const featuredCategories = Object.keys(categoryMap).slice(0, 6);
+  const featuredCategories = Object.keys(categoryMap).slice(0, 7);
 
   return (
     <section className="relative bg-gradient-to-r from-cyan-500/10 via-purple-100 to-cyan-50 py-20 px-6 md:px-16 overflow-hidden">
