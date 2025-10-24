@@ -60,6 +60,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
       toast({
         title: "Added to cart",
         description: `${product.name} has been added to your cart. Yes, keep going!`,
+         variant: "default",
       });
     } catch (err) {
       console.error('Add to cart failed', err);

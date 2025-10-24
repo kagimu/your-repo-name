@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
     })
   ],
   build: {
-    target: ['es2015', 'safari11'],
+    target: ['es2015', 'safari11', 'edge18', 'firefox57', 'chrome64'],
     rollupOptions: {
       output: {
         manualChunks: {

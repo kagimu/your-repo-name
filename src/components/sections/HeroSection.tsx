@@ -7,6 +7,7 @@ import { EdumallButton } from '@/components/ui/EdumallButton';
 import debounce from 'lodash.debounce';
 import { useQuery } from '@tanstack/react-query';
 
+
 interface Product {
   id: number;
   name: string;
