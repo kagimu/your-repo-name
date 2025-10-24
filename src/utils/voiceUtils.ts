@@ -24,7 +24,7 @@ export const normalizeSpeech = (text: string): string => {
     // Remove common filler words
     .replace(/\b(um|uh|like|you know|well|so|just|actually|basically)\b/g, '')
     // Remove common punctuation
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+    .replace(/[.,/#$%^&*;:{}=\-_`~()]/g, '')
     // Replace multiple spaces with single space
     .replace(/\s+/g, ' ')
     .trim();

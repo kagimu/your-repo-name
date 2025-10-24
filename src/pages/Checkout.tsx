@@ -82,7 +82,7 @@ const Checkout = () => {
   const total = subtotal + deliveryFee;
 
   /** Step 1: Delivery Details */
-  const handleDetailsSubmit = (details: any) => {
+  const handleDetailsSubmit = (details: { fullName: string; email: string; phone: string; address: string; city: string; district: string; postalCode?: string; instructions?: string; useCurrentLocation: boolean; coordinates: { lat: number; lng: number }; distanceKm?: number; deliveryFee?: number }) => {
     // Save sanitized delivery info
     setDeliveryDetails(details);
     setDeliveryFee(details.deliveryFee);

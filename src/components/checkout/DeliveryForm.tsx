@@ -6,8 +6,8 @@ import { EdumallInput } from '../ui/EdumallInput';
 import { EdumallButton } from '../ui/EdumallButton';
 
 interface DeliveryFormProps {
-  user: any;
-  onDetailsSubmit: (details: any) => void;
+  user: { id: string; name: string; email: string };
+  onDetailsSubmit: (details: { address: string; city: string; district: string; specialInstructions: string; fullName: string; email: string; userId: string }) => void;
 }
 
 export const DeliveryForm: React.FC<DeliveryFormProps> = ({ user, onDetailsSubmit }) => {

@@ -6,7 +6,7 @@ import { EdumallButton } from '../ui/EdumallButton';
 
 interface OrderTrackingProps {
   orderId: string;
-  deliveryDetails: any;
+  deliveryDetails: { address: string; city: string; district: string };
 }
 
 export const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, deliveryDetails }) => {

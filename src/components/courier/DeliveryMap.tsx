@@ -5,7 +5,7 @@ import { MapPin, Navigation, Phone } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 
 interface DeliveryMapProps {
-  deliveries: any[];
+  deliveries: { id: string; status: string; customerName: string; distance: string; estimatedTime: string; customerPhone: string; pickupAddress: string; deliveryAddress: string }[];
 }
 
 export const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveries }) => {

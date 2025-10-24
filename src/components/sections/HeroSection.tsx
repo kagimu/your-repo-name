@@ -53,15 +53,15 @@ export const HeroSection: React.FC = () => {
       });
 
       const apiData = response.data?.data ?? (Array.isArray(response.data) ? response.data : []);
-      return apiData.map((item: any) => ({
+      return apiData.map((item: { id: number; name: string; category: string; subcategory?: string; avatar_url?: string; avatar?: string; price: string | number; rating: string | number; in_stock: string | number }) => ({
         id: item.id,
         name: item.name,
         category: item.category,
         subcategory: item.subcategory,
         avatar_url: item.avatar_url || item.avatar || '',
-        price: parseFloat(item.price) || 0,
-        rating: parseFloat(item.rating) || 0,
-        in_stock: parseInt(item.in_stock) > 0,
+        price: parseFloat(String(item.price)) || 0,
+        rating: parseFloat(String(item.rating)) || 0,
+        in_stock: parseInt(String(item.in_stock)) > 0,
       }));
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

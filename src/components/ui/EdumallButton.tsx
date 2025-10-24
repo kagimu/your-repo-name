@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface EdumallButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface EdumallButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onDragEnter' | 'onDragLeave' | 'onDragOver' | 'onDrop' | 'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration'> {
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
@@ -45,7 +45,7 @@ export const EdumallButton: React.FC<EdumallButtonProps> = ({
         className
       )}
       disabled={disabled || isLoading}
-      {...(props as any)}
+      {...props}
     >
       {isLoading && (
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />

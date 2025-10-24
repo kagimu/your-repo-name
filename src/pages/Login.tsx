@@ -78,7 +78,7 @@ const Login = () => {
       localStorage.removeItem('returnUrl');
 
       navigate(returnUrl || '/categories');
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.data?.errors) {
         const apiErrors = error.response.data.errors;
         setErrors({

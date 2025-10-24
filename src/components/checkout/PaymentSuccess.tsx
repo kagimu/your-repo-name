@@ -21,7 +21,7 @@ const PaymentSuccess = () => {
       try {
         interface VerifyPaymentResponse {
           status: string;
-          [key: string]: any;
+          [key: string]: unknown;
         }
 
         const res = await axios.post<VerifyPaymentResponse>('https://edumall-admin.up.railway.app/api/payment/verify', {

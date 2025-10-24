@@ -37,27 +37,35 @@ export const requestMicrophoneAccess = async () => {
     // If permission is prompt or Permissions API isn't supported, try getUserMedia
     await navigator.mediaDevices.getUserMedia({ audio: true });
     return { granted: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     let message = 'Unable to access microphone.';
-    
-    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-      message = 'Microphone access was denied. Please allow microphone access to use voice commands.';
-    } else if (error.name === 'NotFoundError') {
-      message = 'No microphone detected. Please connect a microphone and try again.';
-    } else if (error.name === 'NotReadableError') {
-      message = 'Your microphone is busy or unavailable. Please check other applications that might be using it.';
-    }
 
-    return {
-      granted: false,
-      error: message,
-      technical: error.message
-    };
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        message = 'Microphone access was denied. Please allow microphone access to use voice commands.';
+      } else if (error.name === 'NotFoundError') {
+        message = 'No microphone detected. Please connect a microphone and try again.';
+      } else if (error.name === 'NotReadableError') {
+        message = 'Your microphone is busy or unavailable. Please check other applications that might be using it.';
+      }
+
+      return {
+        granted: false,
+        error: message,
+        technical: error.message
+      };
+    } else {
+      return {
+        granted: false,
+        error: message,
+        technical: 'Unknown error occurred'
+      };
+    }
   }
 };
 
 export const setupAudioContext = () => {
-  const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+  const AudioContext = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContext) {
     throw new Error('AudioContext is not supported in this browser');
   }

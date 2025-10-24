@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Users, Star, Search, Filter } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 
@@ -98,9 +97,9 @@ const Travel = () => {
     }).format(price);
   };
 
-  const handleBooking = (option: any) => {
+  const handleBooking = (option: { id: number; title: string; price: number; image: string }) => {
     addToCart({
-      id: `travel-${option.id}`,
+      id: 1000 + option.id,
       name: option.title,
       price: option.price,
       image: option.image,
@@ -111,7 +110,6 @@ const Travel = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
-      <CustomCursor />
       <Navbar />
       
       <main className="pt-20 px-4 sm:px-6 lg:px-8">

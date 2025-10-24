@@ -10,11 +10,11 @@ interface CustomerInfo {
 }
 
 interface PaymentOptionsProps {
-  onPaymentComplete: (paymentData: any) => void;
+  onPaymentComplete: (paymentData: { method: string; amount: number; status: string; note: string; timestamp: string; items: { product_id: number; quantity: number; price: number }[] }) => void;
   subtotal: number;
   deliveryFee: number;
   customer: CustomerInfo;
-   items: { id: number; quantity: number; price: number }[];
+  items: { id: number; name: string; image: string; quantity: number; price: number }[];
 }
 
 const PaymentOptions: React.FC<PaymentOptionsProps> = ({
@@ -57,10 +57,10 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
         note: 'Payment will be collected upon delivery',
         timestamp: new Date().toISOString(),
          items: items.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
+           product_id: item.id,
+           quantity: item.quantity,
+           price: Number(item.price),
+         })),
       });
     }
   };

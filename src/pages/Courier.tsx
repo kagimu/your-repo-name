@@ -9,7 +9,7 @@ const Courier = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [courierData, setCourierData] = useState(null);
 
-  const handleLogin = (data: any) => {
+  const handleLogin = (data: { id: string; name: string; phone: string; vehicle: string; rating: number; completedDeliveries: number }) => {
     setCourierData(data);
     setIsLoggedIn(true);
   };

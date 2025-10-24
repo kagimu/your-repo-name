@@ -26,11 +26,13 @@ interface DeliveryFormData {
 }
 
 interface DeliveryFormProps {
-  user?: any;
+  user?: { firstName?: string; lastName?: string; name?: string; email?: string };
   defaultValues?: Partial<DeliveryFormData>;
   onDetailsSubmit: (details: DeliveryFormData) => void;
   openCageApiKey: string;
 }
+
+const MAPEERA_BUILDING = { lat: 0.3156, lng: 32.5822 }; // Kampala pickup point
 
 export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   user,
@@ -38,7 +40,6 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
   onDetailsSubmit,
   openCageApiKey,
 }) => {
-  const MAPEERA_BUILDING = { lat: 0.3156, lng: 32.5822 }; // Kampala pickup point
 
   const [formData, setFormData] = useState<DeliveryFormData>({
     fullName:

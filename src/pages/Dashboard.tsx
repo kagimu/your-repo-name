@@ -97,13 +97,13 @@ const Dashboard: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Initialize the active section from URL search params or location state
-  const urlParams = new URLSearchParams(location.search);
+  const urlParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [activeSection, setActiveSection] = useState<'overview' | 'orders'>('overview');
 
   // Set active section immediately when component mounts or URL/state changes
   useEffect(() => {
     const section = location.state?.activeSection || urlParams.get('section');
-    
+
     if (section === 'orders') {
       setActiveSection('orders');
       // Ensure URL reflects the active section
@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
         window.history.replaceState({}, '', newUrl.toString());
       }
     }
-    
+
     // Debug log
     console.log('Setting active section:', section);
   }, [location, urlParams]);
@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
       newUrl.searchParams.set('section', 'orders');
       window.history.replaceState({}, '', newUrl.toString());
     }
-  }, [location.state]);
+  }, [location.state?.orderId]);
 
   // Debug logging to track section changes
   useEffect(() => {

@@ -23,9 +23,9 @@ export interface DeliveryDetails {
   email: string;
   phone: string;
   coordinates: { lat: number; lng: number };
-  address?: string;
-  district?: string;
-  city?: string;
+  address: string;
+  district: string;
+  city: string;
   postalCode?: string;
   instructions?: string;
   deliveryFee?: number;

@@ -6,12 +6,12 @@ export const AppStartupLoader: React.FC<{ onComplete: () => void }> = ({ onCompl
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
 
-  const steps = [
+  const steps = React.useMemo(() => [
     'Initializing Edumall...',
     'Loading resources...',
     'Setting up workspace...',
     'Almost ready...'
-  ];
+  ], []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -44,7 +44,7 @@ export const AppStartupLoader: React.FC<{ onComplete: () => void }> = ({ onCompl
       clearInterval(interval);
       clearInterval(stepInterval);
     };
-  }, [onComplete]);
+  }, [onComplete, steps]);
 
   return (
     <motion.div

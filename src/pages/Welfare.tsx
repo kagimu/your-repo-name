@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Users, Shield, Phone, Search, Filter } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 
@@ -99,9 +98,9 @@ const Welfare = () => {
     }).format(price);
   };
 
-  const handleBooking = (service: any) => {
+  const handleBooking = (service: { id: number; title: string; price: number; image: string }) => {
     addToCart({
-      id: `welfare-${service.id}`,
+      id: service.id,
       name: service.title,
       price: service.price,
       image: service.image,
@@ -112,7 +111,6 @@ const Welfare = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50">
-      <CustomCursor />
       <Navbar />
       
       <main className="pt-20 px-4 sm:px-6 lg:px-8">

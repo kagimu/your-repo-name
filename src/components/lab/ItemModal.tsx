@@ -60,7 +60,7 @@ export const ItemModal = ({ isOpen, onClose, onSave, item, mode }: ItemModalProp
     }
   };
 
-  const handleChange = (field: keyof LabItem, value: any) => {
+  const handleChange = (field: keyof LabItem, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));

@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Users, Search, Filter } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
-import { CustomCursor } from '@/components/CustomCursor';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 import { useCart } from '@/hooks/useCart';
 
@@ -104,9 +103,9 @@ const Events = () => {
     }).format(price);
   };
 
-  const handleBooking = (event: any) => {
+  const handleBooking = (event: { id: number; title: string; price: number; image: string; type: string }) => {
     addToCart({
-      id: `event-${event.id}`,
+      id: -event.id,
       name: event.title,
       price: event.price,
       image: event.image,

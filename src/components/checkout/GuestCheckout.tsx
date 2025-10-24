@@ -6,7 +6,7 @@ import { EdumallInput } from '../ui/EdumallInput';
 import { EdumallButton } from '../ui/EdumallButton';
 
 interface GuestCheckoutProps {
-  onDetailsSubmit: (details: any) => void;
+  onDetailsSubmit: (details: { fullName: string; email: string; phone: string; address: string; city: string; district: string; postalCode: string; specialInstructions: string; useCurrentLocation: boolean; coordinates: { lat: number; lng: number } }) => void;
 }
 
 export const GuestCheckout: React.FC<GuestCheckoutProps> = ({ onDetailsSubmit }) => {

@@ -5,7 +5,7 @@ import { Truck, Lock, User } from 'lucide-react';
 import { EdumallButton } from '@/components/ui/EdumallButton';
 
 interface CourierLoginProps {
-  onLogin: (data: any) => void;
+  onLogin: (data: { id: string; name: string; phone: string; vehicle: string; rating: number; completedDeliveries: number }) => void;
 }
 
 export const CourierLogin: React.FC<CourierLoginProps> = ({ onLogin }) => {

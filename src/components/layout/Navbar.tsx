@@ -153,7 +153,7 @@ export const Navbar = () => {
         const allProducts = res.data.data || [];
         const firstTwoChars = query.substring(0, 2).toLowerCase();
         const filteredSuggestions = allProducts
-          .filter((product: any) => product.name.toLowerCase().startsWith(firstTwoChars))
+          .filter((product: { id: number; name: string }) => product.name.toLowerCase().startsWith(firstTwoChars))
           .slice(0, 10); // top 10 suggestions
         setDynamicSuggestions(filteredSuggestions);
       } catch (err) {

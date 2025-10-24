@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { Package, Clock, MapPin } from 'lucide-react';
 
 interface OrderSummaryProps {
-  items: any[];
+  items: { id: number; name: string; image: string; quantity: number; price: number }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
-  deliveryDetails?: any;
+  deliveryDetails?: { address?: string; city?: string; district?: string };
 }
 
 

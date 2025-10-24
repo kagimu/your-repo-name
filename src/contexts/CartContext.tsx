@@ -85,19 +85,66 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [token]);
 
   /** -----------------
-   * Initialize Cart
-   ------------------ */
+    * Merge Guest → Auth Cart
+    ------------------ */
+  const mergeGuestCart = useCallback(async () => {
+    console.log('[CartContext] Starting cart merge process');
+    setError(null);
+    const guestCart = loadGuestCart();
+    console.log('[CartContext] Guest cart items:', guestCart);
+
+    if (!guestCart.length) {
+      console.log('[CartContext] No guest cart items to merge');
+      return;
+    }
+
+    if (!token) {
+      console.log('[CartContext] No auth token available for merge');
+      return;
+    }
+
+    try {
+      console.log('[CartContext] Starting to add guest items to auth cart');
+      for (const product of guestCart) {
+        console.log('[CartContext] Adding product to auth cart:', { id: product.id, quantity: product.quantity });
+        await axios.post(
+          'https://backend-main.laravel.cloud/api/cart/add',
+          {
+            product_id: product.id,
+            quantity: product.quantity
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      console.log('[CartContext] All guest items added, removing local storage');
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+
+      console.log('[CartContext] Fetching updated auth cart');
+      await fetchAuthCart();
+      console.log('[CartContext] Cart merge completed successfully');
+    } catch (err) {
+      console.error('[CartContext] Error merging guest cart:', err);
+      setError('Failed to merge guest cart');
+      // Don't remove local storage on error
+      return;
+    }
+  }, [token, fetchAuthCart]);
+
+  /** -----------------
+    * Initialize Cart
+    ------------------ */
   useEffect(() => {
     const initializeCart = async () => {
       console.log('[CartContext] Initializing cart', { isAuthenticated, hasToken: !!token });
       setIsLoading(true);
       setError(null);
-      
+
       try {
         if (isAuthenticated && token) {
           console.log('[CartContext] User is authenticated, fetching auth cart');
           await fetchAuthCart();
-          
+
           // Check if we have guest cart items that need to be merged
           const guestCart = loadGuestCart();
           if (guestCart.length > 0) {
@@ -126,7 +173,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Load initial cart data
     initializeCart();
-  }, [isAuthenticated, token, fetchAuthCart]);
+  }, [isAuthenticated, token, fetchAuthCart, mergeGuestCart]);
 
   /** -----------------
    * Cart Operations
@@ -258,53 +305,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const getCartCount = () => items.length; // Count unique items instead of total quantity
   const getCartTotal = () => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  /** -----------------
-   * Merge Guest → Auth Cart
-   ------------------ */
-  const mergeGuestCart = useCallback(async () => {
-    console.log('[CartContext] Starting cart merge process');
-    setError(null);
-    const guestCart = loadGuestCart();
-    console.log('[CartContext] Guest cart items:', guestCart);
-    
-    if (!guestCart.length) {
-      console.log('[CartContext] No guest cart items to merge');
-      return;
-    }
-    
-    if (!token) {
-      console.log('[CartContext] No auth token available for merge');
-      return;
-    }
-
-    try {
-      console.log('[CartContext] Starting to add guest items to auth cart');
-      for (const product of guestCart) {
-        console.log('[CartContext] Adding product to auth cart:', { id: product.id, quantity: product.quantity });
-        await axios.post(
-          'https://backend-main.laravel.cloud/api/cart/add',
-          { 
-            product_id: product.id, 
-            quantity: product.quantity
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-      
-      console.log('[CartContext] All guest items added, removing local storage');
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      
-      console.log('[CartContext] Fetching updated auth cart');
-      await fetchAuthCart();
-      console.log('[CartContext] Cart merge completed successfully');
-    } catch (err) {
-      console.error('[CartContext] Error merging guest cart:', err);
-      setError('Failed to merge guest cart');
-      // Don't remove local storage on error
-      return false;
-    }
-  }, [token, fetchAuthCart]);
 
   // Initialize pending checkout details
   useEffect(() => {
