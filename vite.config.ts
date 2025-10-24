@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
       modernPolyfills: true,
       renderLegacyChunks: true,
       polyfills: true
-    })
+    }),
   ],
   build: {
     target: ['es2015', 'safari11', 'edge18', 'firefox57', 'chrome64'],
