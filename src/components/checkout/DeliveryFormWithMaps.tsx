@@ -202,7 +202,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
               <EdumallInput
                 label="Full Name"
                 value={formData.fullName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
+                onChange={(value) => setFormData((prev) => ({ ...prev, fullName: value }))}
                 required
               />
               {user?.firstName && user?.lastName && (
@@ -216,7 +216,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
               label="Email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+              onChange={(value) => setFormData((prev) => ({ ...prev, email: value }))}
               required
             />
           </div>
@@ -225,7 +225,7 @@ export const DeliveryFormWithMaps: React.FC<DeliveryFormProps> = ({
             label="Phone Number"
             type="tel"
             value={formData.phone}
-            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+            onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
             required
           />
 

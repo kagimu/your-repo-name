@@ -1052,7 +1052,7 @@ const Dashboard: React.FC = () => {
             className="relative group"
           >
             <div className="w-24 h-24 sm:w-20 sm:h-20 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-3xl sm:text-2xl font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
+              <span className="text-3xl sm:text-2xl font-bold text-white">{user?.firstName?.charAt(0) || 'U'}</span>
             </div>
             <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
               <motion.div whileHover={{ rotate: 180 }}>
@@ -1062,7 +1062,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
           
           <div className="flex-1">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">{user?.name || 'User'}</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">{user?.firstName || 'User'}</h3>
             <p className="text-gray-600 text-sm">{user?.email || 'user@example.com'}</p>
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
               <span className="inline-flex items-center text-xs font-medium text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full">
@@ -1089,7 +1089,7 @@ const Dashboard: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
               <input 
                 type="text" 
-                defaultValue={user?.name || ''}
+                defaultValue={user?.firstName || ''}
                 className="w-full px-4 py-2.5 glass-medium rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-shadow"
                 placeholder="Enter your full name"
               />
@@ -1723,7 +1723,7 @@ const Dashboard: React.FC = () => {
             className="mb-8 text-center max-w-2xl mx-auto"
           >
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Welcome back, {user?.name || 'User'}
+              Welcome back, {user?.firstName || 'User'}
             </h1>
             <p className="text-lg text-gray-600 mx-auto max-w-xl leading-relaxed">
               Manage your orders, track deliveries, and discover new products
