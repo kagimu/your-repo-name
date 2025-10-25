@@ -93,31 +93,6 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsLoggingIn(true);
-    setTimeout(() => {
-      const userData = {
-        id: '2',
-        name: 'Google User',
-        email: 'user@gmail.com',
-        accountType: 'individual' as const,
-        type: 'individual' as const,
-        userType: 'Parent',
-        firstName: '',
-        lastName: '',
-        phone: '',
-      };
-      const fakeToken = 'google-oauth-fake-token';
-      login(userData, fakeToken);
-
-      const returnUrl = localStorage.getItem('returnUrl');
-      localStorage.removeItem('returnUrl');
-
-      navigate(returnUrl || '/categories');
-      setIsLoggingIn(false);
-      navigate('/dashboard');
-    }, 2000);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -199,29 +174,6 @@ const Login = () => {
               {isLoggingIn ? 'Signing In...' : 'Sign In'}
             </EdumallButton>
           </form>
-
-          {/* Or continue with */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-
-            <EdumallButton
-              variant="ghost"
-              size="lg"
-              className="w-full mt-4 border border-gray-300"
-              onClick={handleGoogleLogin}
-              disabled={isLoggingIn}
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
-              Google
-            </EdumallButton>
-          </div>
 
           {/* Sign up */}
           <div className="mt-6 text-center">

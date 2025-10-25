@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface EdumallInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface EdumallInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: string;
   error?: string;
   icon?: React.ReactNode;
   onIconClick?: () => void;
   rightElement?: React.ReactNode;
+  onChange?: (value: string) => void;
 }
 
 export const EdumallInput: React.FC<EdumallInputProps> = ({
@@ -18,9 +19,16 @@ export const EdumallInput: React.FC<EdumallInputProps> = ({
   onIconClick,
   rightElement,
   className,
+  onChange,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChange) {
+      onChange(e.target.value);
+    }
+  };
 
   return (
     <div className="w-full">
@@ -42,6 +50,7 @@ export const EdumallInput: React.FC<EdumallInputProps> = ({
           )}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onChange={handleChange}
           {...props}
         />
         {(icon || rightElement) && (

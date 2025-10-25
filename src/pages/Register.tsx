@@ -7,6 +7,7 @@ import { EdumallInput } from '@/components/ui/EdumallInput';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { PreLoader } from '@/components/ui/PreLoader';
+import { getDistricts, getSubcounties, getParishes, getVillages } from '@/data/ugandaData';
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -16,6 +17,11 @@ const Register = () => {
   const { login } = useAuth();
   const { mergeGuestCart } = useCart();
   const navigate = useNavigate();
+
+  // Location state for cascading dropdowns
+  const [availableSubcounties, setAvailableSubcounties] = useState<string[]>([]);
+  const [availableParishes, setAvailableParishes] = useState<string[]>([]);
+  const [availableVillages, setAvailableVillages] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     institution_name: '',
@@ -51,6 +57,36 @@ const Register = () => {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: undefined })); // clear error on input
+
+    // Handle cascading dropdowns for location fields
+    if (field === 'district') {
+      setAvailableSubcounties(getSubcounties(value));
+      setAvailableParishes([]);
+      setAvailableVillages([]);
+      // Clear dependent fields
+      setFormData(prev => ({
+        ...prev,
+        subcounty: '',
+        parish: '',
+        village: ''
+      }));
+    } else if (field === 'subcounty') {
+      setAvailableParishes(getParishes(formData.district, value));
+      setAvailableVillages([]);
+      // Clear dependent fields
+      setFormData(prev => ({
+        ...prev,
+        parish: '',
+        village: ''
+      }));
+    } else if (field === 'parish') {
+      setAvailableVillages(getVillages(formData.district, formData.subcounty, value));
+      // Clear dependent field
+      setFormData(prev => ({
+        ...prev,
+        village: ''
+      }));
+    }
   };
 
   const handlePaymentMethodToggle = (method: string) => {
@@ -168,10 +204,289 @@ const Register = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Here you can reuse your existing step rendering functions */}
-            {/* ...Insert renderInstitutionSteps and renderIndividualSteps code here, 
-                 but pass down `errors` and show error messages under each field as done in login page */}
-            
+            {currentStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('institution')}
+                      className={`p-4 border rounded-xl text-center transition-all ${
+                        accountType === 'institution'
+                          ? 'border-teal-500 bg-teal-50 text-teal-700'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="font-medium">Institution</div>
+                      <div className="text-sm text-gray-500">Schools, Colleges, Universities</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('individual')}
+                      className={`p-4 border rounded-xl text-center transition-all ${
+                        accountType === 'individual'
+                          ? 'border-teal-500 bg-teal-50 text-teal-700'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="font-medium">Individual</div>
+                      <div className="text-sm text-gray-500">Parents, Students, Teachers</div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {accountType === 'institution' && currentStep === 2 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">Institution Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="Institution Name"
+                    value={formData.institution_name}
+                    onChange={(value) => handleInputChange('institution_name', value)}
+                    placeholder="Enter institution name"
+                    error={errors.institution_name}
+                    required
+                  />
+                  <EdumallInput
+                    label="Centre Number"
+                    value={formData.centre_number}
+                    onChange={(value) => handleInputChange('centre_number', value)}
+                    placeholder="Enter centre number"
+                    error={errors.centre_number}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">District</label>
+                    <select
+                      value={formData.district}
+                      onChange={(e) => handleInputChange('district', e.target.value)}
+                      className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.district ? 'border-red-500' : 'border-gray-300'}`}
+                      required
+                    >
+                      <option value="">Select district</option>
+                      {getDistricts().map(district => (
+                        <option key={district} value={district}>{district}</option>
+                      ))}
+                    </select>
+                    {errors.district && <p className="text-red-500 text-sm mt-1">{errors.district}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Subcounty</label>
+                    <select
+                      value={formData.subcounty}
+                      onChange={(e) => handleInputChange('subcounty', e.target.value)}
+                      className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.subcounty ? 'border-red-500' : 'border-gray-300'}`}
+                      required
+                      disabled={!formData.district}
+                    >
+                      <option value="">Select subcounty</option>
+                      {availableSubcounties.map(subcounty => (
+                        <option key={subcounty} value={subcounty}>{subcounty}</option>
+                      ))}
+                    </select>
+                    {errors.subcounty && <p className="text-red-500 text-sm mt-1">{errors.subcounty}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Parish</label>
+                    <select
+                      value={formData.parish}
+                      onChange={(e) => handleInputChange('parish', e.target.value)}
+                      className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.parish ? 'border-red-500' : 'border-gray-300'}`}
+                      required
+                      disabled={!formData.subcounty}
+                    >
+                      <option value="">Select parish</option>
+                      {availableParishes.map(parish => (
+                        <option key={parish} value={parish}>{parish}</option>
+                      ))}
+                    </select>
+                    {errors.parish && <p className="text-red-500 text-sm mt-1">{errors.parish}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Village</label>
+                    <select
+                      value={formData.village}
+                      onChange={(e) => handleInputChange('village', e.target.value)}
+                      className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.village ? 'border-red-500' : 'border-gray-300'}`}
+                      required
+                      disabled={!formData.parish}
+                    >
+                      <option value="">Select village</option>
+                      {availableVillages.map(village => (
+                        <option key={village} value={village}>{village}</option>
+                      ))}
+                    </select>
+                    {errors.village && <p className="text-red-500 text-sm mt-1">{errors.village}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {accountType === 'institution' && currentStep === 3 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">Administrator Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="Administrator Name"
+                    value={formData.adminName}
+                    onChange={(value) => handleInputChange('adminName', value)}
+                    placeholder="Enter administrator name"
+                    error={errors.adminName}
+                    required
+                  />
+                  <EdumallInput
+                    label="Administrator Email"
+                    type="email"
+                    value={formData.adminEmail}
+                    onChange={(value) => handleInputChange('adminEmail', value)}
+                    placeholder="Enter administrator email"
+                    error={errors.adminEmail}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="Administrator Phone"
+                    value={formData.adminPhone}
+                    onChange={(value) => handleInputChange('adminPhone', value)}
+                    placeholder="Enter administrator phone"
+                    error={errors.adminPhone}
+                    required
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
+                    <select
+                      value={formData.designation}
+                      onChange={(e) => handleInputChange('designation', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-xl focus:ring-2 focus:border-teal-500 ${
+                        errors.designation ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      required
+                    >
+                      <option value="">Select designation</option>
+                      {designationOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    {errors.designation && <p className="text-red-500 text-sm mt-1">{errors.designation}</p>}
+                  </div>
+                </div>
+                {formData.designation === 'Other' && (
+                  <EdumallInput
+                    label="Custom Designation"
+                    value={formData.customDesignation}
+                    onChange={(value) => handleInputChange('customDesignation', value)}
+                    placeholder="Enter custom designation"
+                    error={errors.customDesignation}
+                    required
+                  />
+                )}
+              </div>
+            )}
+
+            {accountType === 'individual' && currentStep === 2 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">Personal Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="First Name"
+                    value={formData.firstName}
+                    onChange={(value) => handleInputChange('firstName', value)}
+                    placeholder="Enter first name"
+                    error={errors.firstName}
+                    required
+                  />
+                  <EdumallInput
+                    label="Last Name"
+                    value={formData.lastName}
+                    onChange={(value) => handleInputChange('lastName', value)}
+                    placeholder="Enter last name"
+                    error={errors.lastName}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(value) => handleInputChange('email', value)}
+                    placeholder="Enter email"
+                    error={errors.email}
+                    required
+                  />
+                  <EdumallInput
+                    label="Phone"
+                    value={formData.phone}
+                    onChange={(value) => handleInputChange('phone', value)}
+                    placeholder="Enter phone number"
+                    error={errors.phone}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">User Type</label>
+                  <select
+                    value={formData.userType}
+                    onChange={(e) => handleInputChange('userType', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-xl focus:ring-2 focus:border-teal-500 ${
+                      errors.userType ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    required
+                  >
+                    <option value="">Select user type</option>
+                    {userTypeOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                  {errors.userType && <p className="text-red-500 text-sm mt-1">{errors.userType}</p>}
+                </div>
+                {formData.userType === 'Other' && (
+                  <EdumallInput
+                    label="Custom User Type"
+                    value={formData.customUserType}
+                    onChange={(value) => handleInputChange('customUserType', value)}
+                    placeholder="Enter custom user type"
+                    error={errors.customUserType}
+                    required
+                  />
+                )}
+              </div>
+            )}
+
+            {((accountType === 'institution' && currentStep === 4) || (accountType === 'individual' && currentStep === 2)) && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">Account Security</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EdumallInput
+                    label="Password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(value) => handleInputChange('password', value)}
+                    placeholder="Enter password"
+                    error={errors.password}
+                    required
+                  />
+                  <EdumallInput
+                    label="Confirm Password"
+                    type="password"
+                    value={formData.password_confirmation}
+                    onChange={(value) => handleInputChange('password_confirmation', value)}
+                    placeholder="Confirm password"
+                    error={errors.password_confirmation}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mt-8">
               {currentStep > 1 ? (
                 <EdumallButton type="button" variant="ghost" size="md" onClick={prevStep}>
