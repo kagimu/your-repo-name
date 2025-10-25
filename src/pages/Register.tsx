@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,18 +7,24 @@ import { EdumallInput } from '@/components/ui/EdumallInput';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { PreLoader } from '@/components/ui/PreLoader';
-import { getDistricts, getSubcounties, getParishes, getVillages } from '@/data/ugandaData';
+import { useUgandaLocale } from '@/hooks/useUgandaLocale';
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [accountType, setAccountType] = useState<'institution' | 'individual'>('institution');
   const [isRegistering, setIsRegistering] = useState(false);
+
+  const maxSteps = accountType === 'institution' ? 4 : 2;
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const { mergeGuestCart } = useCart();
   const navigate = useNavigate();
 
+  // Use Uganda locale hook for dynamic location data
+  const { districts, getCounties, getSubcounties, getParishes, getVillages, loading: locationLoading, error: locationError } = useUgandaLocale();
+
   // Location state for cascading dropdowns
+  const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableSubcounties, setAvailableSubcounties] = useState<string[]>([]);
   const [availableParishes, setAvailableParishes] = useState<string[]>([]);
   const [availableVillages, setAvailableVillages] = useState<string[]>([]);
@@ -27,6 +33,7 @@ const Register = () => {
     institution_name: '',
     centre_number: '',
     district: '',
+    county: '',
     subcounty: '',
     parish: '',
     village: '',
@@ -51,8 +58,8 @@ const Register = () => {
   // New: form errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const designationOptions = ['Head-Teacher','Deputy Head-Teacher','Deputy of Studies','Bursar','Other'];
-  const userTypeOptions = ['Parent','Student','Teacher','Guardian','Other'];
+  const designationOptions = ['Head-Teacher', 'Deputy Head-Teacher', 'Deputy of Studies', 'Bursar', 'Other'];
+  const userTypeOptions = ['Parent', 'Student', 'Teacher', 'Guardian', 'Other'];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -60,7 +67,20 @@ const Register = () => {
 
     // Handle cascading dropdowns for location fields
     if (field === 'district') {
-      setAvailableSubcounties(getSubcounties(value));
+      setAvailableCounties(getCounties(value));
+      setAvailableSubcounties([]);
+      setAvailableParishes([]);
+      setAvailableVillages([]);
+      // Clear dependent fields
+      setFormData(prev => ({
+        ...prev,
+        county: '',
+        subcounty: '',
+        parish: '',
+        village: ''
+      }));
+    } else if (field === 'county') {
+      setAvailableSubcounties(getSubcounties(formData.district, value));
       setAvailableParishes([]);
       setAvailableVillages([]);
       // Clear dependent fields
@@ -89,6 +109,14 @@ const Register = () => {
     }
   };
 
+  // Update maxSteps when accountType changes
+  useEffect(() => {
+    const newMaxSteps = accountType === 'institution' ? 4 : 2;
+    if (currentStep > newMaxSteps) {
+      setCurrentStep(newMaxSteps);
+    }
+  }, [accountType, currentStep]);
+
   const handlePaymentMethodToggle = (method: string) => {
     setFormData(prev => ({
       ...prev,
@@ -98,7 +126,7 @@ const Register = () => {
     }));
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, accountType === 'institution' ? 4 : 2));
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, maxSteps));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,7 +199,7 @@ const Register = () => {
     }
   };
 
-  const isLastStep = () => currentStep === (accountType === 'institution' ? 4 : 2);
+  const isLastStep = () => currentStep === maxSteps;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
@@ -190,13 +218,13 @@ const Register = () => {
           {currentStep > 1 && (
             <div className="mb-8">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Step {currentStep} of {accountType === 'institution' ? 4 : 2}</span>
-                <span>{Math.round((currentStep / (accountType === 'institution' ? 4 : 2)) * 100)}% Complete</span>
+                <span>Step {currentStep} of {maxSteps}</span>
+                <span>{Math.round((currentStep / maxSteps) * 100)}% Complete</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${(currentStep / (accountType === 'institution' ? 4 : 2)) * 100}%` }}
+                  animate={{ width: `${(currentStep / maxSteps) * 100}%` }}
                   className="bg-gradient-to-r from-teal-500 to-cyan-400 h-2 rounded-full transition-all duration-300"
                 />
               </div>
@@ -241,6 +269,17 @@ const Register = () => {
             {accountType === 'institution' && currentStep === 2 && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900">Institution Details</h3>
+                {locationLoading && (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500"></div>
+                    <p className="text-sm text-gray-600 mt-2">Loading location data...</p>
+                  </div>
+                )}
+                {locationError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-600">{locationError}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <EdumallInput
                     label="Institution Name"
@@ -269,12 +308,30 @@ const Register = () => {
                       required
                     >
                       <option value="">Select district</option>
-                      {getDistricts().map(district => (
+                      {districts.map(district => (
                         <option key={district} value={district}>{district}</option>
                       ))}
                     </select>
                     {errors.district && <p className="text-red-500 text-sm mt-1">{errors.district}</p>}
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">County</label>
+                    <select
+                      value={formData.county}
+                      onChange={(e) => handleInputChange('county', e.target.value)}
+                      className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.county ? 'border-red-500' : 'border-gray-300'}`}
+                      required
+                      disabled={!formData.district}
+                    >
+                      <option value="">Select county</option>
+                      {availableCounties.map(county => (
+                        <option key={county} value={county}>{county}</option>
+                      ))}
+                    </select>
+                    {errors.county && <p className="text-red-500 text-sm mt-1">{errors.county}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Subcounty</label>
                     <select
@@ -282,7 +339,7 @@ const Register = () => {
                       onChange={(e) => handleInputChange('subcounty', e.target.value)}
                       className={`w-full px-3 py-3 border rounded-xl focus:ring-2 focus:border-teal-500 ${errors.subcounty ? 'border-red-500' : 'border-gray-300'}`}
                       required
-                      disabled={!formData.district}
+                      disabled={!formData.county}
                     >
                       <option value="">Select subcounty</option>
                       {availableSubcounties.map(subcounty => (
@@ -461,7 +518,7 @@ const Register = () => {
               </div>
             )}
 
-            {((accountType === 'institution' && currentStep === 4) || (accountType === 'individual' && currentStep === 2)) && (
+            {isLastStep() && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900">Account Security</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
