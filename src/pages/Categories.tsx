@@ -267,12 +267,12 @@ const Categories = () => {
   return (
     <div className="min-h-screen">
       <Navbar/>
-      <main className="pt-10 md:pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="pt-10 md:pt-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto md:mt-10">
 
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-1 md:pt-2">
-            <h1 className="text-2xl md:mt-2 md:text-xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-1 md:pt-2 mt-10 md:mt-0">
+            <h1 className="text-2xl md:mt-5 md:text-xl font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2">
               Educational Supplies
             </h1>
           </motion.div>
