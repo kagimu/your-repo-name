@@ -261,13 +261,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               variant="secondary"
               size="sm"
               onClick={handleViewDetails}
-              className="h-9 flex items-center justify-center gap-1 text-sm bg-gray-50 hover:bg-gray-100"
+              className="w-full h-9 flex items-center justify-center gap-1 text-sm bg-gray-50 hover:bg-gray-100"
             >
               <Eye size={16} />
               <span>View</span>
             </EdumallButton>
 
             <motion.div
+              className="w-full" // ✅ Ensures it takes full column width
               animate={{ scale: loading ? 0.95 : 1 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
@@ -276,12 +277,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
                 size="sm"
                 disabled={!product.in_stock || loading}
                 onClick={handleAddToCart}
-                className="h-9 flex items-center justify-center gap-1 text-sm font-medium bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
+                className="w-full h-9 flex items-center justify-center gap-1 text-sm font-medium bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
               >
                 {loading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    <span className="ml-1 text-xs sm:text-sm font-medium opacity-70">Adding...</span>
+                    <span className="w-full ml-1 text-xs sm:text-sm font-medium opacity-70">Adding...</span>
                   </>
                 ) : (
                   <>
@@ -292,6 +293,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) =
               </EdumallButton>
             </motion.div>
           </div>
+
         </div>
       </motion.div>
 
